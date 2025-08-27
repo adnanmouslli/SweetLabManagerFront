@@ -2,10 +2,13 @@
 import { OrderResponseDto } from "@/types/orders.type";
 import { formatCurrency } from "@/utils/formatters";
 import { getStatusClass, getStatusText } from "@/utils/orderHelpers";
-import { ArrowUpDown, Eye, ShoppingBag } from "lucide-react";
+import { ArrowUpDown, Eye, ShoppingBag, X } from "lucide-react";
 import React, { useState } from "react";
 import CustomerOrderCard from "./CustomerOrderCard";
 import SearchBar from "./SearchBar";
+import CancelOrderDialog from "./CancelOrderDialog";
+import { useCancelOrder } from "@/hooks/useOrders";
+import toast from "react-hot-toast";
 
 interface OrderListByDateViewProps {
     todayOrders: OrderResponseDto[];
@@ -33,6 +36,36 @@ const OrderListByDateView: React.FC<OrderListByDateViewProps> = ({
         tomorrow: true,
         all: true,
     });
+
+    // Cancel order functionality
+    const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+    const [selectedOrderForCancel, setSelectedOrderForCancel] = useState<OrderResponseDto | null>(null);
+
+    const { mutate: cancelOrder, isPending: isCancelling } = useCancelOrder();
+
+    const handleCancelOrder = (order: OrderResponseDto) => {
+        setSelectedOrderForCancel(order);
+        setCancelDialogOpen(true);
+    };
+
+    const handleConfirmCancel = (reason: string) => {
+        if (!selectedOrderForCancel) return;
+
+        cancelOrder(
+            { orderId: selectedOrderForCancel.id, reason },
+            {
+                onSuccess: () => {
+                    toast.success('تم إلغاء الطلب بنجاح');
+                    setCancelDialogOpen(false);
+                    setSelectedOrderForCancel(null);
+                },
+                onError: (error) => {
+                    toast.error('حدث خطأ أثناء إلغاء الطلب');
+                    console.error('Error cancelling order:', error);
+                }
+            }
+        );
+    };
 
     const [sortConfig, setSortConfig] = useState<{
         key: keyof OrderResponseDto | "customerName" | "paidStatusText" | "statusText";
@@ -297,13 +330,25 @@ const OrderListByDateView: React.FC<OrderListByDateViewProps> = ({
                                                                 </span>
                                                             </td>
                                                             <td className="px-4 py-3">
-                                                                <button
-                                                                    onClick={() => onViewOrderDetails(order)}
-                                                                    className="text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1"
-                                                                >
-                                                                    <Eye className="h-4 w-4" />
-                                                                    عرض
-                                                                </button>
+                                                                <div className="flex items-center gap-2">
+                                                                    <button
+                                                                        onClick={() => onViewOrderDetails(order)}
+                                                                        className="text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1"
+                                                                    >
+                                                                        <Eye className="h-4 w-4" />
+                                                                        عرض
+                                                                    </button>
+                                                                    {order.status !== 'delivered' && order.status !== 'cancelled' && (
+                                                                        <button
+                                                                            onClick={() => handleCancelOrder(order)}
+                                                                            className="text-red-400 hover:text-red-300 transition-colors flex items-center gap-1"
+                                                                            title="إلغاء الطلب"
+                                                                        >
+                                                                            <X className="h-4 w-4" />
+                                                                            إلغاء
+                                                                        </button>
+                                                                    )}
+                                                                </div>
                                                             </td>
                                                         </tr>
                                                     ))}
@@ -317,6 +362,7 @@ const OrderListByDateView: React.FC<OrderListByDateViewProps> = ({
                                                         key={order.id}
                                                         order={order}
                                                         onViewDetails={onViewOrderDetails}
+                                                        onCancelOrder={order.status !== 'delivered' && order.status !== 'cancelled' ? handleCancelOrder : undefined}
                                                     />
                                                 ))}
                                             </div>
@@ -461,13 +507,25 @@ const OrderListByDateView: React.FC<OrderListByDateViewProps> = ({
                                                                 </span>
                                                             </td>
                                                             <td className="px-4 py-3">
-                                                                <button
-                                                                    onClick={() => onViewOrderDetails(order)}
-                                                                    className="text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1"
-                                                                >
-                                                                    <Eye className="h-4 w-4" />
-                                                                    عرض
-                                                                </button>
+                                                                <div className="flex items-center gap-2">
+                                                                    <button
+                                                                        onClick={() => onViewOrderDetails(order)}
+                                                                        className="text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1"
+                                                                    >
+                                                                        <Eye className="h-4 w-4" />
+                                                                        عرض
+                                                                    </button>
+                                                                    {order.status !== 'delivered' && order.status !== 'cancelled' && (
+                                                                        <button
+                                                                            onClick={() => handleCancelOrder(order)}
+                                                                            className="text-red-400 hover:text-red-300 transition-colors flex items-center gap-1"
+                                                                            title="إلغاء الطلب"
+                                                                        >
+                                                                            <X className="h-4 w-4" />
+                                                                            إلغاء
+                                                                        </button>
+                                                                    )}
+                                                                </div>
                                                             </td>
                                                         </tr>
                                                     ))}
@@ -481,6 +539,7 @@ const OrderListByDateView: React.FC<OrderListByDateViewProps> = ({
                                                         key={order.id}
                                                         order={order}
                                                         onViewDetails={onViewOrderDetails}
+                                                        onCancelOrder={order.status !== 'delivered' && order.status !== 'cancelled' ? handleCancelOrder : undefined}
                                                     />
                                                 ))}
                                             </div>
@@ -625,13 +684,25 @@ const OrderListByDateView: React.FC<OrderListByDateViewProps> = ({
                                                                 </span>
                                                             </td>
                                                             <td className="px-4 py-3">
-                                                                <button
-                                                                    onClick={() => onViewOrderDetails(order)}
-                                                                    className="text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1"
-                                                                >
-                                                                    <Eye className="h-4 w-4" />
-                                                                    عرض
-                                                                </button>
+                                                                <div className="flex items-center gap-2">
+                                                                    <button
+                                                                        onClick={() => onViewOrderDetails(order)}
+                                                                        className="text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1"
+                                                                    >
+                                                                        <Eye className="h-4 w-4" />
+                                                                        عرض
+                                                                    </button>
+                                                                    {order.status !== 'delivered' && order.status !== 'cancelled' && (
+                                                                        <button
+                                                                            onClick={() => handleCancelOrder(order)}
+                                                                            className="text-red-400 hover:text-red-300 transition-colors flex items-center gap-1"
+                                                                            title="إلغاء الطلب"
+                                                                        >
+                                                                            <X className="h-4 w-4" />
+                                                                            إلغاء
+                                                                        </button>
+                                                                    )}
+                                                                </div>
                                                             </td>
                                                         </tr>
                                                     ))}
@@ -645,6 +716,7 @@ const OrderListByDateView: React.FC<OrderListByDateViewProps> = ({
                                                         key={order.id}
                                                         order={order}
                                                         onViewDetails={onViewOrderDetails}
+                                                        onCancelOrder={order.status !== 'delivered' && order.status !== 'cancelled' ? handleCancelOrder : undefined}
                                                     />
                                                 ))}
                                             </div>
@@ -656,6 +728,16 @@ const OrderListByDateView: React.FC<OrderListByDateViewProps> = ({
                     </div>
                 </div>
             )}
+
+            {/* Cancel Order Dialog */}
+            <CancelOrderDialog
+                isOpen={cancelDialogOpen}
+                onClose={() => setCancelDialogOpen(false)}
+                onConfirm={handleConfirmCancel}
+                orderNumber={selectedOrderForCancel?.orderNumber}
+                customerName={selectedOrderForCancel?.customer?.name}
+                isCancelling={isCancelling}
+            />
         </div>
     );
 };

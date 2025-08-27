@@ -357,13 +357,25 @@ export default function Page() {
       },
     });
 
-  const { mutateAsync: closeShiftPartially, isPending: isClosingShiftPartially, isSuccess: isPartiallyCloseSuccess } = useCloseShiftPartially();
-
-  useEffect(() => {
-    if (isPartiallyCloseSuccess) {
-      window.location.reload()
-    }
-  }, [isPartiallyCloseSuccess])
+  const { mutateAsync: closeShiftPartially, isPending: isClosingShiftPartially, isSuccess: isPartiallyCloseSuccess } = useCloseShiftPartially({
+    onSuccess: () => {
+      setSnackbarConfig({
+        open: true,
+        severity: "success",
+        message: "تم إغلاق الوردية جزئياً بنجاح",
+      });
+      // Reload the page after successful partial close
+      window.location.reload();
+    },
+    onError: (error) => {
+      console.error("Error closing shift partially:", error);
+      setSnackbarConfig({
+        open: true,
+        severity: "error",
+        message: error?.response?.data?.message || "فشل في إغلاق الوردية جزئياً",
+      });
+    },
+  });
 
   const {
     data: shiftSummary,

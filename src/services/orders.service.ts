@@ -94,6 +94,11 @@ export class OrdersService {
         await apiClient.delete(`/orders/${orderId}`);
     };
 
+    static cancelOrder = async (orderId: number, reason: string): Promise<OrderResponseDto> => {
+        const response = await apiClient.post<OrderResponseDto>(`/orders/${orderId}/cancel`, { reason });
+        return response;
+    };
+
 
 
     // Additional helper methods for filtering orders

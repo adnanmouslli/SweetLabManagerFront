@@ -197,7 +197,10 @@ export const useShifts = () => {
 };
 
 
-export const useCloseShiftPartially = () => {
+export const useCloseShiftPartially = (options?: {
+  onSuccess?: (data: CloseShiftResponse) => void;
+  onError?: (error: any) => void;
+}) => {
   const queryClient = useQueryClient();
 
   return useMutation<CloseShiftResponse, any>({
@@ -214,7 +217,10 @@ export const useCloseShiftPartially = () => {
       queryClient.invalidateQueries({ queryKey: ["pendingTransfers"] });
       queryClient.invalidateQueries({ queryKey: ["transferHistory"] });
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
+
+      options?.onSuccess?.(data);
     },
+    onError: options?.onError,
   });
 };
 

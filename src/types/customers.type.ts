@@ -6,6 +6,12 @@ interface BaseEntity {
   createdAt: string;
 }
 
+// Customer Type enum
+export enum CustomerTypeEnum {
+  CUSTOMER = 'CUSTOMER',
+  SUPPLIER = 'SUPPLIER'
+}
+
 // Customer Category interface
 export interface CustomerCategory {
   id: number;
@@ -26,6 +32,7 @@ export interface CustomerInfo {
   customerSince: string;
   categoryId: number | null;
   category: CustomerCategory | null;
+  customerType: CustomerTypeEnum;
 }
 
 // Financial Summary Interface
@@ -234,6 +241,8 @@ export interface AllCustomerType extends BaseEntity {
   updatedAt: string;
   categoryId: number | null;
   category: CustomerCategory | null;
+  customerType: CustomerTypeEnum;
+  supplierBalance: number;
   invoices: AllCustomersInvoice[];
   trays: Tray[];
   debts: Debt[];
@@ -246,6 +255,7 @@ export interface CustomerType {
   phone: string;
   totalDebt: number;
   category: CustomerCategory | null;
+  customerType: CustomerTypeEnum;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   activeAdvances: any;
 }
@@ -258,6 +268,7 @@ export interface CreateCustomerRequest {
   phone: string;
   notes?: string | null;
   categoryId?: number | null;
+  customerType: CustomerTypeEnum;
 }
 
 export type CreateCustomerResponse = CustomerInfo;
@@ -268,6 +279,7 @@ export interface UpdateCustomerRequest {
   phone?: string;
   notes?: string | null;
   categoryId?: number | null;
+  customerType?: CustomerTypeEnum;
 }
 
 export type UpdateCustomerResponse = CustomerInfo;
@@ -322,4 +334,22 @@ export interface DeleteCustomerCategoryResponse {
   success: boolean;
   message: string;
   deletedCategoryId: number;
+}
+
+// Supplier Payment Types
+export interface SupplierPaymentRequest {
+  amount: number;
+  notes?: string;
+}
+
+export interface SupplierPaymentResponse {
+  success: boolean;
+  message: string;
+  paymentId: number;
+  newBalance: number;
+}
+
+export interface SupplierBalanceResponse {
+  balance: number;
+  currency: string;
 }

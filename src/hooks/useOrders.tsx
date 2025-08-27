@@ -212,3 +212,20 @@ export const useDeleteOrder = () => {
         },
     });
 };
+
+export const useCancelOrder = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ orderId, reason }: { orderId: number; reason: string }) =>
+            OrdersService.cancelOrder(orderId, reason),
+        onSuccess: (_, { orderId }) => {
+            // Invalidate specific order and related lists
+            queryClient.invalidateQueries({ queryKey: ["order", orderId] });
+            queryClient.invalidateQueries({ queryKey: ["orders"] });
+            queryClient.invalidateQueries({ queryKey: ["ordersSummary"] });
+            queryClient.invalidateQueries({ queryKey: ["ordersForPreparation"] });
+            queryClient.invalidateQueries({ queryKey: ["ordersForDeliveryToday"] });
+        },
+    });
+};

@@ -1,13 +1,14 @@
 // components/orders/CustomerOrderCard.tsx
 import React, { useState } from "react";
-import { ShoppingBag, Calendar, EyeIcon, Clock, CheckCircle, CheckCircle2, AlertCircle, RefreshCcw, BellDot } from "lucide-react";
+import { ShoppingBag, Calendar, EyeIcon, Clock, CheckCircle, CheckCircle2, AlertCircle, RefreshCcw, BellDot, X } from "lucide-react";
 import { OrderResponseDto, OrderStatus } from "@/types/orders.type";
-import { formatCurrency } from "@/utils/formatters";
+import { formatCurrency, getCustomerDisplayName } from "@/utils/formatters";
 import { getStatusClass, getStatusText } from "@/utils/orderHelpers";
 
 interface CustomerOrderCardProps {
     order: OrderResponseDto;
     onViewDetails?: (order: OrderResponseDto) => void;
+    onCancelOrder?: (order: OrderResponseDto) => void;
 }
 
 // Helper function to directly get the status icon component
@@ -28,7 +29,7 @@ const getStatusIconComponent = (status: OrderStatus) => {
     }
 };
 
-const CustomerOrderCard: React.FC<CustomerOrderCardProps> = ({ order, onViewDetails }) => {
+const CustomerOrderCard: React.FC<CustomerOrderCardProps> = ({ order, onViewDetails, onCancelOrder }) => {
     const [showDetails, setShowDetails] = useState(false);
 
     const handleViewClick = () => {
@@ -47,6 +48,14 @@ const CustomerOrderCard: React.FC<CustomerOrderCardProps> = ({ order, onViewDeta
                     <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusClass(order.status!)}`}>
                         {getStatusIconComponent(order.status!)}
                         <span className="mx-1">{getStatusText(order.status!)}</span>
+                    </div>
+                </div>
+
+                {/* Customer Name */}
+                <div className="mb-3">
+                    <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                        <p className="text-slate-100 font-medium">{getCustomerDisplayName(order.customer, order.notes, 'غير معروف')}</p>
                     </div>
                 </div>
 
@@ -69,13 +78,25 @@ const CustomerOrderCard: React.FC<CustomerOrderCardProps> = ({ order, onViewDeta
 
                 <div className="flex justify-between items-center pt-2 border-t border-slate-700/30">
                     <p className="text-primary font-semibold">{formatCurrency(order.totalAmount)}</p>
-                    <button
-                        onClick={handleViewClick}
-                        className="inline-flex items-center text-primary hover:text-primary-dark transition-colors text-sm"
-                    >
-                        <EyeIcon className="h-4 w-4 mx-1" />
-                        {onViewDetails ? 'عرض التفاصيل' : (showDetails ? 'إخفاء التفاصيل' : 'عرض التفاصيل')}
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={handleViewClick}
+                            className="inline-flex items-center text-primary hover:text-primary-dark transition-colors text-sm"
+                        >
+                            <EyeIcon className="h-4 w-4 mx-1" />
+                            {onViewDetails ? 'عرض التفاصيل' : (showDetails ? 'إخفاء التفاصيل' : 'عرض التفاصيل')}
+                        </button>
+                        {onCancelOrder && order.status !== 'cancelled' && (
+                            <button
+                                onClick={() => onCancelOrder(order)}
+                                className="inline-flex items-center text-red-400 hover:text-red-300 transition-colors text-sm"
+                                title="إلغاء الطلب"
+                            >
+                                <X className="h-4 w-4 mx-1" />
+                                إلغاء
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 {!onViewDetails && showDetails && (

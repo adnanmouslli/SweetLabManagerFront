@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Calculator, FileText } from "lucide-react";
 import { InvoiceCategory } from "@/types/invoice.type";
@@ -54,6 +54,7 @@ interface FormData {
   notes?: string;
   advanceId?: number;
   additionalAmount: number;
+  supplierPaymentAmount: number; // المبلغ المدفوع للمورد
 }
 
 export const InvoiceForm: React.FC<InvoiceFormProps> = ({
@@ -88,10 +89,21 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
     discount: 0,
     paidStatus: true,
     additionalAmount: 0,
+    supplierPaymentAmount: 0,
   });
 
   const [formItems, setFormItems] = useState<FormItem[]>([]);
   const [selectedGroupId, setSelectedGroupId] = useState<number>(0);
+
+  // Auto-update supplier payment amount when total amount changes for expense invoices
+  useEffect(() => {
+    if (mode === "expense" && type === InvoiceCategory.PRODUCTS) {
+      setFormData(prev => ({
+        ...prev,
+        supplierPaymentAmount: prev.totalAmount,
+      }));
+    }
+  }, [formData.totalAmount, mode, type]);
 
   // Flags and derived values
   const isPurchaseInvoice = mode === "expense";
@@ -203,7 +215,8 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
         name === "totalAmount" ||
           name === "discount" ||
           name === "firstPayment" ||
-          name === "additionalAmount"
+          name === "additionalAmount" ||
+          name === "supplierPaymentAmount"
           ? Number(value)
           : value,
     }));
@@ -221,9 +234,12 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
 
   const addFormItem = (newItem: FormItem) => {
     setFormItems((prev) => [...prev, newItem]);
+    const newTotalAmount = formData.totalAmount + newItem.subTotal;
     setFormData((prev) => ({
       ...prev,
-      totalAmount: prev.totalAmount + newItem.subTotal,
+      totalAmount: newTotalAmount,
+      // Auto-update supplier payment amount for expense invoices
+      supplierPaymentAmount: mode === "expense" ? newTotalAmount : prev.supplierPaymentAmount,
     }));
   };
 
@@ -232,9 +248,12 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
     if (!item) return;
 
     setFormItems((prev) => prev.filter((i) => i.id !== itemId));
+    const newTotalAmount = formData.totalAmount - item.subTotal;
     setFormData((prev) => ({
       ...prev,
-      totalAmount: prev.totalAmount - item.subTotal,
+      totalAmount: newTotalAmount,
+      // Auto-update supplier payment amount for expense invoices
+      supplierPaymentAmount: mode === "expense" ? newTotalAmount : prev.supplierPaymentAmount,
     }));
   };
 
@@ -339,9 +358,10 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
             additionalAmount: Number(formData.additionalAmount) || 0,
           } as IncomeProductsDTO);
         } else {
-          await createExpenseProducts.mutateAsync(
-            productInvoiceData as ExpenseProductsDTO
-          );
+          await createExpenseProducts.mutateAsync({
+            ...productInvoiceData,
+            supplierPaymentAmount: formData.supplierPaymentAmount,
+          } as ExpenseProductsDTO);
         }
       }
       // Handle direct/debt invoices
@@ -405,6 +425,27 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
               type={type}
               mode={mode}
             />
+
+            {/* Supplier Payment Amount Field (Only show for expense invoices) */}
+            {mode === "expense" && (
+              <div className="space-y-2">
+                <label className="block text-slate-200">المبلغ المدفوع للمورد</label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    name="supplierPaymentAmount"
+                    value={formData.supplierPaymentAmount}
+                    onChange={handleChange}
+                    min="0"
+                    className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-200"
+                    placeholder="المبلغ المدفوع للمورد"
+                  />
+                </div>
+                <p className="text-xs text-slate-400">
+                  المبلغ المدفوع للمورد (يتم تعيينه تلقائياً بقيمة الفاتورة الكاملة)
+                </p>
+              </div>
+            )}
 
             {/* Notes */}
             <div className="space-y-2">

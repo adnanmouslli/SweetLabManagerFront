@@ -46,6 +46,7 @@ const CustomerModal: React.FC<CustomerModalProps> = ({
       phone: "",
       notes: "",
       categoryId: null,
+      customerType: "CUSTOMER", // Always set customer type for customers
     },
     // Add mode-specific validation
     context: { isCreateMode: mode === "create" }
@@ -70,12 +71,14 @@ const CustomerModal: React.FC<CustomerModalProps> = ({
         setValue("phone", customerData.phone || "");
         setValue("notes", customerData.notes || "");
         setValue("categoryId", customerData.categoryId);
+        setValue("customerType", customerData.customerType || "CUSTOMER"); // Ensure customer type is set
       } else if (mode === "create") {
         reset({
           name: "",
           phone: "",
           notes: "",
           categoryId: null,
+          customerType: "CUSTOMER", // Always ensure customer type is set
         });
       }
     }
@@ -88,12 +91,18 @@ const CustomerModal: React.FC<CustomerModalProps> = ({
     setSubmitStatus(null);
 
     try {
+      // Ensure customerType is always included
+      const requestData = {
+        ...data,
+        customerType: "CUSTOMER", // Always ensure this is set for customers
+      };
+
       if (mode === "create") {
-        await createCustomer(data);
+        await createCustomer(requestData);
       } else if (mode === "update" && customerData) {
         await updateCustomer({
           id: customerData.id,
-          ...data,
+          ...requestData,
         });
       }
 
@@ -239,6 +248,9 @@ const CustomerModal: React.FC<CustomerModalProps> = ({
           ) : (
             // Create/Update Form
             <form onSubmit={handleSubmit(onSubmit)}>
+              {/* Hidden input for customerType to ensure it's always submitted */}
+              <input type="hidden" {...register("customerType")} value="CUSTOMER" />
+
               <div className="space-y-4">
                 {/* Name Field */}
                 <div>

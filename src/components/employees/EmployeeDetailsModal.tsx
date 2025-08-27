@@ -217,35 +217,6 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
                     )}
                   </div>
                 </>
-              ) : employee.workType === WorkType.PRODUCTION && employeeDetails?.productionRecords ? (
-                <>
-                  <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20">
-                    <h4 className="font-medium text-white mb-3 flex items-center gap-2">
-                      <DollarSign className="h-5 w-5 text-green-400" />
-                      سجل الإنتاج ({employeeDetails.productionRecords.length} سجل)
-                    </h4>
-                    {employeeDetails.productionRecords.length > 0 ? (
-                      <div className="space-y-2 max-h-40 overflow-y-auto">
-                        {employeeDetails.productionRecords.slice(0, 5).map((record) => (
-                          <div key={record.id} className="flex justify-between items-center bg-white/5 p-2 rounded">
-                            <div className="text-sm">
-                              <div className="text-slate-300">{record.quantity} قطعة × {formatCurrency(record.productionRate)} ل.س</div>
-                              <div className="text-xs text-slate-400">{formatDate(record.date)}</div>
-                            </div>
-                            <div className="text-green-400 font-medium">{formatCurrency(record.totalAmount)} ل.س</div>
-                          </div>
-                        ))}
-                        {employeeDetails.productionRecords.length > 5 && (
-                          <div className="text-center text-sm text-slate-400 pt-2">
-                            و {employeeDetails.productionRecords.length - 5} سجلات أخرى...
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <p className="text-center text-slate-400 py-3">لا توجد سجلات إنتاج</p>
-                    )}
-                  </div>
-                </>
               ) : (
                 <div className="p-4 rounded-lg bg-white/5 border border-white/10">
                   <p className="text-center text-slate-400 py-3">لا توجد بيانات عمل متاحة</p>

@@ -11,7 +11,7 @@ import {
   ChevronRight,
   BellDot
 } from "lucide-react";
-import { formatDate } from "@/utils/formatters";
+import { formatDate, getCustomerDisplayName } from "@/utils/formatters";
 import { ShiftsInvoices } from "@/types/shifts.type";
 import { useState, useRef, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
@@ -611,7 +611,7 @@ const InvoicesModal = ({
                             </div>
                           </td>
                           <td className="py-3 px-4 text-white">
-                            {invoice.customer ? invoice.customer.name : ""}
+                            {getCustomerDisplayName(invoice.customer, invoice.notes)}
                           </td>
                           <td className="py-3 px-4 text-white">
                             {formatDate(invoice.createdAt)}

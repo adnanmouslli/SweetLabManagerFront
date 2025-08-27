@@ -1,7 +1,7 @@
 // src/components/common/InvoiceTable.tsx
 import { useState, useEffect } from "react";
 import { Invoice } from "@/types/invoice.type";
-import { formatCurrency, formatDate } from "@/utils/formatters";
+import { formatCurrency, formatDate, getCustomerDisplayName } from "@/utils/formatters";
 import {
   AlertCircle,
   CheckCircle,
@@ -366,7 +366,7 @@ export const InvoiceTable = ({
                 <div>
                   <div className="text-sm text-slate-400">العميل</div>
                   <div className="text-foreground">
-                    {invoice.customer ? invoice.customer.name : "-"}
+                    {getCustomerDisplayName(invoice.customer, invoice.notes)}
                   </div>
                 </div>
                 <div>
@@ -527,7 +527,7 @@ export const InvoiceTable = ({
                       {formatDate(invoice.createdAt)}
                     </td>
                     <td className="p-4 text-foreground text-center">
-                      {invoice.customer ? invoice.customer.name : "-"}
+                      {getCustomerDisplayName(invoice.customer, invoice.notes)}
                     </td>
                     <td className="p-4 text-foreground text-center">
                       {invoice.customer ? invoice.customer.phone : "-"}

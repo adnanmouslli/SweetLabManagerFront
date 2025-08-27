@@ -32,3 +32,33 @@ export const formatDate = (dateString: string | Date | null) => {
   const toArabic = (num: number) => num.toString().replace(/[0-9]/g, d => String.fromCharCode(0x0660 + Number(d)));
   return `${toArabic(y)}/${toArabic(m)}/${toArabic(d)}`;
 };
+
+/**
+ * Extract customer name from notes if customer is null
+ * Looks for pattern: w-name (e.g., w-ahmad, w-adnan, w-joe)
+ * @param customer - The customer object
+ * @param notes - The invoice notes
+ * @param fallback - Fallback text if no name found
+ * @returns The customer name or extracted name from notes or fallback
+ */
+export const getCustomerDisplayName = (
+  customer: { name: string } | null,
+  notes: string | null | undefined,
+  fallback: string = "-"
+): string => {
+  // If customer exists and has a name, return it
+  if (customer?.name) {
+    return customer.name;
+  }
+
+  // If no customer but notes exist, try to extract name from pattern w-name
+  if (notes && notes.trim()) {
+    const nameMatch = notes.match(/w-([a-zA-Z\u0600-\u06FF]+)/);
+    if (nameMatch && nameMatch[1]) {
+      return nameMatch[1];
+    }
+  }
+
+  // Return fallback if no name found
+  return fallback;
+};

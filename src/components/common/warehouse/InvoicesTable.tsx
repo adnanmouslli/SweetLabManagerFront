@@ -1,6 +1,6 @@
 "use client";
 import { WareHouseInvoice } from "@/types/warehouse.type";
-import { formatDate } from "@/utils/formatters";
+import { formatDate, getCustomerDisplayName } from "@/utils/formatters";
 import { motion } from "framer-motion";
 import { Eye } from "lucide-react";
 
@@ -37,7 +37,7 @@ export const InvoicesTable = ({
               <td className="p-4 text-slate-300">
                 {formatDate(invoice.createdAt)}
               </td>
-              <td className="p-4 text-slate-300">{invoice.customer?.name}</td>
+              <td className="p-4 text-slate-300">{getCustomerDisplayName(invoice.customer, invoice.notes)}</td>
 
               <td className="p-4 text-slate-300">{invoice.totalAmount} ليرة</td>
               <td className="p-4">

@@ -28,6 +28,10 @@ interface CloseShiftModalProps {
   shiftType: "صباحي" | "مسائي";
   shiftSummary?: ShiftSummaryData;
   isShiftClosing: boolean;
+  // New props for shifts page compatibility
+  open?: boolean;
+  isLoading?: boolean;
+  shiftId?: number;
 }
 
 const CloseShiftModal: React.FC<CloseShiftModalProps> = ({
@@ -36,10 +40,19 @@ const CloseShiftModal: React.FC<CloseShiftModalProps> = ({
   shiftType,
   shiftSummary,
   isShiftClosing,
+  // New props for shifts page compatibility
+  open,
+  isLoading,
+  shiftId,
 }) => {
   const [actualAmount, setActualAmount] = useState<number>(0);
   const [difference, setDifference] = useState<number>(0);
   const { data } = useCheckPendingTransfers();
+
+  // Use the new props if available, otherwise fall back to the old ones
+  const isOpen = open !== undefined ? open : true;
+  const isShiftClosingState = isLoading !== undefined ? isLoading : isShiftClosing;
+  const displayShiftId = shiftId || (shiftSummary?.shiftId);
 
   // Calculate difference when actualAmount or shiftSummary changes
   useEffect(() => {
@@ -58,6 +71,9 @@ const CloseShiftModal: React.FC<CloseShiftModalProps> = ({
   };
 
   const differenceStatus = getDifferenceStatus();
+
+  // Don't render if not open (for shifts page compatibility)
+  if (!isOpen) return null;
 
   return (
     <motion.div
@@ -82,7 +98,7 @@ const CloseShiftModal: React.FC<CloseShiftModalProps> = ({
             <X size={24} />
           </button>
           <h2 className="text-xl font-bold text-slate-100">
-            تأكيد إغلاق الوردية
+            {displayShiftId ? `إنهاء الوردية #${displayShiftId}` : "تأكيد إغلاق الوردية"}
           </h2>
         </div>
 
@@ -255,10 +271,10 @@ const CloseShiftModal: React.FC<CloseShiftModalProps> = ({
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => onConfirm({ amount: actualAmount })}
-                disabled={isShiftClosing}
+                disabled={isShiftClosingState}
                 className="flex-1 bg-red-500/10 text-red-400 hover:bg-red-500/20 px-4 py-2 rounded-lg font-medium transition-colors border border-red-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isShiftClosing ? (
+                {isShiftClosingState ? (
                   <div className="flex items-center justify-center">
                     <span className="animate-spin h-4 w-4 border-2 border-red-400/30 border-t-red-400 rounded-full mx-2"></span>
                     جارٍ إغلاق الوردية...
@@ -272,7 +288,7 @@ const CloseShiftModal: React.FC<CloseShiftModalProps> = ({
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={onClose}
-              disabled={isShiftClosing}
+              disabled={isShiftClosingState}
               className="flex-1 bg-slate-700/50 text-slate-300 hover:bg-slate-700 px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
             >
               إلغاء

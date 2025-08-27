@@ -140,6 +140,7 @@ export interface ExpenseProductsDTO extends BaseInvoiceDTO {
   paidStatus: boolean;
   totalAmount: number;
   items: CreateInvoiceItemDTO[];
+  supplierPaymentAmount?: number; // المبلغ المدفوع للمورد
 }
 
 // Direct/Debt Invoice DTO (for both income and expense)
@@ -171,6 +172,7 @@ export interface SingleFetchedInvoice {
   // New fields for breakage type
   isBreak?: boolean;
   firstPayment?: number;
+  supplierPaymentAmount?: number; // المبلغ المدفوع للمورد
   items: InvoiceItem[];
   employee: Employee;
   fund: Fund;
@@ -256,6 +258,7 @@ export interface ProductInvoice {
   // New fields for breakage type
   isBreak?: boolean;
   firstPayment?: number;
+  supplierPaymentAmount?: number; // المبلغ المدفوع للمورد
 }
 
 export interface RelatedEmployee {

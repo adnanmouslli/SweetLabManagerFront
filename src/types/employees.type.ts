@@ -39,7 +39,20 @@ export interface Employee {
   createdAt: string;
   updatedAt: string;
   withdrawals?: EmployeeWithdrawal[];
+  financialSummary?: WorkshopEmployeeFinancialSummary;
   // debts are now handled separately through the EmployeeDebt interface in debts.type.ts
+}
+
+export interface WorkshopEmployeeFinancialSummary {
+  debtAmount: number;
+  hasActiveDebt: boolean;
+  lastPaymentDate: string;
+  lastWorkshopSettlement: string | null;
+  paymentsCount: number;
+  periodStart: string;
+  totalSalaries: number;
+  totalWithdrawals: number;
+  withdrawalsCount: number;
 }
 
 // Employee Financial Summary
@@ -103,7 +116,7 @@ export interface EmployeeDetails extends Employee {
   productionRecords?: EmployeeProductionRecord[];
   hourRecords?: EmployeeHoursRecord[];
   invoices?: EmployeeInvoice[];
-  financialSummary: EmployeeFinancialSummary;
+  financialSummary: WorkshopEmployeeFinancialSummary;
   // Employee debts are now referenced from debt.type.ts
 }
 

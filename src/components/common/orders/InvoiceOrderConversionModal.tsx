@@ -34,7 +34,7 @@ const InvoiceOrderConversionModal: React.FC<InvoiceOrderConversionModalProps> = 
     const [discount, setDiscount] = useState<number>(0);
     const [additionalAmount, setAdditionalAmount] = useState<number>(0);
     const [initialPayment, setInitialPayment] = useState<number>(0);
-    const [paymentType, setPaymentType] = useState<PaymentType>('paid');
+    const [paymentType, setPaymentType] = useState<PaymentType>('unpaid');
     const [notes, setNotes] = useState<string>('');
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
 

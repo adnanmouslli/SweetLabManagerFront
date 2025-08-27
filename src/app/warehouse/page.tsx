@@ -261,18 +261,18 @@ const RawMaterialWarehouse = () => {
         />
 
         {/* New Audit Modal */}
-        {/* {rawMaterialExpenses?.rawMaterialStats?.items && (
+        {inventoryData && (
           <AuditModal
             isOpen={isAuditModalOpen}
-            onClose={() => setIsAuditModalOpen(false)}  
-            items={rawMaterialExpenses.rawMaterialStats.items.map(item => ({
+            onClose={() => setIsAuditModalOpen(false)}
+            items={inventoryData.map(item => ({
               id: item.itemId,
-              name: item.itemName,
-              currentStock: item.totalQuantity,
-              defaultUnit: item.defaultUnit || "وحدة"
+              name: item.item.name,
+              currentStock: item.currentStock,
+              defaultUnit: item.item.defaultUnit || "وحدة"
             }))}
           />
-        )} */}
+        )}
       </div>
     </div>
   );

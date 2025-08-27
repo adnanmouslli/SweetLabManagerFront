@@ -1,7 +1,7 @@
 "use client";
 import { formatSYP } from "@/hooks/invoices/useInvoiceStats";
 import { ProductInvoice } from "@/types/invoice.type";
-import { formatDate } from "@/utils/formatters";
+import { formatDate, getCustomerDisplayName } from "@/utils/formatters";
 import { motion } from "framer-motion";
 import { Phone, User, X } from "lucide-react";
 import React from "react";
@@ -97,7 +97,7 @@ export const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                       <div>
                         <p className="text-slate-400 text-sm">الاسم</p>
                         <p className="text-slate-200">
-                          {invoice.customer.name}
+                          {getCustomerDisplayName(invoice.customer, invoice.notes)}
                         </p>
                       </div>
                     </div>

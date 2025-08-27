@@ -36,6 +36,7 @@ interface CustomerFormData {
   phone: string;
   notes: string;
   categoryId: number;
+  customerType: "CUSTOMER" | "SUPPLIER";
 }
 
 interface CustomerSectionProps {
@@ -59,18 +60,19 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
   const [showAddCustomer, setShowAddCustomer] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerType | null>(null);
   const [selectedAdvance, setSelectedAdvance] = useState<Advance | null>(null);
-  
+
   const isAdvanceRepay = type === InvoiceCategory.ADVANCE && mode === "expense";
   const isCustomerRequired = type === InvoiceCategory.ADVANCE;
   const isCustomerPreset = isAdvanceRepay && customerId;
-  
+
   // Setup React Hook Form
   const { control, handleSubmit, reset, formState: { errors }, watch } = useForm<CustomerFormData>({
     defaultValues: {
       name: "",
       phone: "",
       notes: "",
-      categoryId: 0
+      categoryId: 0,
+      customerType: mode === "income" ? "CUSTOMER" : "SUPPLIER"
     }
   });
 
@@ -98,10 +100,21 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
 
   // Format customers for react-select
   const customerOptions: CustomerOption[] = useMemo(() => {
-    // Filter customers based on debt or advance repayment requirements
+    // Filter customers based on mode (income/expense) and other requirements
     let filteredCustomers = customers || [];
+
+    // Filter by customer type based on invoice mode
+    if (mode === "income") {
+      // For income invoices, only show customers (not suppliers)
+      filteredCustomers = filteredCustomers.filter((customer) => customer.customerType === "CUSTOMER");
+    } else if (mode === "expense") {
+      // For expense invoices, only show suppliers
+      filteredCustomers = filteredCustomers.filter((customer) => customer.customerType === "SUPPLIER");
+    }
+
+    // Additional filtering for debt or advance repayment requirements
     if (type === InvoiceCategory.DEBT && mode === "income" && customers) {
-      filteredCustomers = customers.filter((customer) => customer.totalDebt > 0);
+      filteredCustomers = filteredCustomers.filter((customer) => customer.totalDebt > 0);
     }
 
     return filteredCustomers.map(customer => ({
@@ -171,13 +184,14 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
   };
 
   // Form submission handler for adding a new customer
-  const onSubmitNewCustomer: SubmitHandler<CustomerFormData> = async (data: CreateCustomerRequest) => {
+  const onSubmitNewCustomer: SubmitHandler<CustomerFormData> = async (data: CustomerFormData) => {
     try {
       const response = await createCustomer.mutateAsync({
         name: data.name,
         phone: data.phone,
         notes: data.notes || null,
-        categoryId: data.categoryId || null
+        categoryId: data.categoryId || null,
+        customerType: data.customerType
       });
 
       // Set the newly created customer as selected
@@ -196,13 +210,13 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
       setSnackbarConfig({
         open: true,
         severity: "success",
-        message: "تم إضافة العميل بنجاح"
+        message: mode === "income" ? "تم إضافة العميل بنجاح" : "تم إضافة المورد بنجاح"
       });
     } catch (error) {
       setSnackbarConfig({
         open: true,
         severity: "error",
-        message: "حدث خطأ أثناء إضافة العميل"
+        message: mode === "income" ? "حدث خطأ أثناء إضافة العميل" : "حدث خطأ أثناء إضافة المورد"
       });
     }
   };
@@ -368,14 +382,14 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
     if (isAdvanceRepay) {
       return "السلفة";
     }
-    
+
     if (type === InvoiceCategory.EMPLOYEE) {
       return "الموظف";
     }
-    
+
     return mode === "income" ? "العميل" : "المورد";
   };
-  
+
   // Determine if customer selection is optional
   const isCustomerOptional = type === InvoiceCategory.DIRECT || type === InvoiceCategory.DEBT;
 
@@ -404,8 +418,8 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
                   options={advanceOptions}
                   styles={advanceSelectStyles}
                   isRtl={true}
-                  placeholder="اختر من القائمة"
-                  noOptionsMessage={() => "لا توجد خيارات متاحة"}
+                  placeholder="اختر السلفة"
+                  noOptionsMessage={() => "لا توجد سلفات متاحة"}
                   isClearable
                   menuPlacement="auto"
                   classNamePrefix="react-select"
@@ -417,8 +431,8 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
                   options={customerOptions}
                   styles={customerSelectStyles}
                   isRtl={true}
-                  placeholder="اختر من القائمة"
-                  noOptionsMessage={() => "لا توجد خيارات متاحة"}
+                  placeholder={mode === "income" ? "اختر العميل" : "اختر المورد"}
+                  noOptionsMessage={() => mode === "income" ? "لا يوجد عملاء متاحون" : "لا يوجد موردون متاحون"}
                   isClearable
                   menuPlacement="auto"
                   classNamePrefix="react-select"
@@ -436,7 +450,7 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
               type="button"
             >
               <Plus className="h-5 w-5" />
-              {showAddCustomer ? "إلغاء" : "إضافة عميل"}
+              {showAddCustomer ? "إلغاء" : (mode === "income" ? "إضافة عميل" : "إضافة مورد")}
             </button>
           </div>
 
@@ -447,7 +461,12 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
               className="p-4 border border-blue-500/20 bg-blue-500/5 rounded-lg space-y-3"
               noValidate
             >
-              <h3 className="text-blue-400 text-lg font-medium">إضافة عميل جديد</h3>
+              <h3 className="text-blue-400 text-lg font-medium">
+                {mode === "income" ? "إضافة عميل جديد" : "إضافة مورد جديد"}
+              </h3>
+
+              {/* Hidden customerType field */}
+              <input type="hidden" name="customerType" value={mode === "income" ? "CUSTOMER" : "SUPPLIER"} />
 
               {/* Name Field */}
               <div className="space-y-2">
@@ -580,7 +599,7 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
         <>
           {selectedCustomer.totalDebt > 0 && (
             <div className="flex items-center gap-2 px-4 py-2 bg-yellow-500/10 text-yellow-400 rounded-lg hover:bg-yellow-500/20 transition-colors disabled:opacity-50 w-fit">
-              الدين الذي عليه {selectedCustomer.totalDebt} ليرة
+              {mode === "income" ? "الدين الذي عليه" : "الرصيد المستحق له"} {selectedCustomer.totalDebt} ليرة
             </div>
           )}
           {selectedAdvance && isAdvanceRepay && (
@@ -593,7 +612,7 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
 
       {isCustomerRequired && !formData.customerId && (
         <div className="text-red-400 text-sm mt-1">
-          يجب اختيار عميل للسلفة
+          يجب اختيار {mode === "income" ? "عميل" : "مورد"} للسلفة
         </div>
       )}
     </div>

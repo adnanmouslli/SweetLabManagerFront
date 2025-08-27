@@ -1,6 +1,6 @@
 import { Invoice } from "@/types/invoice.type";
 import { WareHouseInvoice } from "@/types/warehouse.type";
-import { formatCurrency, formatDate } from "@/utils/formatters";
+import { formatCurrency, formatDate, getCustomerDisplayName } from "@/utils/formatters";
 import { AnimatePresence, motion } from "framer-motion";
 import { usePathname } from "next/navigation";
 
@@ -72,7 +72,7 @@ const InvoiceDetailModal = ({
                   </h3>
                   <div className="space-y-1 text-slate-300">
                     <p>
-                      الاسم: {invoice.customer ? invoice.customer.name : "-"}
+                      الاسم: {getCustomerDisplayName(invoice.customer, invoice.notes)}
                     </p>
                     <p>
                       الهاتف: {invoice.customer ? invoice.customer.phone : "-"}

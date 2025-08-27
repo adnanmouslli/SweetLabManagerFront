@@ -13,14 +13,15 @@ import {
   GetCustomersListResponse,
   GetAllCustomersResponse,
   CustomerAccountStatementResponse,
-  CustomerCategory,
   GetCustomerCategoriesResponse,
   CreateCustomerCategoryRequest,
   CreateCustomerCategoryResponse,
   UpdateCustomerCategoryRequest,
   UpdateCustomerCategoryResponse,
   DeleteCustomerCategoryResponse,
+  SupplierPaymentResponse,
 } from "@/types/customers.type";
+import { CustomerCategory } from "@/types/customerCategories.types";
 
 /**
  * Hook for retrieving a simple list of customers with basic information
@@ -81,7 +82,7 @@ export const useSummaryCustomer = ({
 export const useCustomerCategories = () => {
   return useQuery<CustomerCategory[]>({
     queryKey: ["customer-categories"],
-    queryFn: async () => {
+    queryFn: async (): Promise<CustomerCategory[]> => {
       const response = await apiClient.get<GetCustomerCategoriesResponse>(
         "/customers/categories"
       );
@@ -127,7 +128,7 @@ export const useCreateCustomer = () => {
       // Invalidate all customer queries to ensure consistency
       queryClient.invalidateQueries({ queryKey: ["customers"] });
       queryClient.invalidateQueries({ queryKey: ["all-customers"] });
-      
+
       // Also invalidate related queries that might show customer information
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
       queryClient.invalidateQueries({ queryKey: ["currentInvoices"] });
@@ -166,7 +167,7 @@ export const useUpdateCustomer = () => {
       queryClient.invalidateQueries({
         queryKey: ["customer-summary", variables.id.toString()],
       });
-      
+
       // Invalidate related queries
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
       queryClient.invalidateQueries({ queryKey: ["currentInvoices"] });
@@ -199,7 +200,7 @@ export const useDeleteCustomer = () => {
       queryClient.invalidateQueries({
         queryKey: ["customer-summary", customerId.toString()],
       });
-      
+
       // Invalidate related queries
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
       queryClient.invalidateQueries({ queryKey: ["currentInvoices"] });
@@ -229,7 +230,7 @@ export const useCreateCustomerCategory = () => {
     onSuccess: () => {
       // Invalidate categories query
       queryClient.invalidateQueries({ queryKey: ["customer-categories"] });
-      
+
       // Since customers include category info, invalidate customer queries too
       queryClient.invalidateQueries({ queryKey: ["customers"] });
       queryClient.invalidateQueries({ queryKey: ["all-customers"] });
@@ -263,11 +264,11 @@ export const useUpdateCustomerCategory = () => {
     onSuccess: () => {
       // Invalidate categories query
       queryClient.invalidateQueries({ queryKey: ["customer-categories"] });
-      
+
       // Invalidate customer queries as they include category info
       queryClient.invalidateQueries({ queryKey: ["customers"] });
       queryClient.invalidateQueries({ queryKey: ["all-customers"] });
-      
+
       // Invalidate all customer summaries as they might display category info
       queryClient.invalidateQueries({ queryKey: ["customer-summary"] });
     },
@@ -294,11 +295,11 @@ export const useDeleteCustomerCategory = () => {
     onSuccess: () => {
       // Invalidate categories query
       queryClient.invalidateQueries({ queryKey: ["customer-categories"] });
-      
+
       // Invalidate customer queries as they include category info
       queryClient.invalidateQueries({ queryKey: ["customers"] });
       queryClient.invalidateQueries({ queryKey: ["all-customers"] });
-      
+
       // Invalidate all customer summaries as they might display category info
       queryClient.invalidateQueries({ queryKey: ["customer-summary"] });
     },
@@ -306,5 +307,62 @@ export const useDeleteCustomerCategory = () => {
       console.error("Error deleting customer category:", error);
       throw formatError(error);
     },
+  });
+};
+
+/**
+ * Hook for paying supplier dues (zero out balance)
+ */
+export const usePaySupplierDues = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    SupplierPaymentResponse,
+    Error,
+    { supplierId: number; amount: number; notes?: string }
+  >({
+    mutationFn: async ({ supplierId, amount, notes }) => {
+      const response = await apiClient.post<SupplierPaymentResponse>(
+        `/customers/${supplierId}/supplier-payment`,
+        { amount, notes }
+      );
+      return response;
+    },
+    onSuccess: (data, variables) => {
+      // Invalidate and refetch customer data
+      queryClient.invalidateQueries({ queryKey: ["customers"] });
+      queryClient.invalidateQueries({ queryKey: ["all-customers"] });
+      queryClient.invalidateQueries({
+        queryKey: ["customer-summary", variables.supplierId.toString()],
+      });
+
+      // Invalidate related queries
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["currentInvoices"] });
+      queryClient.invalidateQueries({ queryKey: ["debtsTracking"] });
+    },
+    onError: (error) => {
+      console.error("Error paying supplier dues:", error);
+      throw formatError(error);
+    },
+  });
+};
+
+/**
+ * Hook for getting supplier balance
+ */
+export const useSupplierBalance = (supplierId: number | null) => {
+  return useQuery<{ balance: number; currency: string }>({
+    queryKey: ["supplier-balance", supplierId],
+    queryFn: async () => {
+      if (!supplierId) {
+        throw new Error("Supplier ID is required");
+      }
+      const response = await apiClient.get<{ balance: number; currency: string }>(
+        `/customers/${supplierId}/supplier-balance`
+      );
+      return response;
+    },
+    enabled: !!supplierId,
   });
 };

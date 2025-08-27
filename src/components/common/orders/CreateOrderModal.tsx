@@ -66,7 +66,6 @@ interface OrderFormData {
     items: OrderItem[];
     discount: number;
     additionalAmount: number;
-    trayCount: number | "";
     paymentType: 'paid' | 'unpaid' | 'breakage';
     initialPayment: number;
     invoiceNotes: string;
@@ -75,7 +74,6 @@ interface OrderFormData {
 interface OrderErrors {
     customerId?: string;
     categoryId?: string;
-    trayCount?: string;
     initialPayment?: string;
     [key: string]: string | undefined;
 }
@@ -99,7 +97,6 @@ const INITIAL_FORM_DATA: OrderFormData = {
     items: [],
     discount: 0,
     additionalAmount: 0,
-    trayCount: '',
     initialPayment: 0,
     invoiceNotes: ''
 };
@@ -195,7 +192,6 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
                 })),
                 discount: order.invoice?.discount || 0,
                 additionalAmount: order.invoice?.additionalAmount || 0,
-                trayCount: order.invoice?.trayCount || '',
                 initialPayment: order.invoice?.initialPayment || 0,
                 invoiceNotes: order.invoice?.notes || ''
             });
@@ -279,9 +275,7 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
                 [name]: type === 'checkbox' ? checked :
                     (name === 'discount' || name === 'additionalAmount' || name === 'initialPayment')
                         ? parseFloat(value) || 0
-                        : name === 'trayCount'
-                            ? value === '' ? '' : (isNaN(Number(value)) ? prev.trayCount : Number(value))
-                            : value
+                        : value
             }));
 
             if (errors[name]) {
@@ -479,13 +473,7 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
                 }
             });
 
-            if (formData.trayCount === '' || formData.trayCount === undefined) {
-                newErrors.trayCount = 'لا يمكن ترك عدد الفوارغ فارغًا';
-                isValid = false;
-            } else if (typeof formData.trayCount === 'number' && formData.trayCount < 0) {
-                newErrors.trayCount = 'لا يمكن أن يكون عدد الفوارغ أقل من صفر';
-                isValid = false;
-            }
+
 
             if (formData.paymentType === 'breakage') {
                 if (formData.initialPayment <= 0) {
@@ -536,7 +524,7 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
                 invoiceData: {
                     discount: formData.discount,
                     additionalAmount: formData.additionalAmount,
-                    trayCount: formData.trayCount === '' ? 0 : formData.trayCount,
+                    trayCount: 0,
                     notes: formData.invoiceNotes || '',
                     ...(formData.paymentType === 'breakage' && {
                         isBreak: true,
@@ -641,7 +629,6 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
             items: orderItems,
             discount: lastOrder.invoice?.discount || 0,
             additionalAmount: lastOrder.invoice?.additionalAmount || 0,
-            trayCount: lastOrder.invoice?.trayCount || '',
             paymentType: paymentType,
             initialPayment: lastOrder.invoice?.initialPayment || 0,
             invoiceNotes: lastOrder.notes || '' // Use order notes as invoice notes
@@ -1082,24 +1069,7 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
 
                     {(formData.paymentType === "paid" || formData.paymentType === "breakage") && (
                         <div>
-                            <div className="space-y-2">
-                                <label className="block text-slate-200">عدد الفوارغ</label>
-                                <div className="relative">
-                                    <input
-                                        type="text"
-                                        name="trayCount"
-                                        value={formData.trayCount}
-                                        onChange={handleInputChange}
-                                        className={`w-full px-4 py-2 bg-slate-700/50 border ${errors.trayCount ? 'border-red-500/50' : 'border-slate-600/50'} rounded-lg text-slate-200`}
-                                        placeholder="عدد الفوارغ"
-                                    />
-                                    {errors.trayCount && (
-                                        <div className="text-red-400 text-sm mt-1">
-                                            {errors.trayCount}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
+
                             <div className="space-y-2 mt-4">
                                 <label className="block text-slate-200">المبلغ الإضافي</label>
                                 <div className="relative">

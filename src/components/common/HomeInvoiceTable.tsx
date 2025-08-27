@@ -1,18 +1,18 @@
 import { formatSYP } from "@/hooks/invoices/useInvoiceStats";
 import { Invoice } from "@/types/invoice.type";
-import { formatDate } from "@/utils/formatters";
+import { formatDate, getCustomerDisplayName } from "@/utils/formatters";
 import { motion } from "framer-motion";
 import {
   BellDot,
   Calendar,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
   Clipboard,
   CreditCard,
   FileText,
-  User,
-  ChevronDown,
-  ChevronUp
+  User
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import InvoicesActionsMenu from "./InvoicesActionsMenu";
@@ -45,7 +45,7 @@ const PaginationControls = ({
     if (totalPages <= 7) return pageNumbers;
 
     // Always show first, last, current, and pages immediately around current
-    let visiblePages = [1, totalPages];
+    const visiblePages = [1, totalPages];
 
     // Pages around current
     for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
@@ -194,8 +194,8 @@ export const HomeInvoiceTable: React.FC<HomeInvoiceTableProps> = ({
         valueB = b.invoiceType;
         break;
       case 'customer':
-        valueA = a.customer?.name || (a.relatedEmployee ? `موظف: ${a.relatedEmployee.name}` : '');
-        valueB = b.customer?.name || (b.relatedEmployee ? `موظف: ${b.relatedEmployee.name}` : '');
+        valueA = getCustomerDisplayName(a.customer, a.notes, a.relatedEmployee ? `موظف: ${a.relatedEmployee.name}` : '');
+        valueB = getCustomerDisplayName(b.customer, b.notes, b.relatedEmployee ? `موظف: ${b.relatedEmployee.name}` : '');
         break;
       case 'amount':
         valueA = a.totalAmount - a.discount;
@@ -312,7 +312,7 @@ export const HomeInvoiceTable: React.FC<HomeInvoiceTableProps> = ({
                   </td>
                   <td className="p-3 text-center text-slate-300 text-sm">{formatDate(invoice.createdAt)}</td>
                   <td className="p-3 text-center text-slate-300 text-sm">
-                    {invoice.customer ? invoice.customer.name : (invoice.relatedEmployee ? `موظف: ${invoice.relatedEmployee.name}` : "-")}
+                    {getCustomerDisplayName(invoice.customer, invoice.notes, invoice.relatedEmployee ? `موظف: ${invoice.relatedEmployee.name}` : '')}
                   </td>
                   <td className="p-3 text-center text-slate-300 text-sm">
                     {formatSYP(invoice.totalAmount - invoice.discount)}
@@ -453,7 +453,7 @@ export const HomeInvoiceTable: React.FC<HomeInvoiceTableProps> = ({
                     <div className="flex items-center gap-1 text-xs text-slate-400">
                       <User className="h-3 w-3" />
                       <span className="truncate max-w-[150px]">
-                        {invoice.customer ? invoice.customer.name : (invoice.relatedEmployee ? `موظف: ${invoice.relatedEmployee.name}` : "-")}
+                        {getCustomerDisplayName(invoice.customer, invoice.notes, invoice.relatedEmployee ? `موظف: ${invoice.relatedEmployee.name}` : '')}
                       </span>
                     </div>
                   </div>

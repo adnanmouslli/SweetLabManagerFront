@@ -4,7 +4,7 @@ import InvoicesModal from "@/components/common/InvoicesModal";
 import Navbar from "@/components/common/Navbar";
 import PageSpinner from "@/components/common/PageSpinner";
 import ShiftSummaryModal from "@/components/common/ShiftSummaryModal";
-import CompleteClosureModal from "@/components/common/CompleteClosureModal";
+import CloseShiftModal from "@/components/common/CloseShiftModal";
 import SplineBackground from "@/components/common/SplineBackground";
 import { useMokkBar } from "@/components/providers/MokkBarContext";
 import {
@@ -75,29 +75,36 @@ const Shifts = () => {
 
   const { mutate: completeClosure, isPending: isCompleteClosureLoading } = useCompleteClosure();
 
-  // State for complete closure modal
-  const [isCompleteClosureModalOpen, setIsCompleteClosureModalOpen] = useState(false);
-  const [closureShiftId, setClosureShiftId] = useState<number | null>(null);
+  // State for close shift modal (replacing complete closure modal)
+  const [isCloseShiftModalOpen, setIsCloseShiftModalOpen] = useState(false);
+  const [closeShiftId, setCloseShiftId] = useState<number | null>(null);
+  const [closeShiftType, setCloseShiftType] = useState<"صباحي" | "مسائي">("صباحي");
 
-  const handleOpenCompleteClosureModal = (shiftId: number) => {
-    setClosureShiftId(shiftId);
-    setIsCompleteClosureModalOpen(true);
-  };
-  const handleCloseCompleteClosureModal = () => {
-    setClosureShiftId(null);
-    setIsCompleteClosureModalOpen(false);
+  const handleOpenCloseShiftModal = (shiftId: number, shiftType: "morning" | "evening") => {
+    setCloseShiftId(shiftId);
+    setCloseShiftType(shiftType === "morning" ? "صباحي" : "مسائي");
+    // Fetch shift summary data
+    fetchSummary(shiftId);
+    setIsCloseShiftModalOpen(true);
   };
 
-  const handleConfirmCompleteClosure = (amount: number) => {
-    if (closureShiftId) {
-      completeClosure({ id: closureShiftId, data: { actualAmount: amount } }, {
+  const handleCloseCloseShiftModal = () => {
+    setCloseShiftId(null);
+    setCloseShiftType("صباحي");
+    setShiftSummary(null);
+    setIsCloseShiftModalOpen(false);
+  };
+
+  const handleConfirmCloseShift = ({ amount }: { amount: number }) => {
+    if (closeShiftId) {
+      completeClosure({ id: closeShiftId, data: { actualAmount: amount } }, {
         onSuccess: () => {
           setSnackbarConfig({
             open: true,
             severity: "success",
             message: "تم إنهاء الوردية بنجاح"
           });
-          handleCloseCompleteClosureModal();
+          handleCloseCloseShiftModal();
         },
         onError: () => {
           setSnackbarConfig({
@@ -225,13 +232,15 @@ const Shifts = () => {
             onClose={handleCloseInvoiceModal}
           />
         )}
-        {isCompleteClosureModalOpen && closureShiftId && (
-          <CompleteClosureModal
-            open={isCompleteClosureModalOpen}
-            onClose={handleCloseCompleteClosureModal}
-            onConfirm={handleConfirmCompleteClosure}
-            isLoading={isCompleteClosureLoading}
-            shiftId={closureShiftId}
+        {isCloseShiftModalOpen && closeShiftId && (
+          <CloseShiftModal
+            open={isCloseShiftModalOpen}
+            onClose={handleCloseCloseShiftModal}
+            onConfirm={handleConfirmCloseShift}
+            shiftType={closeShiftType}
+            shiftSummary={shiftSummary}
+            isShiftClosing={isCompleteClosureLoading}
+            shiftId={closeShiftId}
           />
         )}
       </AnimatePresence>
@@ -401,7 +410,7 @@ const Shifts = () => {
                         {/* complete closure */}
                         {shift.status === "partially_closed" && (
                           <button
-                            onClick={() => handleOpenCompleteClosureModal(shift.id)}
+                            onClick={() => handleOpenCloseShiftModal(shift.id, shift.shiftType)}
                             className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
                           >
                             <CheckCircle className="w-4 h-4" />
