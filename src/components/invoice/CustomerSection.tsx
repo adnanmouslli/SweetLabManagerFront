@@ -1,8 +1,8 @@
 import { useActiveAdvances } from "@/hooks/advances/useAdvances";
-import { useCreateCustomer, useCustomersList } from "@/hooks/customers/useCustomers";
+import { useCreateCustomer, useFetchCustomers } from "@/hooks/customers/useCustomers";
 import { useFetchCategories } from "@/hooks/customers/useCustomersCategories";
 import { Advance } from "@/types/advances.type";
-import { CreateCustomerRequest, CustomerType } from "@/types/customers.type";
+import { AllCustomerType } from "@/types/customers.type";
 import { InvoiceCategory } from "@/types/invoice.type";
 import { Loader2, Plus, Tag, User } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
@@ -14,7 +14,7 @@ import { useMokkBar } from "../providers/MokkBarContext";
 interface CustomerOption {
   value: number;
   label: string;
-  customer: CustomerType;
+  customer: AllCustomerType;
 }
 
 interface AdvanceOption {
@@ -55,10 +55,10 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
   customerId,
 }) => {
   const { setSnackbarConfig } = useMokkBar();
-  const { data: customers } = useCustomersList();
+  const { data: customers } = useFetchCustomers();
   const { data: activeAdvances } = useActiveAdvances();
   const [showAddCustomer, setShowAddCustomer] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState<CustomerType | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<AllCustomerType | null>(null);
   const [selectedAdvance, setSelectedAdvance] = useState<Advance | null>(null);
 
   const isAdvanceRepay = type === InvoiceCategory.ADVANCE && mode === "expense";
@@ -98,6 +98,13 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
   // Inside the component, add categories data
   const { data: categories } = useFetchCategories();
 
+  // Calculate total debt from debts array
+  const calculateTotalDebt = (customer: AllCustomerType): number => {
+    return customer.debts
+      .filter(debt => debt.status === "active")
+      .reduce((sum, debt) => sum + debt.remainingAmount, 0);
+  };
+
   // Format customers for react-select
   const customerOptions: CustomerOption[] = useMemo(() => {
     // Filter customers based on mode (income/expense) and other requirements
@@ -114,11 +121,12 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
 
     // Additional filtering for debt or advance repayment requirements
     if (type === InvoiceCategory.DEBT && mode === "income" && customers) {
-      filteredCustomers = filteredCustomers.filter((customer) => customer.totalDebt > 0);
+      filteredCustomers = filteredCustomers.filter((customer) => calculateTotalDebt(customer) > 0);
     }
 
     return filteredCustomers.map(customer => {
       let balanceInfo = '';
+      const totalDebt = calculateTotalDebt(customer);
 
       if (customer.customerType === "SUPPLIER") {
         // For suppliers, show supplier balance
@@ -127,8 +135,8 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
           : ' - رصيد: 0 ل.س';
       } else {
         // For customers, show debt
-        balanceInfo = customer.totalDebt > 0
-          ? ` - دين: ${customer.totalDebt} ل.س`
+        balanceInfo = totalDebt > 0
+          ? ` - دين: ${totalDebt} ل.س`
           : ' - دين: 0 ل.س';
       }
 
@@ -176,7 +184,7 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
     if (selectedOption) {
       const advance = selectedOption.advance;
       setSelectedAdvance(advance);
-      setSelectedCustomer(advance.customer as unknown as CustomerType);
+      setSelectedCustomer(advance.customer as unknown as AllCustomerType);
       setFormData((prev: any) => ({
         ...prev,
         advanceId: advance.id,
@@ -211,7 +219,7 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
       });
 
       // Set the newly created customer as selected
-      setSelectedCustomer(response as unknown as CustomerType);
+      setSelectedCustomer(response as unknown as AllCustomerType);
       setFormData((prev: any) => ({
         ...prev,
         customerId: response.id,
@@ -622,11 +630,14 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
             )
           ) : (
             // For customers, show debt
-            selectedCustomer.totalDebt > 0 && (
-              <div className="flex items-center gap-2 px-4 py-2 bg-yellow-500/10 text-yellow-400 rounded-lg hover:bg-yellow-500/20 transition-colors disabled:opacity-50 w-fit">
-                الدين الذي عليه: {selectedCustomer.totalDebt} ل.س
-              </div>
-            )
+            (() => {
+              const totalDebt = calculateTotalDebt(selectedCustomer);
+              return totalDebt > 0 && (
+                <div className="flex items-center gap-2 px-4 py-2 bg-yellow-500/10 text-yellow-400 rounded-lg hover:bg-yellow-500/20 transition-colors disabled:opacity-50 w-fit">
+                  الدين الذي عليه: {totalDebt} ل.س
+                </div>
+              );
+            })()
           )}
           {selectedAdvance && isAdvanceRepay && (
             <div className="flex items-center gap-2 px-4 py-2 bg-blue-500/10 text-blue-400 rounded-lg hover:bg-blue-500/20 transition-colors disabled:opacity-50 w-fit">

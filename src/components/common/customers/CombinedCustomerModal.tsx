@@ -57,9 +57,9 @@ const CombinedCustomerModal = ({
                     phone: customerData.phone || "",
                     categoryId: customerData.categoryId || 0,
                     notes: customerData.notes || "",
-                    customerType: customerData.customerType || CustomerTypeEnum.CUSTOMER,
+                    customerType: customerData.type || CustomerTypeEnum.CUSTOMER,
                 });
-                setCustomerType(customerData.customerType || CustomerTypeEnum.CUSTOMER);
+                setCustomerType(customerData.type || CustomerTypeEnum.CUSTOMER);
             }
             setError("");
             setSuccess(false);
@@ -138,7 +138,6 @@ const CombinedCustomerModal = ({
 
         try {
             await deleteCustomer(customerData.id);
-            console.log(`${customerData.customerType === CustomerTypeEnum.SUPPLIER ? 'Supplier' : 'Customer'} deleted successfully:`, customerData.id);
             onClose(); // Close modal on success
         } catch (err: any) {
             const errorMessage = err.message || "حدث خطأ أثناء الحذف";
