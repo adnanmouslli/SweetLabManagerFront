@@ -117,11 +117,27 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
       filteredCustomers = filteredCustomers.filter((customer) => customer.totalDebt > 0);
     }
 
-    return filteredCustomers.map(customer => ({
-      value: customer.id,
-      label: `${customer.name}${customer.phone ? ` - ${customer.phone}` : ''}`,
-      customer
-    }));
+    return filteredCustomers.map(customer => {
+      let balanceInfo = '';
+
+      if (customer.customerType === "SUPPLIER") {
+        // For suppliers, show supplier balance
+        balanceInfo = customer.supplierBalance > 0
+          ? ` - رصيد: ${customer.supplierBalance} ل.س`
+          : ' - رصيد: 0 ل.س';
+      } else {
+        // For customers, show debt
+        balanceInfo = customer.totalDebt > 0
+          ? ` - دين: ${customer.totalDebt} ل.س`
+          : ' - دين: 0 ل.س';
+      }
+
+      return {
+        value: customer.id,
+        label: `${customer.name}${customer.phone ? ` - ${customer.phone}` : ''}${balanceInfo}`,
+        customer
+      };
+    });
   }, [customers, type, mode]);
 
   // Format advances for react-select
@@ -404,7 +420,7 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
       {isCustomerPreset ? (
         // Display selected customer info when customerId is preset
         <div className="bg-slate-800/50 text-slate-200 rounded-lg border border-slate-700/50 py-3 px-4">
-          {selectedCustomer?.name || "العميل المحدد"}
+          {selectedCustomer?.name || (mode === "income" ? "العميل المحدد" : "المورد المحدد")}
         </div>
       ) : (
         // React-select for customer selection
@@ -597,10 +613,20 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
       {/* Customer information display */}
       {selectedCustomer && (
         <>
-          {selectedCustomer.totalDebt > 0 && (
-            <div className="flex items-center gap-2 px-4 py-2 bg-yellow-500/10 text-yellow-400 rounded-lg hover:bg-yellow-500/20 transition-colors disabled:opacity-50 w-fit">
-              {mode === "income" ? "الدين الذي عليه" : "الرصيد المستحق له"} {selectedCustomer.totalDebt} ليرة
-            </div>
+          {selectedCustomer.customerType === "SUPPLIER" ? (
+            // For suppliers, show supplier balance
+            selectedCustomer.supplierBalance > 0 && (
+              <div className="flex items-center gap-2 px-4 py-2 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20 transition-colors disabled:opacity-50 w-fit">
+                الرصيد المستحق للمورد: {selectedCustomer.supplierBalance} ل.س
+              </div>
+            )
+          ) : (
+            // For customers, show debt
+            selectedCustomer.totalDebt > 0 && (
+              <div className="flex items-center gap-2 px-4 py-2 bg-yellow-500/10 text-yellow-400 rounded-lg hover:bg-yellow-500/20 transition-colors disabled:opacity-50 w-fit">
+                الدين الذي عليه: {selectedCustomer.totalDebt} ل.س
+              </div>
+            )
           )}
           {selectedAdvance && isAdvanceRepay && (
             <div className="flex items-center gap-2 px-4 py-2 bg-blue-500/10 text-blue-400 rounded-lg hover:bg-blue-500/20 transition-colors disabled:opacity-50 w-fit">

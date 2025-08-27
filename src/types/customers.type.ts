@@ -256,6 +256,7 @@ export interface CustomerType {
   totalDebt: number;
   category: CustomerCategory | null;
   customerType: CustomerTypeEnum;
+  supplierBalance: number;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   activeAdvances: any;
 }
