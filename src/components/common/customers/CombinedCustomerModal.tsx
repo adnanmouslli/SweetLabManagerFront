@@ -57,9 +57,9 @@ const CombinedCustomerModal = ({
                     phone: customerData.phone || "",
                     categoryId: customerData.categoryId || 0,
                     notes: customerData.notes || "",
-                    customerType: customerData.type || CustomerTypeEnum.CUSTOMER,
+                    customerType: customerData.customerType || CustomerTypeEnum.CUSTOMER,
                 });
-                setCustomerType(customerData.type || CustomerTypeEnum.CUSTOMER);
+                setCustomerType(customerData.customerType || CustomerTypeEnum.CUSTOMER);
             }
             setError("");
             setSuccess(false);
