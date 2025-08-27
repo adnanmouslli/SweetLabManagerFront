@@ -17,6 +17,7 @@ const SupplierPaymentModal: React.FC<SupplierPaymentModalProps> = ({
 }) => {
     const [amount, setAmount] = useState<string>(supplier.supplierBalance.toString());
     const [notes, setNotes] = useState<string>("");
+    const [fundId, setFundId] = useState<number>(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showConfirmation, setShowConfirmation] = useState(false);
 
@@ -49,8 +50,9 @@ const SupplierPaymentModal: React.FC<SupplierPaymentModalProps> = ({
         try {
             await paySupplierDues.mutateAsync({
                 supplierId: supplier.id,
-                amount: parseFloat(amount),
+                paymentAmount: parseFloat(amount),
                 notes: notes || undefined,
+                fundId: fundId,
             });
 
             // Close modal after successful payment
@@ -75,6 +77,7 @@ const SupplierPaymentModal: React.FC<SupplierPaymentModalProps> = ({
             onClose();
             setAmount("");
             setNotes("");
+            setFundId(1);
             setShowConfirmation(false);
         }
     };
@@ -210,6 +213,23 @@ const SupplierPaymentModal: React.FC<SupplierPaymentModalProps> = ({
                                     className="w-full px-2.5 py-1.5 border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none text-sm bg-slate-700 text-white placeholder-slate-400"
                                     disabled={isSubmitting}
                                 />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                                    الصندوق
+                                </label>
+                                <select
+                                    value={fundId}
+                                    onChange={(e) => setFundId(parseInt(e.target.value))}
+                                    className="w-full px-2.5 py-1.5 border border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm bg-slate-700 text-white"
+                                    disabled={isSubmitting}
+                                >
+                                    <option value={1}>الصندوق الرئيسي</option>
+                                    <option value={2}>الصندوق العام</option>
+                                    <option value={3}>صندوق الكشك</option>
+                                    <option value={4}>صندوق الجامعة</option>
+                                </select>
                             </div>
 
                             {/* Submit Button */}

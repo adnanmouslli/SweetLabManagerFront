@@ -1,22 +1,5 @@
 import { apiClient } from "@/utils/axios";
-import { AllCustomerType, CreateCustomerRequest, UpdateCustomerRequest } from "@/types/customers.type";
-
-export interface SupplierPaymentRequest {
-  amount: number;
-  notes?: string;
-}
-
-export interface SupplierPaymentResponse {
-  success: boolean;
-  message: string;
-  paymentId: number;
-  newBalance: number;
-}
-
-export interface SupplierBalanceResponse {
-  balance: number;
-  currency: string;
-}
+import { AllCustomerType, CreateCustomerRequest, UpdateCustomerRequest, SupplierPaymentRequest, SupplierPaymentResponse, SupplierBalanceResponse } from "@/types/customers.type";
 
 export class CustomersService {
   // Get all customers

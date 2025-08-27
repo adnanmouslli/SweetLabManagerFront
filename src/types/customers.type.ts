@@ -338,8 +338,9 @@ export interface DeleteCustomerCategoryResponse {
 
 // Supplier Payment Types
 export interface SupplierPaymentRequest {
-  amount: number;
+  paymentAmount: number;
   notes?: string;
+  fundId: number;
 }
 
 export interface SupplierPaymentResponse {

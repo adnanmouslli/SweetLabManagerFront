@@ -319,12 +319,12 @@ export const usePaySupplierDues = () => {
   return useMutation<
     SupplierPaymentResponse,
     Error,
-    { supplierId: number; amount: number; notes?: string }
+    { supplierId: number; paymentAmount: number; notes?: string; fundId: number }
   >({
-    mutationFn: async ({ supplierId, amount, notes }) => {
+    mutationFn: async ({ supplierId, paymentAmount, notes, fundId }) => {
       const response = await apiClient.post<SupplierPaymentResponse>(
         `/customers/${supplierId}/supplier-payment`,
-        { amount, notes }
+        { paymentAmount, notes, fundId }
       );
       return response;
     },
