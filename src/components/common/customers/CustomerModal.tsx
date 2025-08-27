@@ -4,7 +4,7 @@ import {
   useDeleteCustomer,
   useUpdateCustomer,
 } from "@/hooks/customers/useCustomers";
-import { AllCustomerType, CreateCustomerRequest } from "@/types/customers.type";
+import { AllCustomerType, CreateCustomerRequest, CustomerTypeEnum } from "@/types/customers.type";
 import { CustomerCategory } from "@/types/customerCategories.types";
 import { AnimatePresence, motion } from "framer-motion";
 import { AlertTriangle, CheckCircle, Loader2, Tag, X } from "lucide-react";
@@ -46,7 +46,7 @@ const CustomerModal: React.FC<CustomerModalProps> = ({
       phone: "",
       notes: "",
       categoryId: null,
-      customerType: "CUSTOMER", // Always set customer type for customers
+      customerType: CustomerTypeEnum.CUSTOMER, // Always set customer type for customers
     },
     // Add mode-specific validation
     context: { isCreateMode: mode === "create" }
@@ -71,14 +71,14 @@ const CustomerModal: React.FC<CustomerModalProps> = ({
         setValue("phone", customerData.phone || "");
         setValue("notes", customerData.notes || "");
         setValue("categoryId", customerData.categoryId);
-        setValue("customerType", customerData.customerType || "CUSTOMER"); // Ensure customer type is set
+        setValue("customerType", customerData.customerType || CustomerTypeEnum.CUSTOMER); // Ensure customer type is set
       } else if (mode === "create") {
         reset({
           name: "",
           phone: "",
           notes: "",
           categoryId: null,
-          customerType: "CUSTOMER", // Always ensure customer type is set
+          customerType: CustomerTypeEnum.CUSTOMER, // Always ensure customer type is set
         });
       }
     }
@@ -94,7 +94,7 @@ const CustomerModal: React.FC<CustomerModalProps> = ({
       // Ensure customerType is always included
       const requestData = {
         ...data,
-        customerType: "CUSTOMER", // Always ensure this is set for customers
+        customerType: CustomerTypeEnum.CUSTOMER, // Always ensure this is set for customers
       };
 
       if (mode === "create") {

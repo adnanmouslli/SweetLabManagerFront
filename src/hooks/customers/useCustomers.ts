@@ -86,7 +86,11 @@ export const useCustomerCategories = () => {
       const response = await apiClient.get<GetCustomerCategoriesResponse>(
         "/customers/categories"
       );
-      return response.categories;
+      // Map the response to match the expected CustomerCategory type
+      return response.categories.map(category => ({
+        ...category,
+        description: category.description ?? null // Convert undefined to null
+      }));
     },
   });
 };

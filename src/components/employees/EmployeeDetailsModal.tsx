@@ -137,8 +137,8 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
                 </h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-green-500/10 p-3 rounded-lg border border-green-500/20">
-                    <div className="text-xs text-green-300 mb-1">إجمالي الأرباح</div>
-                    <div className="text-lg font-bold text-green-400">{formatCurrency(employeeDetails.financialSummary.totalEarnings)} ل.س</div>
+                    <div className="text-xs text-green-300 mb-1">إجمالي الرواتب</div>
+                    <div className="text-lg font-bold text-green-400">{formatCurrency(employeeDetails.financialSummary.totalSalaries)} ل.س</div>
                   </div>
                   <div className="bg-red-500/10 p-3 rounded-lg border border-red-500/20">
                     <div className="text-xs text-red-300 mb-1">إجمالي السحوبات</div>
@@ -150,7 +150,7 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
                   </div>
                   <div className="bg-blue-500/10 p-3 rounded-lg border border-blue-500/20">
                     <div className="text-xs text-blue-300 mb-1">الصافي</div>
-                    <div className="text-lg font-bold text-blue-400">{formatCurrency(employeeDetails.financialSummary.netAmount)} ل.س</div>
+                    <div className="text-lg font-bold text-blue-400">{formatCurrency(employeeDetails.financialSummary.totalSalaries - employeeDetails.financialSummary.totalWithdrawals)} ل.س</div>
                   </div>
                 </div>
               </div>

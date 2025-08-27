@@ -42,7 +42,7 @@ export const formatDate = (dateString: string | Date | null) => {
  * @returns The customer name or extracted name from notes or fallback
  */
 export const getCustomerDisplayName = (
-  customer: { name: string } | null,
+  customer: { name: string } | null | undefined,
   notes: string | null | undefined,
   fallback: string = "-"
 ): string => {

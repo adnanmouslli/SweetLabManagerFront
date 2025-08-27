@@ -2,7 +2,7 @@ import { useActiveAdvances } from "@/hooks/advances/useAdvances";
 import { useCreateCustomer, useFetchCustomers } from "@/hooks/customers/useCustomers";
 import { useFetchCategories } from "@/hooks/customers/useCustomersCategories";
 import { Advance } from "@/types/advances.type";
-import { AllCustomerType } from "@/types/customers.type";
+import { AllCustomerType, CustomerTypeEnum } from "@/types/customers.type";
 import { InvoiceCategory } from "@/types/invoice.type";
 import { Loader2, Plus, Tag, User } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
@@ -36,7 +36,7 @@ interface CustomerFormData {
   phone: string;
   notes: string;
   categoryId: number;
-  customerType: "CUSTOMER" | "SUPPLIER";
+  customerType: CustomerTypeEnum;
 }
 
 interface CustomerSectionProps {
@@ -72,7 +72,7 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
       phone: "",
       notes: "",
       categoryId: 0,
-      customerType: mode === "income" ? "CUSTOMER" : "SUPPLIER"
+      customerType: mode === "income" ? CustomerTypeEnum.CUSTOMER : CustomerTypeEnum.SUPPLIER
     }
   });
 
@@ -113,10 +113,10 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
     // Filter by customer type based on invoice mode
     if (mode === "income") {
       // For income invoices, only show customers (not suppliers)
-      filteredCustomers = filteredCustomers.filter((customer) => customer.customerType === "CUSTOMER");
+      filteredCustomers = filteredCustomers.filter((customer) => customer.customerType === CustomerTypeEnum.CUSTOMER);
     } else if (mode === "expense") {
       // For expense invoices, only show suppliers
-      filteredCustomers = filteredCustomers.filter((customer) => customer.customerType === "SUPPLIER");
+      filteredCustomers = filteredCustomers.filter((customer) => customer.customerType === CustomerTypeEnum.SUPPLIER);
     }
 
     // Additional filtering for debt or advance repayment requirements
@@ -128,7 +128,7 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
       let balanceInfo = '';
       const totalDebt = calculateTotalDebt(customer);
 
-      if (customer.customerType === "SUPPLIER") {
+      if (customer.customerType === CustomerTypeEnum.SUPPLIER) {
         // For suppliers, show supplier balance
         balanceInfo = customer.supplierBalance > 0
           ? ` - رصيد: ${customer.supplierBalance} ل.س`
@@ -428,7 +428,7 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
       {isCustomerPreset ? (
         // Display selected customer info when customerId is preset
         <div className="bg-slate-800/50 text-slate-200 rounded-lg border border-slate-700/50 py-3 px-4">
-          {selectedCustomer?.name || (mode === "income" ? "العميل المحدد" : "المورد المحدد")}
+          {selectedCustomer?.name || ((mode as string) === "income" ? "العميل المحدد" : "المورد المحدد")}
         </div>
       ) : (
         // React-select for customer selection
@@ -490,7 +490,7 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
               </h3>
 
               {/* Hidden customerType field */}
-              <input type="hidden" name="customerType" value={mode === "income" ? "CUSTOMER" : "SUPPLIER"} />
+              <input type="hidden" name="customerType" value={mode === "income" ? CustomerTypeEnum.CUSTOMER : CustomerTypeEnum.SUPPLIER} />
 
               {/* Name Field */}
               <div className="space-y-2">

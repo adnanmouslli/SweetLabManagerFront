@@ -38,8 +38,8 @@ const Shifts = () => {
     "all"
   );
   const [selectedShift, setSelectedShift] = useState<number | null>(null);
-  const [shiftSummary, setShiftSummary] = useState<ShiftSummaryData | null>(
-    null
+  const [shiftSummary, setShiftSummary] = useState<ShiftSummaryData | undefined>(
+    undefined
   );
 
   // State for invoice modals
@@ -91,7 +91,7 @@ const Shifts = () => {
   const handleCloseCloseShiftModal = () => {
     setCloseShiftId(null);
     setCloseShiftType("صباحي");
-    setShiftSummary(null);
+    setShiftSummary(undefined);
     setIsCloseShiftModalOpen(false);
   };
 
@@ -218,10 +218,10 @@ const Shifts = () => {
         {selectedShift && (
           <ShiftSummaryModal
             shiftId={selectedShift}
-            summary={shiftSummary || undefined}
+            summary={shiftSummary}
             onClose={() => {
               setSelectedShift(null);
-              setShiftSummary(null);
+              setShiftSummary(undefined);
             }}
           />
         )}
