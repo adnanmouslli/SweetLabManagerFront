@@ -296,18 +296,18 @@ export const InvoiceTable = ({
               <span>تحويل إلى دين</span>
             </button>
 
-            {invoiceType === "income" && onConvertToBreak && (
-              <button
-                onClick={() => {
-                  onConvertToBreak(actionInvoice);
-                  setActionInvoice(null);
-                }}
-                className="flex w-full items-center gap-2 p-3 rounded-lg text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 transition-colors text-sm text-right"
-              >
-                <FileX className="h-4 w-4" />
-                <span>تحويل إلى كسر</span>
-              </button>
-            )}
+            {invoiceType === "income" && onConvertToBreak && !actionInvoice.isBreak && (
+            <button
+              onClick={() => {
+                onConvertToBreak(actionInvoice);
+                setActionInvoice(null);
+              }}
+              className="flex w-full items-center gap-2 p-3 rounded-lg text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 transition-colors text-sm text-right"
+            >
+              <FileX className="h-4 w-4" />
+              <span>تحويل إلى كسر</span>
+            </button>
+          )}
 
             <button
               onClick={() => {

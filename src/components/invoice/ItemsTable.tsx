@@ -24,7 +24,7 @@ const ItemsTable: React.FC<ItemsTableProps> = ({ formItems, removeItem }) => {
             <th className="text-right text-slate-200 p-3">
               معامل التحويل
             </th>
-            <th className="text-right text-slate-200 p-3">سعر الانتاج</th>
+            {/* <th className="text-right text-slate-200 p-3">سعر الانتاج</th> */}
             <th className="text-right text-slate-200 p-3">المجموع</th>
             <th className="text-right text-slate-200 p-3"></th>
           </tr>
@@ -37,7 +37,7 @@ const ItemsTable: React.FC<ItemsTableProps> = ({ formItems, removeItem }) => {
               <td className="p-3 text-slate-300">{item.unit}</td>
               <td className="p-3 text-slate-300">{item.unitPrice.toFixed(2)}</td>
               <td className="p-3 text-slate-300">{item.factor}</td>
-              <td className="p-3 text-slate-300">{(item.productionRate ?? 0).toFixed(2)}</td>
+              {/* <td className="p-3 text-slate-300">{(item.productionRate ?? 0).toFixed(2)}</td> */}
               <td className="p-3 text-slate-300">{item.subTotal.toFixed(2)}</td>
               <td className="p-3">
                 <button

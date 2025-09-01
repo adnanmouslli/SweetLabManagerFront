@@ -22,9 +22,9 @@ const CancelOrderDialog: React.FC<CancelOrderDialogProps> = ({
     const [reason, setReason] = useState('');
 
     const handleConfirm = () => {
-        if (reason.trim()) {
-            onConfirm(reason.trim());
-        }
+        // إذا لم يتم إدخال سبب، نرسل سبب فارغ
+        const finalReason = reason.trim() || '';
+        onConfirm(finalReason);
     };
 
     const handleClose = () => {
@@ -73,13 +73,13 @@ const CancelOrderDialog: React.FC<CancelOrderDialogProps> = ({
 
                     <div className="space-y-2">
                         <label className="block text-slate-200 font-medium">
-                            سبب الإلغاء <span className="text-red-500">*</span>
+                            سبب الإلغاء <span className="text-slate-400 text-sm">(اختياري)</span>
                         </label>
                         <textarea
                             value={reason}
                             onChange={(e) => setReason(e.target.value)}
                             className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500/30 min-h-[100px] resize-none"
-                            placeholder="أدخل سبب إلغاء الطلب..."
+                            placeholder="أدخل سبب إلغاء الطلب (اختياري)..."
                             dir="rtl"
                         />
                     </div>
@@ -96,7 +96,7 @@ const CancelOrderDialog: React.FC<CancelOrderDialogProps> = ({
                         <button
                             type="button"
                             onClick={handleConfirm}
-                            disabled={!reason.trim() || isCancelling}
+                            disabled={isCancelling}
                             className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors disabled:opacity-50 flex items-center gap-2"
                         >
                             {isCancelling ? (

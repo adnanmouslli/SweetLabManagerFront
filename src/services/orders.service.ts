@@ -95,7 +95,7 @@ export class OrdersService {
     };
 
     static cancelOrder = async (orderId: number, reason: string): Promise<OrderResponseDto> => {
-        const response = await apiClient.post<OrderResponseDto>(`/orders/${orderId}/cancel`, { reason });
+        const response = await apiClient.patch<OrderResponseDto>(`/orders/${orderId}/cancel`, { reason });
         return response;
     };
 
