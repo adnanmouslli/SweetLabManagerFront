@@ -15,22 +15,6 @@ services:
     networks:
       - app-network
 
-  nginx:
-    image: nginx:alpine
-    container_name: nginx
-    restart: unless-stopped
-    ports:
-      - "8080:80"
-      - "443:443"
-    volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d
-      - ./nginx/logs:/var/log/nginx
-      - /etc/letsencrypt:/etc/letsencrypt
-    depends_on:
-      - sweet-lab
-    networks:
-      - app-network
-
 networks:
   app-network:
     driver: bridge
