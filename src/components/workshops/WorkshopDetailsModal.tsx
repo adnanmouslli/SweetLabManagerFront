@@ -708,6 +708,84 @@ const WorkshopDetailsModal: React.FC<WorkshopDetailsModalProps> = ({ workshop, p
               </div>
             )}
 
+            {/* Activity Details Summary */}
+            {workshop.settlements && workshop.settlements.length > 0 && (
+              <div className="space-y-3">
+                <h4 className="text-sm text-slate-400 font-medium">تفاصيل الأنشطة المالية</h4>
+                <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-slate-700/50">
+                        <tr>
+                          <th className="text-right text-slate-300 p-4 font-medium">تاريخ المحاسبة</th>
+                          <th className="text-right text-slate-300 p-4 font-medium">الدخل</th>
+                          <th className="text-right text-slate-300 p-4 font-medium">السحب الكلي</th>
+                          <th className="text-right text-slate-300 p-4 font-medium">المبلغ المستحق</th>
+                          <th className="text-right text-slate-300 p-4 font-medium">المبلغ المأخوذ</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {workshop.settlements.map((settlement, index) => {
+                          if (!settlement || !settlement.id) return null;
+
+                          // Calculate total withdrawals for this settlement period
+                          const settlementDate = new Date(settlement.date);
+                          const totalWithdrawals = workshop.employees?.reduce((total, employee) => {
+                            const employeeWithdrawals = employee.withdrawals?.filter(withdrawal => {
+                              const withdrawalDate = new Date(withdrawal.createdAt);
+                              return withdrawalDate <= settlementDate;
+                            }).reduce((sum, withdrawal) => sum + withdrawal.amount, 0) || 0;
+                            return total + employeeWithdrawals;
+                          }, 0) || 0;
+
+                          // Calculate total earnings (production or hours)
+                          const totalEarnings = workshop.workType === WorkType.PRODUCTION
+                            ? workshop.productionRecords?.filter(record => new Date(record.date) <= settlementDate)
+                              .reduce((sum, record) => sum + record.totalProduction, 0) || 0
+                            : workshop.hourRecords?.filter(record => new Date(record.date) <= settlementDate)
+                              .reduce((sum, record) => sum + record.totalAmount, 0) || 0;
+
+                          return (
+                            <motion.tr
+                              key={`activity-detail-${settlement.id}-${index}`}
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: index * 0.1 }}
+                              className="border-t border-slate-600/30 hover:bg-slate-700/20 transition-colors"
+                            >
+                              <td className="p-4 text-slate-200">
+                                {formatDate(settlement.date)}
+                              </td>
+                              <td className="p-4 text-slate-200">
+                                <span className="text-green-400 font-medium">
+                                  {formatCurrency(totalEarnings)}
+                                </span>
+                              </td>
+                              <td className="p-4 text-slate-200">
+                                <span className="text-red-400 font-medium">
+                                  {formatCurrency(totalWithdrawals)}
+                                </span>
+                              </td>
+                              <td className="p-4 text-slate-200">
+                                <span className="text-blue-400 font-medium">
+                                  {formatCurrency(settlement.amount)}
+                                </span>
+                              </td>
+                              <td className="p-4 text-slate-200">
+                                <span className="text-emerald-400 font-medium">
+                                  {formatCurrency(settlement.paidAmount)}
+                                </span>
+                              </td>
+                            </motion.tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+
           </div>
         );
 

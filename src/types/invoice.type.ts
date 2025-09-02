@@ -32,6 +32,8 @@ export interface Invoice {
   };
   totalAmount: number;
   discount: number;
+  additionalAmount?: number;
+  supplierPaymentAmount?: number;
   paidStatus: boolean;
   paymentDate: string | null;
   createdAt: string;
@@ -56,6 +58,7 @@ export interface InvoiceItem {
   id: number;
   quantity: number;
   unitPrice: number;
+  unit?: string;
   invoiceId: number;
   itemId: number;
   item: Item;
@@ -67,6 +70,7 @@ export interface Item {
   type: "raw" | "production";
   unit?: string;
   price?: number;
+  defaultUnit?: string;
   description: string;
   groupId: number;
 }

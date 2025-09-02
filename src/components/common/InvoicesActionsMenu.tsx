@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Edit, Eye, FileText, Trash, DollarSign, FileX } from "lucide-react";
+import { createPortal } from "react-dom";
+import { Edit, Eye, FileText, Trash, DollarSign, FileX, Package } from "lucide-react";
 import { Invoice } from "@/types/invoice.type";
 import BreakageConversionModal from "@/components/common/invoices/BreakageConversionModal";
+import InvoiceTemplateModal from "@/components/common/InvoiceTemplateModal";
 import { useMarkInvoiceAsBreak } from "@/hooks/invoices/useInvoice";
 import { useMokkBar } from "@/components/providers/MokkBarContext";
 import { useMarkInvoiceAsPaid } from "@/hooks/invoices/useInvoice"; // New hook for marking as paid
@@ -21,24 +23,50 @@ const InvoicesActionsMenu: React.FC<InvoicesActionsMenuProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isBreakageModalOpen, setIsBreakageModalOpen] = useState(false);
+  const [isInvoiceTemplateOpen, setIsInvoiceTemplateOpen] = useState(false);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
   const menuRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const markAsBreak = useMarkInvoiceAsBreak();
   const markAsPaid = useMarkInvoiceAsPaid(); // New hook
   const { setSnackbarConfig } = useMokkBar();
 
-  // Handle clicks outside the menu to close it
+  // Calculate menu position
+  const updateMenuPosition = () => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setMenuPosition({
+        top: rect.bottom + 4,
+        left: rect.left - 80, // Adjust based on menu width
+      });
+    }
+  };
+
+  // Handle clicks outside the menu to close it and update position on scroll
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node) &&
+        buttonRef.current && !buttonRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
 
+    const handleScroll = () => {
+      if (isOpen) {
+        updateMenuPosition();
+      }
+    };
+
     document.addEventListener("mousedown", handleClickOutside);
+    window.addEventListener("scroll", handleScroll, true);
+    window.addEventListener("resize", handleScroll);
+
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("scroll", handleScroll, true);
+      window.removeEventListener("resize", handleScroll);
     };
-  }, [menuRef]);
+  }, [menuRef, buttonRef, isOpen]);
 
   const handleActionClick = (action: (invoice: Invoice) => void) => {
     action(invoice);
@@ -91,23 +119,28 @@ const InvoicesActionsMenu: React.FC<InvoicesActionsMenuProps> = ({
   };
 
   return (
-    <div className="relative" ref={menuRef}>
+    <div className="relative">
       <button
+        ref={buttonRef}
         className="text-blue-400 hover:text-blue-300 transition-colors p-1 rounded-full hover:bg-slate-700/50"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          updateMenuPosition();
+          setIsOpen(!isOpen);
+        }}
         aria-label="Actions menu"
         aria-expanded={isOpen}
       >
         <Eye className="h-5 w-5" />
       </button>
 
-      {isOpen && (
+      {isOpen && createPortal(
         <div
-          className="absolute z-30 bg-slate-800 border border-slate-700 rounded-lg shadow-xl py-2 px-1 
-                      w-24 md:w-20
-                      left-1/2 transform -translate-x-1/2 
-                      md:left-0 md:transform-none md:-translate-x-0
-                      top-full mt-1 md:top-0 md:-translate-y-2"
+          ref={menuRef}
+          className="fixed z-[9999] bg-slate-800 border border-slate-700 rounded-lg shadow-xl py-2 px-1 w-24"
+          style={{
+            top: `${menuPosition.top}px`,
+            left: `${menuPosition.left}px`,
+          }}
         >
           <div className="flex flex-col gap-2">
             <button
@@ -117,6 +150,19 @@ const InvoicesActionsMenu: React.FC<InvoicesActionsMenuProps> = ({
               <FileText className="h-4 w-4" />
               عرض
             </button>
+            {/* Show items button only if invoice has items */}
+            {invoice.items && invoice.items.length > 0 && (
+              <button
+                onClick={() => {
+                  setIsInvoiceTemplateOpen(true);
+                  setIsOpen(false);
+                }}
+                className="text-purple-400 hover:text-purple-300 transition-colors flex items-center gap-1 text-sm px-2 py-1 rounded-md hover:bg-slate-700/50 w-full justify-start"
+              >
+                <Package className="h-4 w-4" />
+                العناصر
+              </button>
+            )}
             <button
               onClick={() => handleActionClick(onEditInvoice)}
               className="text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1 text-sm px-2 py-1 rounded-md hover:bg-slate-700/50 w-full justify-start"
@@ -161,7 +207,8 @@ const InvoicesActionsMenu: React.FC<InvoicesActionsMenuProps> = ({
               </button>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Breakage Conversion Modal */}
@@ -171,6 +218,15 @@ const InvoicesActionsMenu: React.FC<InvoicesActionsMenuProps> = ({
           onClose={() => setIsBreakageModalOpen(false)}
           onConfirm={handleConfirmBreakConversion}
           isProcessing={markAsBreak.isPending}
+        />
+      )}
+
+      {/* Invoice Template Modal */}
+      {isInvoiceTemplateOpen && (
+        <InvoiceTemplateModal
+          isOpen={isInvoiceTemplateOpen}
+          onClose={() => setIsInvoiceTemplateOpen(false)}
+          invoice={invoice}
         />
       )}
     </div>

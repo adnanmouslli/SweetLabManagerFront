@@ -22,6 +22,7 @@ import {
   Wallet,
   Warehouse,
   X,
+  FileText,
 } from "lucide-react";
 
 import { useEffect, useState, useRef } from "react";
@@ -206,6 +207,12 @@ const Navbar = () => {
           roles: [Role.ADMIN, Role.MANAGER, Role.TreasuryManager],
         },
       ],
+    },
+    {
+      name: "التقارير",
+      icon: FileText,
+      href: "/reports",
+      roles: [Role.ADMIN, Role.MANAGER, Role.TreasuryManager], // Only Admin, Manager, and TreasuryManager can access reports
     },
     {
       name: "إدارة",
