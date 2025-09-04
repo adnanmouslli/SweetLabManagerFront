@@ -1,3 +1,4 @@
+import React from "react";
 import { motion } from "framer-motion";
 import {
   X,
@@ -9,7 +10,10 @@ import {
   ChevronUp,
   ChevronLeft,
   ChevronRight,
-  BellDot
+  BellDot,
+  Package,
+  Plus,
+  Minus
 } from "lucide-react";
 import { formatDate, getCustomerDisplayName } from "@/utils/formatters";
 import { ShiftsInvoices } from "@/types/shifts.type";
@@ -94,7 +98,7 @@ const ActionsMenu = ({
               onDelete(invoice);
               setIsOpen(false);
             }}
-            className="flex w-full items-center gap-2 px-3 py-2 text-sm text-white hover:bg-white/10 rounded-md transition-colors text-right text-red-400"
+            className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-white/10 rounded-md transition-colors text-right"
           >
             <Trash2 className="h-4 w-4" />
             <span>حذف</span>
@@ -222,6 +226,75 @@ const SortableHeader = ({
   );
 };
 
+// Component to display invoice items
+const InvoiceItemsRow = ({ invoice, isExpanded }: { invoice: any, isExpanded: boolean }) => {
+  // Check if invoice has items
+  const hasItems = (invoice: any) => {
+    return invoice.items && invoice.items.length > 0;
+  };
+
+  if (!isExpanded || !hasItems(invoice)) return null;
+
+  return (
+    <motion.tr
+      initial={{ opacity: 0, height: 0 }}
+      animate={{ opacity: 1, height: "auto" }}
+      exit={{ opacity: 0, height: 0 }}
+      className="bg-slate-700/30 border-b border-white/5"
+    >
+      <td colSpan={8} className="p-0">
+        <div className="p-4 bg-slate-700/20">
+          <div className="flex items-center gap-2 mb-3">
+            <Package className="h-4 w-4 text-blue-400" />
+            <span className="text-sm font-medium text-blue-400">أصناف الفاتورة</span>
+            <span className="text-xs text-gray-400">({invoice.items.length} صنف)</span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-white/10">
+                  <th className="text-right py-2 px-3 text-gray-400 font-medium">المنتج</th>
+                  <th className="text-right py-2 px-3 text-gray-400 font-medium">الكمية</th>
+                  <th className="text-right py-2 px-3 text-gray-400 font-medium">سعر الوحدة</th>
+                  <th className="text-right py-2 px-3 text-gray-400 font-medium">الوحدة</th>
+                  <th className="text-right py-2 px-3 text-gray-400 font-medium">المجموع الفرعي</th>
+                </tr>
+              </thead>
+              <tbody>
+                {invoice.items.map((item: any, index: number) => {
+
+                  console.log("item => ", item);
+
+                  return (
+                    <tr key={item.id || index} className="border-b border-white/5 hover:bg-white/5">
+                      <td className="py-2 px-3 text-white">{item.title}</td>
+                      <td className="py-2 px-3 text-white">{item.quantity}</td>
+                      <td className="py-2 px-3 text-white">{item.unitPrice.toLocaleString()} ليرة</td>
+                      <td className="py-2 px-3 text-white">{item.unit || "-"}</td>
+                      <td className="py-2 px-3 text-white font-medium">{item.subTotal.toLocaleString()} ليرة</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+              <tfoot>
+                <tr className="border-t border-white/10 bg-slate-600/20">
+                  <td colSpan={4} className="py-2 px-3 text-right text-gray-300 font-medium">
+                    المجموع الكلي:
+                  </td>
+                  <td className="py-2 px-3 text-white font-bold">
+                    {invoice.totalAmount.toLocaleString()} ليرة
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </td>
+    </motion.tr>
+  );
+};
+
 const InvoicesModal = ({
   type,
   data,
@@ -241,6 +314,7 @@ const InvoicesModal = ({
   const [selectedInvoiceForEdit, setSelectedInvoiceForEdit] = useState<any | null>(null);
   const [selectedInvoiceForDelete, setSelectedInvoiceForDelete] = useState<any | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
 
   // Check for mobile view
   useEffect(() => {
@@ -310,6 +384,23 @@ const InvoicesModal = ({
     }
   };
 
+  // Handle row expansion
+  const toggleRowExpansion = (invoiceId: number) => {
+    setExpandedRows(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(invoiceId)) {
+        newSet.delete(invoiceId);
+      } else {
+        newSet.add(invoiceId);
+      }
+      return newSet;
+    });
+  };
+
+  // Check if invoice has items
+  const hasItems = (invoice: any) => {
+    return invoice.items && invoice.items.length > 0;
+  };
 
   const getTitle = () => {
     switch (type) {
@@ -592,72 +683,99 @@ const InvoicesModal = ({
                       </tr>
                     </thead>
                     <tbody>
-                      {paginatedInvoices.map((invoice) => (
-                        <tr
-                          key={invoice.id}
-                          className={`border-b border-white/5 hover:bg-white/5 transition-colors ${invoice.invoiceType === "expense"
-                            ? "bg-red-500/5"
-                            : "bg-emerald-500/5"
-                            }`}
-                        >
-                          <td className="py-3 px-4 text-white">
-                            <div className="flex items-center">
-                              #{invoice.id}
-                              {hasNotes(invoice) && (
-                                <div className="mx-2 text-red-500" title="يحتوي على ملاحظات">
-                                  <BellDot className="h-4 w-4" />
+                      {paginatedInvoices.map((invoice) => {
+                        const isExpanded = expandedRows.has(invoice.id);
+                        const hasInvoiceItems = hasItems(invoice);
+
+                        return (
+                          <React.Fragment key={invoice.id}>
+                            <tr
+                              className={`border-b border-white/5 hover:bg-white/5 transition-colors ${invoice.invoiceType === "expense"
+                                ? "bg-red-500/5"
+                                : "bg-emerald-500/5"
+                                }`}
+                            >
+                              <td className="py-3 px-4 text-white">
+                                <div className="flex items-center gap-2">
+                                  {hasInvoiceItems && (
+                                    <button
+                                      onClick={() => toggleRowExpansion(invoice.id)}
+                                      className="p-1 rounded hover:bg-white/10 transition-colors"
+                                      title={isExpanded ? "إخفاء الأصناف" : "عرض الأصناف"}
+                                    >
+                                      {isExpanded ? (
+                                        <Minus className="h-4 w-4 text-blue-400" />
+                                      ) : (
+                                        <Plus className="h-4 w-4 text-blue-400" />
+                                      )}
+                                    </button>
+                                  )}
+                                  <div className="flex items-center">
+                                    #{invoice.id}
+                                    {hasNotes(invoice) && (
+                                      <div className="mx-2 text-red-500" title="يحتوي على ملاحظات">
+                                        <BellDot className="h-4 w-4" />
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
-                              )}
-                            </div>
-                          </td>
-                          <td className="py-3 px-4 text-white">
-                            {getCustomerDisplayName(invoice.customer, invoice.notes)}
-                          </td>
-                          <td className="py-3 px-4 text-white">
-                            {formatDate(invoice.createdAt)}
-                          </td>
-                          <td className="py-3 px-4 text-white">
-                            {invoice.totalAmount.toLocaleString()} ليرة
-                          </td>
-                          <td className="py-3 px-4 text-white max-w-40 truncate" title={invoice.notes || ''}>
-                            {invoice.notes || "-"}
-                          </td>
-                          <td className="py-3 px-4">
-                            <span
-                              className={`
-                                px-3 py-1 rounded-full text-sm font-medium
-                                ${invoice.paidStatus
-                                  ? "bg-emerald-500/10 text-emerald-400"
-                                  : "bg-red-500/10 text-red-400"
-                                }
-                              `}
-                            >
-                              {invoice.paidStatus ? "مدفوع" : "غير مدفوع"}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4">
-                            <span
-                              className={`
-                                px-3 py-1 rounded-full text-sm font-medium
-                                ${invoice.invoiceType === "expense"
-                                  ? "bg-red-500/10 text-red-400"
-                                  : "bg-emerald-500/10 text-emerald-400"
-                                }
-                              `}
-                            >
-                              {invoice.invoiceType === "expense" ? "صرف" : "دخل"}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4">
-                            <ActionsMenu
+                              </td>
+                              <td className="py-3 px-4 text-white">
+                                {getCustomerDisplayName(invoice.customer, invoice.notes)}
+                              </td>
+                              <td className="py-3 px-4 text-white">
+                                {formatDate(invoice.createdAt)}
+                              </td>
+                              <td className="py-3 px-4 text-white">
+                                {invoice.totalAmount.toLocaleString()} ليرة
+                              </td>
+                              <td className="py-3 px-4 text-white max-w-40 truncate" title={invoice.notes || ''}>
+                                {invoice.notes || "-"}
+                              </td>
+                              <td className="py-3 px-4">
+                                <span
+                                  className={`
+                                    px-3 py-1 rounded-full text-sm font-medium
+                                    ${invoice.paidStatus
+                                      ? "bg-emerald-500/10 text-emerald-400"
+                                      : "bg-red-500/10 text-red-400"
+                                    }
+                                  `}
+                                >
+                                  {invoice.paidStatus ? "مدفوع" : "غير مدفوع"}
+                                </span>
+                              </td>
+                              <td className="py-3 px-4">
+                                <span
+                                  className={`
+                                    px-3 py-1 rounded-full text-sm font-medium
+                                    ${invoice.invoiceType === "expense"
+                                      ? "bg-red-500/10 text-red-400"
+                                      : "bg-emerald-500/10 text-emerald-400"
+                                    }
+                                  `}
+                                >
+                                  {invoice.invoiceType === "expense" ? "صرف" : "دخل"}
+                                </span>
+                              </td>
+                              <td className="py-3 px-4">
+                                <ActionsMenu
+                                  invoice={invoice}
+                                  onView={handleViewInvoice}
+                                  onEdit={handleEditInvoice}
+                                  onDelete={handleDeleteInvoice}
+                                />
+                              </td>
+                            </tr>
+
+                            {/* Expandable items row */}
+                            <InvoiceItemsRow
                               invoice={invoice}
-                              onView={handleViewInvoice}
-                              onEdit={handleEditInvoice}
-                              onDelete={handleDeleteInvoice}
+                              isExpanded={isExpanded}
                             />
-                          </td>
-                        </tr>
-                      ))}
+                          </React.Fragment>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>

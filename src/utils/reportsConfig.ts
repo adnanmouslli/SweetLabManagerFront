@@ -37,463 +37,426 @@ export const YEAR_OPTIONS = Array.from({ length: 11 }, (_, i) => ({
     label: (currentYear - 5 + i).toString()
 }));
 
-// Customer Categories Options (you can fetch these from API later)
-export const CUSTOMER_CATEGORY_OPTIONS = [
-    { value: 1, label: 'عملاء عاديون' },
-    { value: 2, label: 'عملاء VIP' },
-    { value: 3, label: 'موردون' },
-    { value: 4, label: 'موزعون' }
-];
+// Function to generate reports configuration with real data
+export const generateReportsConfig = (data: {
+    customerOptions: Array<{ value: number; label: string }>;
+    customerCategoryOptions: Array<{ value: number; label: string }>;
+    itemOptions: Array<{ value: number; label: string }>;
+    itemGroupOptions: Array<{ value: number; label: string }>;
+    debtOptions: Array<{ value: number; label: string }>;
+    shiftOptions: Array<{ value: number; label: string }>;
+}): ReportConfig[] => [
+        // Orders Reports
+        {
+            id: 'orders-inventory',
+            title: 'تقرير جرد الطلبيات',
+            description: 'عرض جميع الطلبيات مع إمكانية الفلترة حسب العميل، التصنيف، الحالة، ومواد معينة',
+            category: ReportCategory.ORDERS,
+            icon: '📋',
+            endpoint: '/reports/orders/inventory',
+            filters: [
+                {
+                    key: 'customerName',
+                    label: 'اسم العميل',
+                    type: FilterType.TEXT,
+                    placeholder: 'ابحث بالاسم...'
+                },
+                {
+                    key: 'categoryId',
+                    label: 'تصنيف الطلبيات',
+                    type: FilterType.SELECT,
+                    options: data.customerCategoryOptions
+                },
+                {
+                    key: 'status',
+                    label: 'حالة الطلبية',
+                    type: FilterType.MULTISELECT,
+                    options: ORDER_STATUS_OPTIONS,
+                    multiple: true
+                },
+                {
+                    key: 'paidStatus',
+                    label: 'حالة الدفع',
+                    type: FilterType.SELECT,
+                    options: PAID_STATUS_OPTIONS
+                },
+                {
+                    key: 'itemIds',
+                    label: 'مواد معينة',
+                    type: FilterType.MULTISELECT,
+                    options: data.itemOptions,
+                    multiple: true
+                },
+                {
+                    key: 'startDate',
+                    label: 'تاريخ البداية',
+                    type: FilterType.DATE,
+                    required: true
+                },
+                {
+                    key: 'endDate',
+                    label: 'تاريخ النهاية',
+                    type: FilterType.DATE,
+                    required: true
+                }
+            ],
+            requiredFilters: ['startDate', 'endDate']
+        },
 
-// Item Groups Options (you can fetch these from API later)
-export const ITEM_GROUP_OPTIONS = [
-    { value: 1, label: 'مواد خام' },
-    { value: 2, label: 'منتجات جاهزة' },
-    { value: 3, label: 'مواد مساعدة' },
-    { value: 4, label: 'أدوات' }
-];
+        // Warehouse Reports
+        {
+            id: 'warehouse-inventory-monthly',
+            title: 'تقرير جرد المستودع الشهري',
+            description: 'تقرير شامل لجرد المستودع لشهر محدد مع إمكانية الفلترة حسب مجموعة المواد',
+            category: ReportCategory.WAREHOUSE,
+            icon: '🏪',
+            endpoint: '/reports/warehouse/inventory/monthly',
+            filters: [
+                {
+                    key: 'year',
+                    label: 'السنة',
+                    type: FilterType.SELECT,
+                    options: YEAR_OPTIONS,
+                    required: true
+                },
+                {
+                    key: 'month',
+                    label: 'الشهر',
+                    type: FilterType.SELECT,
+                    options: MONTH_OPTIONS,
+                    required: true
+                },
+                {
+                    key: 'itemGroupId',
+                    label: 'مجموعة المواد',
+                    type: FilterType.SELECT,
+                    options: data.itemGroupOptions
+                },
+                {
+                    key: 'itemIds',
+                    label: 'مواد محددة',
+                    type: FilterType.MULTISELECT,
+                    options: data.itemOptions,
+                    multiple: true
+                }
+            ],
+            requiredFilters: ['year', 'month']
+        },
 
-// Sample Items Options (you can fetch these from API later)
-export const ITEM_OPTIONS = [
-    { value: 1, label: 'طحين' },
-    { value: 2, label: 'سكر' },
-    { value: 3, label: 'زيت' },
-    { value: 4, label: 'ملح' },
-    { value: 5, label: 'خميرة' },
-    { value: 6, label: 'معروك عجوة' },
-    { value: 7, label: 'كعك' },
-    { value: 8, label: 'بسكويت' }
-];
+        {
+            id: 'warehouse-comparison',
+            title: 'تقرير مقارنة الاستهلاك الشهري',
+            description: 'مقارنة استهلاك المواد بين شهرين مختلفين',
+            category: ReportCategory.WAREHOUSE,
+            icon: '📊',
+            endpoint: '/reports/warehouse/inventory/comparison',
+            filters: [
+                {
+                    key: 'year1',
+                    label: 'سنة الفترة الأولى',
+                    type: FilterType.SELECT,
+                    options: YEAR_OPTIONS,
+                    required: true
+                },
+                {
+                    key: 'month1',
+                    label: 'شهر الفترة الأولى',
+                    type: FilterType.SELECT,
+                    options: MONTH_OPTIONS,
+                    required: true
+                },
+                {
+                    key: 'year2',
+                    label: 'سنة الفترة الثانية',
+                    type: FilterType.SELECT,
+                    options: YEAR_OPTIONS,
+                    required: true
+                },
+                {
+                    key: 'month2',
+                    label: 'شهر الفترة الثانية',
+                    type: FilterType.SELECT,
+                    options: MONTH_OPTIONS,
+                    required: true
+                }
+            ],
+            requiredFilters: ['year1', 'month1', 'year2', 'month2']
+        },
 
-// Sample Customers Options (you can fetch these from API later)
-export const CUSTOMER_OPTIONS = [
-    { value: 1, label: 'أحمد محمد' },
-    { value: 2, label: 'فاطمة علي' },
-    { value: 3, label: 'محمد حسن' },
-    { value: 4, label: 'نور الدين' },
-    { value: 5, label: 'سارة أحمد' }
-];
+        // Booth Reports
+        {
+            id: 'booth-inventory',
+            title: 'تقرير جرد البسطة',
+            description: 'تقرير شامل لجميع فواتير البسطة (دخل/صرف) في فترة زمنية مع حساب صافي الدخل',
+            category: ReportCategory.BOOTH,
+            icon: '🏪',
+            endpoint: '/reports/booth/inventory',
+            filters: [
+                {
+                    key: 'startDate',
+                    label: 'تاريخ البداية',
+                    type: FilterType.DATE,
+                    required: true
+                },
+                {
+                    key: 'endDate',
+                    label: 'تاريخ النهاية',
+                    type: FilterType.DATE,
+                    required: true
+                }
+            ],
+            requiredFilters: ['startDate', 'endDate']
+        },
 
-// Sample Debts Options (you can fetch these from API later)
-export const DEBT_OPTIONS = [
-    { value: 1, label: 'دين #1 - أحمد محمد' },
-    { value: 2, label: 'دين #2 - فاطمة علي' },
-    { value: 3, label: 'دين #3 - محمد حسن' },
-    { value: 4, label: 'دين #4 - نور الدين' },
-    { value: 5, label: 'دين #5 - سارة أحمد' }
-];
+        // Items Reports
+        {
+            id: 'item-consumption',
+            title: 'تقرير جرد استهلاك مادة معينة',
+            description: 'حساب استهلاك مادة محددة خلال فترة زمنية (الاستهلاك = رصيد البداية + المشتريات - رصيد النهاية)',
+            category: ReportCategory.ITEMS,
+            icon: '📦',
+            endpoint: '/reports/item/:id/consumption',
+            filters: [
+                {
+                    key: 'itemId',
+                    label: 'معرف المادة',
+                    type: FilterType.SELECT,
+                    options: data.itemOptions,
+                    required: true
+                },
+                {
+                    key: 'startDate',
+                    label: 'تاريخ البداية',
+                    type: FilterType.DATE,
+                    required: true
+                },
+                {
+                    key: 'endDate',
+                    label: 'تاريخ النهاية',
+                    type: FilterType.DATE,
+                    required: true
+                }
+            ],
+            requiredFilters: ['itemId', 'startDate', 'endDate']
+        },
 
-// Sample Shifts Options (you can fetch these from API later)
-export const SHIFT_OPTIONS = [
-    { value: 1, label: 'واردية #1 - صباحية' },
-    { value: 2, label: 'واردية #2 - مسائية' },
-    { value: 3, label: 'واردية #3 - ليلية' },
-    { value: 4, label: 'واردية #4 - نهاية الأسبوع' }
-];
+        {
+            id: 'item-purchases',
+            title: 'تقرير جرد شراء مادة معينة',
+            description: 'تقرير شامل لجميع مشتريات مادة محددة من فواتير الصرف مع تفاصيل كل عملية شراء',
+            category: ReportCategory.ITEMS,
+            icon: '🛒',
+            endpoint: '/reports/item/:id/purchases',
+            filters: [
+                {
+                    key: 'itemId',
+                    label: 'معرف المادة',
+                    type: FilterType.SELECT,
+                    options: data.itemOptions,
+                    required: true
+                },
+                {
+                    key: 'startDate',
+                    label: 'تاريخ البداية',
+                    type: FilterType.DATE,
+                    required: true
+                },
+                {
+                    key: 'endDate',
+                    label: 'تاريخ النهاية',
+                    type: FilterType.DATE,
+                    required: true
+                }
+            ],
+            requiredFilters: ['itemId', 'startDate', 'endDate']
+        },
 
-// Reports configuration
-export const REPORTS: ReportConfig[] = [
-    // Orders Reports
-    {
-        id: 'orders-inventory',
-        title: 'تقرير جرد الطلبيات',
-        description: 'عرض جميع الطلبيات مع إمكانية الفلترة حسب العميل، التصنيف، الحالة، ومواد معينة',
-        category: ReportCategory.ORDERS,
-        icon: '📋',
-        endpoint: '/reports/orders/inventory',
-        filters: [
-            {
-                key: 'customerName',
-                label: 'اسم العميل',
-                type: FilterType.TEXT,
-                placeholder: 'ابحث بالاسم...'
-            },
-            {
-                key: 'categoryId',
-                label: 'تصنيف الطلبيات',
-                type: FilterType.SELECT,
-                options: CUSTOMER_CATEGORY_OPTIONS
-            },
-            {
-                key: 'status',
-                label: 'حالة الطلبية',
-                type: FilterType.MULTISELECT,
-                options: ORDER_STATUS_OPTIONS,
-                multiple: true
-            },
-            {
-                key: 'paidStatus',
-                label: 'حالة الدفع',
-                type: FilterType.SELECT,
-                options: PAID_STATUS_OPTIONS
-            },
-            {
-                key: 'itemIds',
-                label: 'مواد معينة',
-                type: FilterType.MULTISELECT,
-                options: ITEM_OPTIONS,
-                multiple: true
-            },
-            {
-                key: 'startDate',
-                label: 'تاريخ البداية',
-                type: FilterType.DATE,
-                required: true
-            },
-            {
-                key: 'endDate',
-                label: 'تاريخ النهاية',
-                type: FilterType.DATE,
-                required: true
-            }
-        ],
-        requiredFilters: ['startDate', 'endDate']
-    },
+        // Debts Reports
+        {
+            id: 'debts-inventory',
+            title: 'تقرير جرد الديون',
+            description: 'عرض جميع الديون النشطة مجمعة حسب تصنيف العملاء مع إمكانية الفلترة',
+            category: ReportCategory.DEBTS,
+            icon: '💰',
+            endpoint: '/reports/debts/inventory',
+            filters: [
+                {
+                    key: 'categoryId',
+                    label: 'تصنيف العملاء',
+                    type: FilterType.SELECT,
+                    options: data.customerCategoryOptions
+                },
+                {
+                    key: 'customerIds',
+                    label: 'عملاء محددين',
+                    type: FilterType.MULTISELECT,
+                    options: data.customerOptions,
+                    multiple: true
+                }
+            ]
+        },
 
-    // Warehouse Reports
-    {
-        id: 'warehouse-inventory-monthly',
-        title: 'تقرير جرد المستودع الشهري',
-        description: 'تقرير شامل لجرد المستودع لشهر محدد مع إمكانية الفلترة حسب مجموعة المواد',
-        category: ReportCategory.WAREHOUSE,
-        icon: '🏪',
-        endpoint: '/reports/warehouse/inventory/monthly',
-        filters: [
-            {
-                key: 'year',
-                label: 'السنة',
-                type: FilterType.SELECT,
-                options: YEAR_OPTIONS,
-                required: true
-            },
-            {
-                key: 'month',
-                label: 'الشهر',
-                type: FilterType.SELECT,
-                options: MONTH_OPTIONS,
-                required: true
-            },
-            {
-                key: 'itemGroupId',
-                label: 'مجموعة المواد',
-                type: FilterType.SELECT,
-                options: ITEM_GROUP_OPTIONS
-            },
-            {
-                key: 'itemIds',
-                label: 'مواد محددة',
-                type: FilterType.MULTISELECT,
-                options: ITEM_OPTIONS,
-                multiple: true
-            }
-        ],
-        requiredFilters: ['year', 'month']
-    },
+        {
+            id: 'debt-details',
+            title: 'تقرير تفاصيل دين معين',
+            description: 'تفاصيل دين محدد خلال فترة زمنية مع عرض إجمالي الديون المتبقية والمسددة',
+            category: ReportCategory.DEBTS,
+            icon: '📄',
+            endpoint: '/reports/debt/:id/details',
+            filters: [
+                {
+                    key: 'debtId',
+                    label: 'معرف الدين',
+                    type: FilterType.SELECT,
+                    options: data.debtOptions,
+                    required: true
+                },
+                {
+                    key: 'startDate',
+                    label: 'تاريخ البداية',
+                    type: FilterType.DATE,
+                    required: true
+                },
+                {
+                    key: 'endDate',
+                    label: 'تاريخ النهاية',
+                    type: FilterType.DATE,
+                    required: true
+                }
+            ],
+            requiredFilters: ['debtId', 'startDate', 'endDate']
+        },
 
-    {
-        id: 'warehouse-comparison',
-        title: 'تقرير مقارنة الاستهلاك الشهري',
-        description: 'مقارنة استهلاك المواد بين شهرين مختلفين',
-        category: ReportCategory.WAREHOUSE,
-        icon: '📊',
-        endpoint: '/reports/warehouse/inventory/comparison',
-        filters: [
-            {
-                key: 'year1',
-                label: 'سنة الفترة الأولى',
-                type: FilterType.SELECT,
-                options: YEAR_OPTIONS,
-                required: true
-            },
-            {
-                key: 'month1',
-                label: 'شهر الفترة الأولى',
-                type: FilterType.SELECT,
-                options: MONTH_OPTIONS,
-                required: true
-            },
-            {
-                key: 'year2',
-                label: 'سنة الفترة الثانية',
-                type: FilterType.SELECT,
-                options: YEAR_OPTIONS,
-                required: true
-            },
-            {
-                key: 'month2',
-                label: 'شهر الفترة الثانية',
-                type: FilterType.SELECT,
-                options: MONTH_OPTIONS,
-                required: true
-            }
-        ],
-        requiredFilters: ['year1', 'month1', 'year2', 'month2']
-    },
+        // Products Reports
+        {
+            id: 'product-sales',
+            title: 'تقرير جرد مبيعات منتج معين',
+            description: 'عرض مبيعات منتجات محددة خلال فترة زمنية من فواتير الدخل المدفوعة',
+            category: ReportCategory.PRODUCTS,
+            icon: '📈',
+            endpoint: '/reports/products/sales',
+            filters: [
+                {
+                    key: 'itemIds',
+                    label: 'معرفات المنتجات',
+                    type: FilterType.MULTISELECT,
+                    options: data.itemOptions,
+                    multiple: true,
+                    required: true
+                },
+                {
+                    key: 'startDate',
+                    label: 'تاريخ البداية',
+                    type: FilterType.DATE,
+                    required: true
+                },
+                {
+                    key: 'endDate',
+                    label: 'تاريخ النهاية',
+                    type: FilterType.DATE,
+                    required: true
+                }
+            ],
+            requiredFilters: ['itemIds', 'startDate', 'endDate']
+        },
 
-    // Booth Reports
-    {
-        id: 'booth-inventory',
-        title: 'تقرير جرد البسطة',
-        description: 'تقرير شامل لجميع فواتير البسطة (دخل/صرف) في فترة زمنية مع حساب صافي الدخل',
-        category: ReportCategory.BOOTH,
-        icon: '🏪',
-        endpoint: '/reports/booth/inventory',
-        filters: [
-            {
-                key: 'startDate',
-                label: 'تاريخ البداية',
-                type: FilterType.DATE,
-                required: true
-            },
-            {
-                key: 'endDate',
-                label: 'تاريخ النهاية',
-                type: FilterType.DATE,
-                required: true
-            }
-        ],
-        requiredFilters: ['startDate', 'endDate']
-    },
+        // Funds Reports
+        {
+            id: 'funds-movement',
+            title: 'تقرير حركة الصناديق',
+            description: 'عرض المدخولات والمصروفات لكل نوع صندوق مع حساب صافي الحركة',
+            category: ReportCategory.FUNDS,
+            icon: '🏦',
+            endpoint: '/reports/funds/movement',
+            filters: [
+                {
+                    key: 'startDate',
+                    label: 'تاريخ البداية',
+                    type: FilterType.DATE,
+                    required: true
+                },
+                {
+                    key: 'endDate',
+                    label: 'تاريخ النهاية',
+                    type: FilterType.DATE,
+                    required: true
+                }
+            ],
+            requiredFilters: ['startDate', 'endDate']
+        },
 
-    // Items Reports
-    {
-        id: 'item-consumption',
-        title: 'تقرير جرد استهلاك مادة معينة',
-        description: 'حساب استهلاك مادة محددة خلال فترة زمنية (الاستهلاك = رصيد البداية + المشتريات - رصيد النهاية)',
-        category: ReportCategory.ITEMS,
-        icon: '📦',
-        endpoint: '/reports/item/:id/consumption',
-        filters: [
-            {
-                key: 'itemId',
-                label: 'معرف المادة',
-                type: FilterType.SELECT,
-                options: ITEM_OPTIONS,
-                required: true
-            },
-            {
-                key: 'startDate',
-                label: 'تاريخ البداية',
-                type: FilterType.DATE,
-                required: true
-            },
-            {
-                key: 'endDate',
-                label: 'تاريخ النهاية',
-                type: FilterType.DATE,
-                required: true
-            }
-        ],
-        requiredFilters: ['itemId', 'startDate', 'endDate']
-    },
+        // Shifts Reports
+        {
+            id: 'shift-summary',
+            title: 'تقرير ملخص الواردية',
+            description: 'ملخص الواردية الحالية أو واردية محددة مع إجماليات كل صندوق',
+            category: ReportCategory.SHIFTS,
+            icon: '⏰',
+            endpoint: '/reports/shift/summary',
+            filters: [
+                {
+                    key: 'shiftId',
+                    label: 'معرف الواردية',
+                    type: FilterType.SELECT,
+                    options: [{ value: '', label: 'الواردية الحالية' }, ...data.shiftOptions]
+                }
+            ]
+        },
 
-    {
-        id: 'item-purchases',
-        title: 'تقرير جرد شراء مادة معينة',
-        description: 'تقرير شامل لجميع مشتريات مادة محددة من فواتير الصرف مع تفاصيل كل عملية شراء',
-        category: ReportCategory.ITEMS,
-        icon: '🛒',
-        endpoint: '/reports/item/:id/purchases',
-        filters: [
-            {
-                key: 'itemId',
-                label: 'معرف المادة',
-                type: FilterType.SELECT,
-                options: ITEM_OPTIONS,
-                required: true
-            },
-            {
-                key: 'startDate',
-                label: 'تاريخ البداية',
-                type: FilterType.DATE,
-                required: true
-            },
-            {
-                key: 'endDate',
-                label: 'تاريخ النهاية',
-                type: FilterType.DATE,
-                required: true
-            }
-        ],
-        requiredFilters: ['itemId', 'startDate', 'endDate']
-    },
+        // Customers Reports
+        {
+            id: 'customer-statement',
+            title: 'كشف حساب عميل',
+            description: 'كشف حساب شامل لعميل محدد مع جميع المعاملات',
+            category: ReportCategory.CUSTOMERS,
+            icon: '👤',
+            endpoint: '/reports/customer/:id/statement',
+            filters: [
+                {
+                    key: 'customerId',
+                    label: 'معرف العميل',
+                    type: FilterType.SELECT,
+                    options: data.customerOptions,
+                    required: true
+                }
+            ],
+            requiredFilters: ['customerId']
+        },
 
-    // Debts Reports
-    {
-        id: 'debts-inventory',
-        title: 'تقرير جرد الديون',
-        description: 'عرض جميع الديون النشطة مجمعة حسب تصنيف العملاء مع إمكانية الفلترة',
-        category: ReportCategory.DEBTS,
-        icon: '💰',
-        endpoint: '/reports/debts/inventory',
-        filters: [
-            {
-                key: 'categoryId',
-                label: 'تصنيف العملاء',
-                type: FilterType.SELECT,
-                options: CUSTOMER_CATEGORY_OPTIONS
-            },
-            {
-                key: 'customerIds',
-                label: 'عملاء محددين',
-                type: FilterType.MULTISELECT,
-                options: CUSTOMER_OPTIONS,
-                multiple: true
-            }
-        ]
-    },
+        // Sales Reports
+        {
+            id: 'sales-report',
+            title: 'تقرير المبيعات',
+            description: 'تقرير شامل للمبيعات خلال فترة زمنية محددة',
+            category: ReportCategory.SALES,
+            icon: '💼',
+            endpoint: '/reports/sales',
+            filters: [
+                {
+                    key: 'startDate',
+                    label: 'تاريخ البداية',
+                    type: FilterType.DATE,
+                    placeholder: 'تاريخ البداية (اختياري)'
+                },
+                {
+                    key: 'endDate',
+                    label: 'تاريخ النهاية',
+                    type: FilterType.DATE,
+                    placeholder: 'تاريخ النهاية (اختياري)'
+                }
+            ]
+        }
+    ];
 
-    {
-        id: 'debt-details',
-        title: 'تقرير تفاصيل دين معين',
-        description: 'تفاصيل دين محدد خلال فترة زمنية مع عرض إجمالي الديون المتبقية والمسددة',
-        category: ReportCategory.DEBTS,
-        icon: '📄',
-        endpoint: '/reports/debt/:id/details',
-        filters: [
-            {
-                key: 'debtId',
-                label: 'معرف الدين',
-                type: FilterType.SELECT,
-                options: DEBT_OPTIONS,
-                required: true
-            },
-            {
-                key: 'startDate',
-                label: 'تاريخ البداية',
-                type: FilterType.DATE,
-                required: true
-            },
-            {
-                key: 'endDate',
-                label: 'تاريخ النهاية',
-                type: FilterType.DATE,
-                required: true
-            }
-        ],
-        requiredFilters: ['debtId', 'startDate', 'endDate']
-    },
-
-    // Products Reports
-    {
-        id: 'product-sales',
-        title: 'تقرير جرد مبيعات منتج معين',
-        description: 'عرض مبيعات منتجات محددة خلال فترة زمنية من فواتير الدخل المدفوعة',
-        category: ReportCategory.PRODUCTS,
-        icon: '📈',
-        endpoint: '/reports/products/sales',
-        filters: [
-            {
-                key: 'itemIds',
-                label: 'معرفات المنتجات',
-                type: FilterType.MULTISELECT,
-                options: ITEM_OPTIONS,
-                multiple: true,
-                required: true
-            },
-            {
-                key: 'startDate',
-                label: 'تاريخ البداية',
-                type: FilterType.DATE,
-                required: true
-            },
-            {
-                key: 'endDate',
-                label: 'تاريخ النهاية',
-                type: FilterType.DATE,
-                required: true
-            }
-        ],
-        requiredFilters: ['itemIds', 'startDate', 'endDate']
-    },
-
-    // Funds Reports
-    {
-        id: 'funds-movement',
-        title: 'تقرير حركة الصناديق',
-        description: 'عرض المدخولات والمصروفات لكل نوع صندوق مع حساب صافي الحركة',
-        category: ReportCategory.FUNDS,
-        icon: '🏦',
-        endpoint: '/reports/funds/movement',
-        filters: [
-            {
-                key: 'startDate',
-                label: 'تاريخ البداية',
-                type: FilterType.DATE,
-                required: true
-            },
-            {
-                key: 'endDate',
-                label: 'تاريخ النهاية',
-                type: FilterType.DATE,
-                required: true
-            }
-        ],
-        requiredFilters: ['startDate', 'endDate']
-    },
-
-    // Shifts Reports
-    {
-        id: 'shift-summary',
-        title: 'تقرير ملخص الواردية',
-        description: 'ملخص الواردية الحالية أو واردية محددة مع إجماليات كل صندوق',
-        category: ReportCategory.SHIFTS,
-        icon: '⏰',
-        endpoint: '/reports/shift/summary',
-        filters: [
-            {
-                key: 'shiftId',
-                label: 'معرف الواردية',
-                type: FilterType.SELECT,
-                options: [{ value: '', label: 'الواردية الحالية' }, ...SHIFT_OPTIONS]
-            }
-        ]
-    },
-
-    // Customers Reports
-    {
-        id: 'customer-statement',
-        title: 'كشف حساب عميل',
-        description: 'كشف حساب شامل لعميل محدد مع جميع المعاملات',
-        category: ReportCategory.CUSTOMERS,
-        icon: '👤',
-        endpoint: '/reports/customer/:id/statement',
-        filters: [
-            {
-                key: 'customerId',
-                label: 'معرف العميل',
-                type: FilterType.SELECT,
-                options: CUSTOMER_OPTIONS,
-                required: true
-            }
-        ],
-        requiredFilters: ['customerId']
-    },
-
-    // Sales Reports
-    {
-        id: 'sales-report',
-        title: 'تقرير المبيعات',
-        description: 'تقرير شامل للمبيعات خلال فترة زمنية محددة',
-        category: ReportCategory.SALES,
-        icon: '💼',
-        endpoint: '/reports/sales',
-        filters: [
-            {
-                key: 'startDate',
-                label: 'تاريخ البداية',
-                type: FilterType.DATE,
-                placeholder: 'تاريخ البداية (اختياري)'
-            },
-            {
-                key: 'endDate',
-                label: 'تاريخ النهاية',
-                type: FilterType.DATE,
-                placeholder: 'تاريخ النهاية (اختياري)'
-            }
-        ]
-    }
-];
+// Static reports configuration (fallback when data is not available)
+export const REPORTS: ReportConfig[] = generateReportsConfig({
+    customerOptions: [],
+    customerCategoryOptions: [],
+    itemOptions: [],
+    itemGroupOptions: [],
+    debtOptions: [],
+    shiftOptions: []
+});
 
 // Categories configuration
 export const CATEGORIES = [
@@ -560,8 +523,8 @@ export const CATEGORIES = [
 ];
 
 // Helper function to get reports by category
-export const getReportsByCategory = (category: ReportCategory) => {
-    return REPORTS.filter(report => report.category === category);
+export const getReportsByCategory = (category: ReportCategory, reportsList: ReportConfig[] = REPORTS) => {
+    return reportsList.filter(report => report.category === category);
 };
 
 // Helper function to get report by ID

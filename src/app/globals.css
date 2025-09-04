@@ -119,12 +119,30 @@ body::-webkit-scrollbar {
 }
 
 select option {
-  background-color: rgb(30, 41, 59);
-  color: rgb(226, 232, 240);
+  background-color: rgb(15, 23, 42) !important;
+  color: rgb(226, 232, 240) !important;
   padding: 8px;
 }
 
 select:focus {
   outline: none;
-  border-color: rgb(51, 65, 85);
+  border-color: rgb(59, 130, 246);
+}
+
+/* Multi-select styling */
+select[multiple] option:checked {
+  background-color: rgb(59, 130, 246) !important;
+  color: white !important;
+}
+
+select[multiple] option:hover {
+  background-color: rgb(30, 41, 59) !important;
+}
+
+/* Line clamp utility */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
