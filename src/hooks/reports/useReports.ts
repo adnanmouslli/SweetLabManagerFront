@@ -18,7 +18,9 @@ import {
     FundsMovementReportDTO,
     ShiftSummaryReportDTO,
     CustomerStatementReportDTO,
-    SalesReportDTO
+    SalesReportDTO,
+    EmployeeWithdrawalsReportDTO,
+    WorkshopSalariesReportDTO
 } from '@/types/reports.type';
 
 export const useReports = () => {
@@ -106,6 +108,12 @@ export const useReports = () => {
                     break;
                 case 'sales-report':
                     result = await reportsService.generateSalesReport(filters as SalesReportDTO);
+                    break;
+                case 'employee-withdrawals':
+                    result = await reportsService.generateEmployeeWithdrawalsReport(filters as EmployeeWithdrawalsReportDTO);
+                    break;
+                case 'workshop-salaries':
+                    result = await reportsService.generateWorkshopSalariesReport(filters as WorkshopSalariesReportDTO);
                     break;
                 default:
                     throw new Error('Unknown report type');
@@ -204,4 +212,4 @@ export const useReports = () => {
     };
 };
 
-export default useReports;
+export default useReports

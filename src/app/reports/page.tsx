@@ -93,19 +93,28 @@ const ReportsPage = () => {
         closeReportModal,
         generateReport,
         downloadReport,
+    
         isLoading
     } = useReports();
 
     const {
         customerOptions,
         customerCategoryOptions,
+        orderCategories,
         itemOptions,
         itemGroupOptions,
         debtOptions,
         shiftOptions,
+        employees,
+        workshops,
+        
         isLoading: dataLoading
     } = useReportsData();
 
+
+
+
+    
     const [previewResult, setPreviewResult] = useState<ReportGenerationResult | null>(null);
     const [showPreview, setShowPreview] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
@@ -118,14 +127,22 @@ const ReportsPage = () => {
 
     // Generate reports configuration with real data
     const reports = useMemo(() => {
+
+    
         return generateReportsConfig({
             customerOptions,
             customerCategoryOptions,
+            orderCategories: orderCategories.map((item)=>({value:item.id, label:item.name})),
             itemOptions,
             itemGroupOptions,
+          
             debtOptions,
-            shiftOptions
+            shiftOptions,
+            employeeOptions : employees.map((item)=>({value:item.id, label:item.name})),
+            workshopOptions : workshops.map((item)=>({value:item.id, label:item.name})),
+        
         });
+
     }, [customerOptions, customerCategoryOptions, itemOptions, itemGroupOptions, debtOptions, shiftOptions]);
 
     // Filter and sort reports
@@ -235,6 +252,7 @@ const ReportsPage = () => {
             [ReportCategory.SHIFTS]: 'from-indigo-500/20 to-indigo-600/10 border-indigo-500/30',
             [ReportCategory.CUSTOMERS]: 'from-pink-500/20 to-pink-600/10 border-pink-500/30',
             [ReportCategory.SALES]: 'from-teal-500/20 to-teal-600/10 border-teal-500/30',
+            [ReportCategory.EMPLOYEES]: 'from-teal-500/20 to-teal-600/10 border-teal-500/30',
         };
         return colors[category] || 'from-gray-500/20 to-gray-600/10 border-gray-500/30';
     }, []);

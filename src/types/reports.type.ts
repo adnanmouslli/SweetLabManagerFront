@@ -53,7 +53,8 @@ export enum ReportCategory {
     FUNDS = 'funds',
     SHIFTS = 'shifts',
     CUSTOMERS = 'customers',
-    SALES = 'sales'
+    SALES = 'sales',
+    EMPLOYEES = 'employees',
 }
 
 // Individual filter configuration
@@ -105,7 +106,7 @@ export interface ReportResponse {
 
 // Specific report DTOs
 export interface OrdersInventoryReportDTO {
-    customerName?: string;
+    customerIds?: number[]; 
     categoryId?: number;
     status?: string[];
     paidStatus?: boolean;
@@ -175,6 +176,7 @@ export interface FundsMovementReportDTO {
     startDate: string;
     endDate: string;
     download?: boolean;
+    fundType?: string;
 }
 
 export interface ShiftSummaryReportDTO {
@@ -212,4 +214,38 @@ export interface ReportModalState {
     selectedReport: ReportConfig | null;
     filters: FilterValues;
     isLoading: boolean;
+}
+
+
+
+
+// NEW 
+// NEW 
+// NEW 
+// NEW 
+// NEW 
+// NEW 
+// NEW 
+// NEW 
+// NEW 
+// NEW 
+// NEW 
+// NEW 
+// NEW 
+
+
+
+// New Employee Report DTOs
+export interface EmployeeWithdrawalsReportDTO {
+    employeeId?: number;
+    startDate: string;
+    endDate: string;
+    download?: boolean;
+}
+
+export interface WorkshopSalariesReportDTO {
+    workshopId?: number;
+    startDate: string;
+    endDate: string;
+    download?: boolean;
 }

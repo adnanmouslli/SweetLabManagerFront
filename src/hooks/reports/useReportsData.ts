@@ -1,22 +1,33 @@
 import { useQuery } from '@tanstack/react-query';
-import { useCustomersList, useCustomerCategories } from '@/hooks/customers/useCustomers';
+import { useCustomersList, useCustomerCategories, useCustomerCategoriesList } from '@/hooks/customers/useCustomers';
 import { useItems } from '@/hooks/items/useItems';
 import { useItemGroups } from '@/hooks/items/useItemGroups';
 import { useDebtsTracking } from '@/hooks/debts/useDebts';
 import { useShifts } from '@/hooks/shifts/useShifts';
-import { CustomerType } from '@/types/customers.type';
+import { CustomerType, CustomerTypeEnum } from '@/types/customers.type';
 import { Item } from '@/types/items.type';
 import { ItemGroup } from '@/types/items.type';
 import { Debt } from '@/types/debts.type';
 import { CustomerCategory } from '@/types/customerCategories.types';
+import { useEmployee, useEmployeesList } from '../employees';
+import { useWorkshops } from '../workshops';
+import { useOrderCategories } from '../useOrders';
 
 // Hook to get all data needed for reports
 export const useReportsData = () => {
+
+
+    const {data:employees=[] , isLoading:employeesLoading} = useEmployeesList()
+
+    const {data : workshops = [], isLoading: workshopsLoading } = useWorkshops();
+    const {data : orderCategories = [], isLoading: orderCategoriesLoading } = useOrderCategories();
+
+    
     // Fetch customers
     const { data: customers = [], isLoading: customersLoading } = useCustomersList();
 
     // Fetch customer categories
-    const { data: customerCategories = [], isLoading: categoriesLoading } = useCustomerCategories();
+    const { data: customerCategories = [], isLoading: categoriesLoading } = useCustomerCategoriesList();
 
     // Fetch items
     const { data: items = [], isLoading: itemsLoading } = useItems();
@@ -31,17 +42,20 @@ export const useReportsData = () => {
     const { data: shifts = [], isLoading: shiftsLoading } = useShifts();
 
     // Transform data for report filters
-    const customerOptions = customers.map((customer: CustomerType) => ({
+    const customerOptions = customers.filter(item=>item.customerType==CustomerTypeEnum.CUSTOMER).map((customer: CustomerType) => ({
         value: customer.id,
         label: customer.name
     }));
 
-    const customerCategoryOptions = customerCategories.map((category: CustomerCategory) => ({
+    const customerCategoryOptions = customerCategories.map((category: CustomerCategory) => {
+        
+        
+        return({
         value: category.id,
         label: category.name
-    }));
+    })});
 
-    const itemOptions = items.map((item: Item) => ({
+    const itemOptions = items.filter(item=>item.type=="raw").map((item: Item) => ({
         value: item.id,
         label: item.name
     }));
@@ -72,6 +86,9 @@ export const useReportsData = () => {
         itemGroups,
         debts,
         shifts,
+        employees,
+        workshops,
+        orderCategories,
 
         // Transformed options for filters
         customerOptions,
@@ -83,6 +100,9 @@ export const useReportsData = () => {
 
         // Loading states
         isLoading,
+        orderCategoriesLoading,
+        workshopsLoading,
+        employeesLoading,
         customersLoading,
         categoriesLoading,
         itemsLoading,

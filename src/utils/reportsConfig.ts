@@ -3,10 +3,10 @@ import { ReportConfig, ReportCategory, FilterType } from '@/types/reports.type';
 // Predefined filter options
 export const ORDER_STATUS_OPTIONS = [
     { value: 'pending', label: 'قيد الانتظار' },
-    { value: 'processing', label: 'قيد المعالجة' },
-    { value: 'ready', label: 'جاهز' },
-    { value: 'delivered', label: 'مسلم' },
-    { value: 'cancelled', label: 'ملغي' }
+    // { value: 'processing', label: 'قيد المعالجة' },
+    // { value: 'ready', label: 'جاهز' },
+    { value: 'delivered', label: 'تم التسليم' },
+    // { value: 'cancelled', label: 'ملغي' }
 ];
 
 export const PAID_STATUS_OPTIONS = [
@@ -30,6 +30,14 @@ export const MONTH_OPTIONS = [
     { value: 12, label: 'ديسمبر' }
 ];
 
+
+export const FUND_TYPE_OPTIONS = [
+    { value: 'main', label: 'الخزينة الرئيسية' },
+    { value: 'general', label: 'الصندوق العام' },
+    { value: 'booth', label: 'البسطة' },
+    { value: 'university', label: 'الجامعة' }
+];
+
 // Generate year options (current year ± 5 years)
 const currentYear = new Date().getFullYear();
 export const YEAR_OPTIONS = Array.from({ length: 11 }, (_, i) => ({
@@ -41,10 +49,15 @@ export const YEAR_OPTIONS = Array.from({ length: 11 }, (_, i) => ({
 export const generateReportsConfig = (data: {
     customerOptions: Array<{ value: number; label: string }>;
     customerCategoryOptions: Array<{ value: number; label: string }>;
+    orderCategories: Array<{ value: number; label: string }>;
+
     itemOptions: Array<{ value: number; label: string }>;
     itemGroupOptions: Array<{ value: number; label: string }>;
     debtOptions: Array<{ value: number; label: string }>;
     shiftOptions: Array<{ value: number; label: string }>;
+    employeeOptions: Array<{ value: number; label: string }>;
+    workshopOptions: Array<{ value: number; label: string }>;
+
 }): ReportConfig[] => [
         // Orders Reports
         {
@@ -56,16 +69,18 @@ export const generateReportsConfig = (data: {
             endpoint: '/reports/orders/inventory',
             filters: [
                 {
-                    key: 'customerName',
-                    label: 'اسم العميل',
-                    type: FilterType.TEXT,
-                    placeholder: 'ابحث بالاسم...'
+                    key: 'customerIds', // تغيير من customerName إلى customerIds
+                    label: 'العملاء',
+                    type: FilterType.MULTISELECT,
+                    options: data.customerOptions,
+                    multiple: true,
+                    placeholder: 'اختر العملاء...'
                 },
                 {
                     key: 'categoryId',
                     label: 'تصنيف الطلبيات',
                     type: FilterType.SELECT,
-                    options: data.customerCategoryOptions
+                    options: data.orderCategories
                 },
                 {
                     key: 'status',
@@ -380,11 +395,17 @@ export const generateReportsConfig = (data: {
                     label: 'تاريخ النهاية',
                     type: FilterType.DATE,
                     required: true
+                },
+                {
+                    key: 'fundType',
+                    label: 'نوع الصندوق',
+                    type: FilterType.SELECT,
+                    options: FUND_TYPE_OPTIONS,
+                    placeholder: 'اختر نوع الصندوق (اختياري)'
                 }
             ],
             requiredFilters: ['startDate', 'endDate']
         },
-
         // Shifts Reports
         {
             id: 'shift-summary',
@@ -445,7 +466,72 @@ export const generateReportsConfig = (data: {
                     placeholder: 'تاريخ النهاية (اختياري)'
                 }
             ]
+        },
+
+        // Employee Reports
+        {
+            id: 'employee-withdrawals',
+            title: 'تقرير سحوبات الموظفين',
+            description: 'تقرير شامل لسحوبات الموظفين مع إمكانية الفلترة حسب موظف محدد أو جميع الموظفين',
+            category: ReportCategory.EMPLOYEES,
+            icon: '💸',
+            endpoint: '/reports/employees/withdrawals',
+            filters: [
+                {
+                    key: 'employeeId',
+                    label: 'الموظف',
+                    type: FilterType.SELECT,
+                    options: [{ value: '', label: 'جميع الموظفين' }, ...data.employeeOptions],
+                    placeholder: 'اختر موظف محدد (اختياري)'
+                },
+                {
+                    key: 'startDate',
+                    label: 'تاريخ البداية',
+                    type: FilterType.DATE,
+                    required: true
+                },
+                {
+                    key: 'endDate',
+                    label: 'تاريخ النهاية',
+                    type: FilterType.DATE,
+                    required: true
+                }
+            ],
+            requiredFilters: ['startDate', 'endDate']
+        },
+
+        {
+            id: 'workshop-salaries',
+            title: 'تقرير رواتب الورش',
+            description: 'تقرير شامل لرواتب الموظفين في الورش مع إمكانية الفلترة حسب ورشة محددة أو جميع الورش',
+            category: ReportCategory.EMPLOYEES,
+            icon: '🏭',
+            endpoint: '/reports/workshops/salaries',
+            filters: [
+                {
+                    key: 'workshopId',
+                    label: 'الورشة',
+                    type: FilterType.SELECT,
+                    options: [{ value: '', label: 'جميع الورش' }, ...data.workshopOptions],
+                    placeholder: 'اختر ورشة محددة (اختياري)'
+                },
+                {
+                    key: 'startDate',
+                    label: 'تاريخ البداية',
+                    type: FilterType.DATE,
+                    required: true
+                },
+                {
+                    key: 'endDate',
+                    label: 'تاريخ النهاية',
+                    type: FilterType.DATE,
+                    required: true
+                }
+            ],
+            requiredFilters: ['startDate', 'endDate']
         }
+
+
     ];
 
 // Static reports configuration (fallback when data is not available)
@@ -455,7 +541,10 @@ export const REPORTS: ReportConfig[] = generateReportsConfig({
     itemOptions: [],
     itemGroupOptions: [],
     debtOptions: [],
-    shiftOptions: []
+    shiftOptions: [],
+    employeeOptions: [],
+    workshopOptions: [],
+    orderCategories: []
 });
 
 // Categories configuration

@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { X, Save, Trash2, UserPlus, UserCheck, Users, Truck } from "lucide-react";
+import { X, Save, Trash2, UserPlus, UserCheck, Users, Truck, GraduationCap } from "lucide-react";
 import { AllCustomerType, CustomerTypeEnum, CreateCustomerRequest, UpdateCustomerRequest } from "@/types/customers.type";
 import { CustomerCategory } from "@/types/customerCategories.types";
 import { useCreateCustomer, useUpdateCustomer, useDeleteCustomer } from "@/hooks/customers/useCustomers";
@@ -27,6 +27,7 @@ const CombinedCustomerModal = ({
         categoryId: 0,
         notes: "",
         customerType: CustomerTypeEnum.CUSTOMER,
+        isUniversity: false, // إضافة الحقل الجديد
     });
 
     const [error, setError] = useState("");
@@ -49,6 +50,7 @@ const CombinedCustomerModal = ({
                     categoryId: 0,
                     notes: "",
                     customerType: CustomerTypeEnum.CUSTOMER,
+                    isUniversity: false, // إضافة القيمة الافتراضية
                 });
                 setCustomerType(CustomerTypeEnum.CUSTOMER);
             } else if (mode === "update" && customerData) {
@@ -58,6 +60,7 @@ const CombinedCustomerModal = ({
                     categoryId: customerData.categoryId || 0,
                     notes: customerData.notes || "",
                     customerType: customerData.customerType || CustomerTypeEnum.CUSTOMER,
+                    isUniversity: customerData.isUniversity || false, // إضافة القيمة من البيانات الموجودة
                 });
                 setCustomerType(customerData.customerType || CustomerTypeEnum.CUSTOMER);
             }
@@ -77,11 +80,21 @@ const CombinedCustomerModal = ({
     const handleInputChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
     ) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]: name === "categoryId" ? Number(value) : value,
-        }));
+        const { name, value, type } = e.target;
+        
+        // معالجة خاصة للـ checkbox
+        if (type === "checkbox") {
+            const checked = (e.target as HTMLInputElement).checked;
+            setFormData((prev) => ({
+                ...prev,
+                [name]: checked,
+            }));
+        } else {
+            setFormData((prev) => ({
+                ...prev,
+                [name]: name === "categoryId" ? Number(value) : value,
+            }));
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -302,6 +315,40 @@ const CombinedCustomerModal = ({
                                     required
                                 />
                             </div>
+
+                            {/* University Checkbox - إظهاره فقط للعملاء وليس للموردين */}
+                            {customerType === CustomerTypeEnum.CUSTOMER && (
+                                <div>
+                                    <div className="flex items-center gap-3">
+                                        <input
+                                            type="checkbox"
+                                            id="isUniversity"
+                                            name="isUniversity"
+                                            checked={formData.isUniversity}
+                                            onChange={handleInputChange}
+                                            className="w-4 h-4 text-blue-600 bg-slate-700 border-slate-600 rounded focus:ring-blue-500 focus:ring-2"
+                                        />
+                                        <label
+                                            htmlFor="isUniversity"
+                                            className="flex items-center gap-2 text-sm font-medium text-slate-300 cursor-pointer"
+                                        >
+                                            <GraduationCap className="h-4 w-4 text-blue-400" />
+                                            عميل جامعة
+                                        </label>
+                                    </div>
+                                    {formData.isUniversity && (
+                                        <div className="mt-2 flex">
+                                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                                                <GraduationCap className="h-3 w-3" />
+                                                عميل جامعة
+                                            </span>
+                                        </div>
+                                    )}
+                                    <p className="mt-1 text-xs text-slate-400">
+                                        حدد هذا الخيار إذا كان العميل من الجامعات
+                                    </p>
+                                </div>
+                            )}
 
                             {/* Category Field */}
                             <div>

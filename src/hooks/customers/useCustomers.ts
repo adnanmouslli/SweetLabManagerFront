@@ -84,13 +84,27 @@ export const useCustomerCategories = () => {
     queryKey: ["customer-categories"],
     queryFn: async (): Promise<CustomerCategory[]> => {
       const response = await apiClient.get<GetCustomerCategoriesResponse>(
-        "/customers/categories"
+        "/customer-categories"
       );
       // Map the response to match the expected CustomerCategory type
       return response.categories.map(category => ({
         ...category,
         description: category.description ?? null // Convert undefined to null
       }));
+    },
+  });
+};
+
+
+export const useCustomerCategoriesList = () => {
+  return useQuery<CustomerCategory[]>({
+    queryKey: ["customer-categories"],
+    queryFn: async (): Promise<CustomerCategory[]> => {
+      const response = await apiClient.get<CustomerCategory[]>(
+        "/customer-categories/list"
+      );
+      // Map the response to match the expected CustomerCategory type
+      return response;
     },
   });
 };

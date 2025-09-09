@@ -33,6 +33,7 @@ export interface CustomerInfo {
   categoryId: number | null;
   category: CustomerCategory | null;
   customerType: CustomerTypeEnum;
+  isUniversity: boolean;
 }
 
 // Financial Summary Interface
@@ -243,6 +244,7 @@ export interface AllCustomerType extends BaseEntity {
   category: CustomerCategory | null;
   customerType: CustomerTypeEnum;
   supplierBalance: number;
+  isUniversity: boolean;
   invoices: AllCustomersInvoice[];
   trays: Tray[];
   debts: Debt[];
@@ -257,6 +259,7 @@ export interface CustomerType {
   category: CustomerCategory | null;
   customerType: CustomerTypeEnum;
   supplierBalance: number;
+  isUniversity: boolean;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   activeAdvances: any;
 }
@@ -270,6 +273,7 @@ export interface CreateCustomerRequest {
   notes?: string | null;
   categoryId?: number | null;
   customerType: CustomerTypeEnum;
+  isUniversity?: boolean;
 }
 
 export type CreateCustomerResponse = CustomerInfo;
@@ -281,6 +285,7 @@ export interface UpdateCustomerRequest {
   notes?: string | null;
   categoryId?: number | null;
   customerType?: CustomerTypeEnum;
+  isUniversity?: boolean;
 }
 
 export type UpdateCustomerResponse = CustomerInfo;

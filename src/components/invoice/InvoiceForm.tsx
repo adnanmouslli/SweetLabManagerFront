@@ -397,7 +397,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
-          className="bg-slate-800 p-6 rounded-lg shadow-xl w-full max-w-lg mx-4"
+          className="bg-slate-800 p-6 rounded-lg shadow-xl w-full max-w-lg mx-4 h-[90vh] overflow-auto"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}

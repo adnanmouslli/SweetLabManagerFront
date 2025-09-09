@@ -1,21 +1,22 @@
-import { apiClient } from '@/utils/axios';
 import {
-    ReportResponse,
-    OrdersInventoryReportDTO,
-    WarehouseInventoryReportDTO,
-    WarehouseComparisonReportDTO,
     BoothInventoryReportDTO,
+    CustomerStatementReportDTO,
+    DebtDetailsReportDTO,
+    DebtsInventoryReportDTO,
+    EmployeeWithdrawalsReportDTO,
+    FundsMovementReportDTO,
     ItemConsumptionReportDTO,
     ItemPurchaseReportDTO,
-    DebtsInventoryReportDTO,
-    DebtDetailsReportDTO,
+    OrdersInventoryReportDTO,
     ProductSalesReportDTO,
-    FundsMovementReportDTO,
-    ShiftSummaryReportDTO,
-    CustomerStatementReportDTO,
+    ReportGenerationResult,
     SalesReportDTO,
-    ReportGenerationResult
+    ShiftSummaryReportDTO,
+    WarehouseComparisonReportDTO,
+    WarehouseInventoryReportDTO,
+    WorkshopSalariesReportDTO
 } from '@/types/reports.type';
+import { apiClient } from '@/utils/axios';
 
 class ReportsService {
     /**
@@ -25,7 +26,9 @@ class ReportsService {
         try {
             const params = new URLSearchParams();
 
-            if (filters.customerName) params.append('customerName', filters.customerName);
+            if (filters.customerIds && filters.customerIds.length > 0) {
+                params.append('customerIds', filters.customerIds.join(','));
+            }
             if (filters.categoryId) params.append('categoryId', filters.categoryId.toString());
             if (filters.status) params.append('status', filters.status.join(','));
             if (filters.paidStatus !== undefined) params.append('paidStatus', filters.paidStatus.toString());
@@ -302,31 +305,41 @@ class ReportsService {
      * Generate Funds Movement Report
      */
     async generateFundsMovementReport(filters: FundsMovementReportDTO): Promise<ReportGenerationResult> {
-        try {
-            const params = new URLSearchParams();
+    try {
+        const params = new URLSearchParams();
 
-            params.append('startDate', filters.startDate);
-            params.append('endDate', filters.endDate);
-            if (filters.download) params.append('download', 'true');
-
-            const response = await apiClient.get<string>(`/reports/funds/movement?${params.toString()}`, {
-                headers: {
-                    'Accept': 'text/html',
-                },
-            });
-
-            return {
-                success: true,
-                content: response,
-                filename: `funds-movement-${filters.startDate}-to-${filters.endDate}.html`
-            };
-        } catch (error) {
-            return {
-                success: false,
-                error: error instanceof Error ? error.message : 'Unknown error occurred'
-            };
+        params.append('startDate', filters.startDate);
+        params.append('endDate', filters.endDate);
+        
+        // إضافة فلتر الصندوق إذا تم تحديده
+        if (filters.fundType) {
+            params.append('fundType', filters.fundType);
         }
+        
+        if (filters.download) params.append('download', 'true');
+
+        const response = await apiClient.get<string>(`/reports/funds/movement?${params.toString()}`, {
+            headers: {
+                'Accept': 'text/html',
+            },
+        });
+
+        // تحديث اسم الملف ليشمل نوع الصندوق
+        const fundSuffix = filters.fundType ? `-${filters.fundType}` : '-all';
+        const filename = `funds-movement${fundSuffix}-${filters.startDate}-to-${filters.endDate}.html`;
+
+        return {
+            success: true,
+            content: response,
+            filename
+        };
+    } catch (error) {
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error occurred'
+        };
     }
+}
 
     /**
      * Generate Shift Summary Report
@@ -406,6 +419,74 @@ class ReportsService {
                 success: true,
                 content: response,
                 filename: `sales-report-${filters.startDate || 'default'}-to-${filters.endDate || 'default'}.html`
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error occurred'
+            };
+        }
+    }
+
+    /**
+     * Generate Employee Withdrawals Report
+     */
+    async generateEmployeeWithdrawalsReport(filters: EmployeeWithdrawalsReportDTO): Promise<ReportGenerationResult> {
+        try {
+            const params = new URLSearchParams();
+
+            params.append('startDate', filters.startDate);
+            params.append('endDate', filters.endDate);
+            if (filters.employeeId) params.append('employeeId', filters.employeeId.toString());
+            if (filters.download) params.append('download', 'true');
+
+            const response = await apiClient.get<string>(`/reports/employees/withdrawals?${params.toString()}`, {
+                headers: {
+                    'Accept': 'text/html',
+                },
+            });
+
+            const employeeSuffix = filters.employeeId ? `-employee-${filters.employeeId}` : '-all-employees';
+            const filename = `employee-withdrawals${employeeSuffix}-${filters.startDate}-to-${filters.endDate}.html`;
+
+            return {
+                success: true,
+                content: response,
+                filename
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error occurred'
+            };
+        }
+    }
+
+    /**
+     * Generate Workshop Salaries Report
+     */
+    async generateWorkshopSalariesReport(filters: WorkshopSalariesReportDTO): Promise<ReportGenerationResult> {
+        try {
+            const params = new URLSearchParams();
+
+            params.append('startDate', filters.startDate);
+            params.append('endDate', filters.endDate);
+            if (filters.workshopId) params.append('workshopId', filters.workshopId.toString());
+            if (filters.download) params.append('download', 'true');
+
+            const response = await apiClient.get<string>(`/reports/workshops/salaries?${params.toString()}`, {
+                headers: {
+                    'Accept': 'text/html',
+                },
+            });
+
+            const workshopSuffix = filters.workshopId ? `-workshop-${filters.workshopId}` : '-all-workshops';
+            const filename = `workshop-salaries${workshopSuffix}-${filters.startDate}-to-${filters.endDate}.html`;
+
+            return {
+                success: true,
+                content: response,
+                filename
             };
         } catch (error) {
             return {

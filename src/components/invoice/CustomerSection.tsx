@@ -4,7 +4,7 @@ import { useFetchCategories } from "@/hooks/customers/useCustomersCategories";
 import { Advance } from "@/types/advances.type";
 import { AllCustomerType, CustomerTypeEnum } from "@/types/customers.type";
 import { InvoiceCategory } from "@/types/invoice.type";
-import { Loader2, Plus, Tag, User } from "lucide-react";
+import { Loader2, Plus, Tag, User, X } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import Select, { GroupBase, StylesConfig } from 'react-select';
@@ -58,15 +58,18 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
   const { data: customers } = useFetchCustomers();
   const { data: activeAdvances } = useActiveAdvances();
   const [showAddCustomer, setShowAddCustomer] = useState(false);
+  const [showFormTypeDialog, setShowFormTypeDialog] = useState(false);
+  const [selectedFormType, setSelectedFormType] = useState<CustomerTypeEnum | null>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<AllCustomerType | null>(null);
   const [selectedAdvance, setSelectedAdvance] = useState<Advance | null>(null);
 
   const isAdvanceRepay = type === InvoiceCategory.ADVANCE && mode === "expense";
   const isCustomerRequired = type === InvoiceCategory.ADVANCE;
   const isCustomerPreset = isAdvanceRepay && customerId;
+  const shouldShowSupplierFormDirectly = mode === "expense" && type === InvoiceCategory.PRODUCTS;
 
   // Setup React Hook Form
-  const { control, handleSubmit, reset, formState: { errors }, watch } = useForm<CustomerFormData>({
+  const { control, handleSubmit, reset, formState: { errors }, watch, setValue } = useForm<CustomerFormData>({
     defaultValues: {
       name: "",
       phone: "",
@@ -100,6 +103,9 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
 
   // Calculate total debt from debts array
   const calculateTotalDebt = (customer: AllCustomerType): number => {
+    if (!customer.debts || !Array.isArray(customer.debts)) {
+      return 0;
+    }
     return customer.debts
       .filter(debt => debt.status === "active")
       .reduce((sum, debt) => sum + debt.remainingAmount, 0);
@@ -111,10 +117,10 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
     let filteredCustomers = customers || [];
 
     // Filter by customer type based on invoice mode
-    if (mode === "income") {
+    if (mode === "income" || (mode == "expense" && type!=InvoiceCategory.PRODUCTS)) {
       // For income invoices, only show customers (not suppliers)
-      filteredCustomers = filteredCustomers.filter((customer) => customer.customerType === CustomerTypeEnum.CUSTOMER);
-    } else if (mode === "expense") {
+      filteredCustomers = filteredCustomers
+    } else if (mode === "expense" && type==InvoiceCategory.PRODUCTS) {
       // For expense invoices, only show suppliers
       filteredCustomers = filteredCustomers.filter((customer) => customer.customerType === CustomerTypeEnum.SUPPLIER);
     }
@@ -207,6 +213,35 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
     }
   };
 
+  // Handle add customer button click
+  const handleAddCustomerClick = () => {
+    if (shouldShowSupplierFormDirectly) {
+      // Show supplier form directly
+      setSelectedFormType(CustomerTypeEnum.SUPPLIER);
+      setValue('customerType', CustomerTypeEnum.SUPPLIER);
+      setShowAddCustomer(true);
+    } else {
+      // Show form type selection dialog
+      setShowFormTypeDialog(true);
+    }
+  };
+
+  // Handle form type selection
+  const handleFormTypeSelection = (formType: CustomerTypeEnum) => {
+    setSelectedFormType(formType);
+    setValue('customerType', formType);
+    setShowFormTypeDialog(false);
+    setShowAddCustomer(true);
+  };
+
+  // Handle cancel add customer
+  const handleCancelAddCustomer = () => {
+    setShowAddCustomer(false);
+    setShowFormTypeDialog(false);
+    setSelectedFormType(null);
+    reset();
+  };
+
   // Form submission handler for adding a new customer
   const onSubmitNewCustomer: SubmitHandler<CustomerFormData> = async (data: CustomerFormData) => {
     try {
@@ -230,17 +265,18 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
       // Reset the form and hide it
       reset();
       setShowAddCustomer(false);
+      setSelectedFormType(null);
 
       setSnackbarConfig({
         open: true,
         severity: "success",
-        message: mode === "income" ? "تم إضافة العميل بنجاح" : "تم إضافة المورد بنجاح"
+        message: data.customerType === CustomerTypeEnum.CUSTOMER ? "تم إضافة العميل بنجاح" : "تم إضافة المورد بنجاح"
       });
     } catch (error) {
       setSnackbarConfig({
         open: true,
         severity: "error",
-        message: mode === "income" ? "حدث خطأ أثناء إضافة العميل" : "حدث خطأ أثناء إضافة المورد"
+        message: selectedFormType === CustomerTypeEnum.CUSTOMER ? "حدث خطأ أثناء إضافة العميل" : "حدث خطأ أثناء إضافة المورد"
       });
     }
   };
@@ -464,33 +500,76 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
               )}
             </div>
             <button
-              onClick={() => {
-                setShowAddCustomer(!showAddCustomer);
-                if (showAddCustomer) {
-                  reset();
-                }
-              }}
+              onClick={handleAddCustomerClick}
               className="bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
               type="button"
             >
               <Plus className="h-5 w-5" />
-              {showAddCustomer ? "إلغاء" : (mode === "income" ? "إضافة عميل" : "إضافة مورد")}
+              {shouldShowSupplierFormDirectly 
+                ? "إضافة مورد" 
+                : (showAddCustomer || showFormTypeDialog) 
+                  ? "إلغاء" 
+                  : "إضافة"}
             </button>
           </div>
 
+          {/* Form Type Selection Dialog */}
+          {showFormTypeDialog && (
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+              <div className="bg-slate-800 border border-slate-700/50 rounded-lg p-6 w-full max-w-md mx-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-medium text-slate-200">اختر نوع النموذج</h3>
+                  <button
+                    onClick={() => setShowFormTypeDialog(false)}
+                    className="text-slate-400 hover:text-slate-200 transition-colors"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+                
+                <div className="space-y-3">
+                  <button
+                    onClick={() => handleFormTypeSelection(CustomerTypeEnum.CUSTOMER)}
+                    className="w-full p-4 text-right bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded-lg transition-colors border border-blue-500/20"
+                  >
+                    <div className="font-medium">إضافة عميل</div>
+                    <div className="text-sm opacity-75">لإضافة عميل جديد</div>
+                  </button>
+                  
+                  <button
+                    onClick={() => handleFormTypeSelection(CustomerTypeEnum.SUPPLIER)}
+                    className="w-full p-4 text-right bg-green-500/10 hover:bg-green-500/20 text-green-400 rounded-lg transition-colors border border-green-500/20"
+                  >
+                    <div className="font-medium">إضافة مورد</div>
+                    <div className="text-sm opacity-75">لإضافة مورد جديد</div>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Add New Customer Form */}
-          {showAddCustomer && (
+          {showAddCustomer && selectedFormType && (
             <form
               onSubmit={handleSubmit(onSubmitNewCustomer)}
               className="p-4 border border-blue-500/20 bg-blue-500/5 rounded-lg space-y-3"
               noValidate
             >
-              <h3 className="text-blue-400 text-lg font-medium">
-                {mode === "income" ? "إضافة عميل جديد" : "إضافة مورد جديد"}
-              </h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-blue-400 text-lg font-medium">
+                  {selectedFormType === CustomerTypeEnum.CUSTOMER ? "إضافة عميل جديد" : "إضافة مورد جديد"}
+                </h3>
+                <button
+                  type="button"
+                  onClick={handleCancelAddCustomer}
+                  className="text-slate-400 hover:text-slate-200 transition-colors"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
 
               {/* Hidden customerType field */}
-              <input type="hidden" name="customerType" value={mode === "income" ? CustomerTypeEnum.CUSTOMER : CustomerTypeEnum.SUPPLIER} />
+              <input type="hidden" name="customerType" value={selectedFormType} />
 
               {/* Name Field */}
               <div className="space-y-2">
@@ -500,13 +579,13 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
                   <Controller
                     name="name"
                     control={control}
-                    rules={{ required: "اسم العميل مطلوب" }}
+                    rules={{ required: `اسم ${selectedFormType === CustomerTypeEnum.CUSTOMER ? 'العميل' : 'المورد'} مطلوب` }}
                     render={({ field }) => (
                       <input
                         {...field}
                         id="name"
                         type="text"
-                        placeholder="أدخل اسم العميل"
+                        placeholder={`أدخل اسم ${selectedFormType === CustomerTypeEnum.CUSTOMER ? 'العميل' : 'المورد'}`}
                         className={`w-full pl-4 pr-12 py-2 bg-slate-700/50 border ${errors.name ? "border-red-500/50" : "border-slate-600/50"
                           } rounded-lg text-slate-200`}
                       />
@@ -610,7 +689,7 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
                     <span>جاري الإضافة...</span>
                   </div>
                 ) : (
-                  <span>إضافة العميل</span>
+                  <span>{selectedFormType === CustomerTypeEnum.CUSTOMER ? "إضافة العميل" : "إضافة المورد"}</span>
                 )}
               </button>
             </form>

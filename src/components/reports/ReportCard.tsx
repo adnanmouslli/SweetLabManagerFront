@@ -87,21 +87,7 @@ const ReportCard: React.FC<ReportCardProps> = ({
 
                             {/* Action Buttons */}
                             <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                                {onToggleFavorite && (
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            onToggleFavorite(report.id);
-                                        }}
-                                        className={`p-2 rounded-xl transition-all duration-200 ${isFavorite
-                                            ? 'text-yellow-400 bg-yellow-500/20'
-                                            : 'text-slate-400 hover:text-yellow-400 hover:bg-yellow-500/10'
-                                            }`}
-                                    >
-                                        <Star className={`w-5 h-5 ${isFavorite ? 'fill-current' : ''}`} />
-                                    </button>
-                                )}
-
+                               
                                 <div className="flex items-center space-x-1 rtl:space-x-reverse text-blue-400 opacity-0 group-hover:opacity-100 transition-all duration-200">
                                     <Eye className="w-4 h-4" />
                                     <span className="text-sm font-medium">معاينة</span>
@@ -163,23 +149,7 @@ const ReportCard: React.FC<ReportCardProps> = ({
                         <span className="text-3xl">{report.icon}</span>
                     </div>
 
-                    {/* Action Buttons */}
-                    <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                        {onToggleFavorite && (
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onToggleFavorite(report.id);
-                                }}
-                                className={`p-2 rounded-xl transition-all duration-200 ${isFavorite
-                                    ? 'text-yellow-400 bg-yellow-500/20 scale-110'
-                                    : 'text-slate-400 hover:text-yellow-400 hover:bg-yellow-500/10 hover:scale-110'
-                                    }`}
-                            >
-                                <Star className={`w-5 h-5 ${isFavorite ? 'fill-current' : ''}`} />
-                            </button>
-                        )}
-                    </div>
+                  
                 </div>
 
                 {/* Title and Description */}
@@ -187,64 +157,10 @@ const ReportCard: React.FC<ReportCardProps> = ({
                     <h3 className="text-xl font-bold text-slate-100 mb-3 group-hover:text-blue-400 transition-colors duration-200 line-clamp-2">
                         {report.title}
                     </h3>
-                    <p className="text-slate-400 text-sm leading-relaxed line-clamp-3">
-                        {report.description}
-                    </p>
+                    
                 </div>
 
-                {/* Category Badge */}
-                <div className="mb-4">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r ${categoryColor} border border-current/20 text-white`}>
-                        {categoryName}
-                    </span>
-                </div>
-
-                {/* Stats Row */}
-                <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-3 rtl:space-x-reverse">
-                        {/* Complexity */}
-                        <div className={`flex items-center space-x-1 rtl:space-x-reverse px-2 py-1 rounded-lg ${getComplexityColor(complexity)}`}>
-                            <TrendingUp className="w-3 h-3" />
-                            <span className="text-xs font-medium">{getComplexityLabel(complexity)}</span>
-                        </div>
-
-                        {/* Filters Count */}
-                        <div className="flex items-center space-x-1 rtl:space-x-reverse text-slate-400">
-                            <Filter className="w-4 h-4" />
-                            <span className="text-sm">{totalFilters}</span>
-                        </div>
-                    </div>
-
-                    {/* Status Indicators */}
-                    <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                        {isRecent && (
-                            <div className="flex items-center space-x-1 rtl:space-x-reverse text-orange-400">
-                                <Clock className="w-4 h-4" />
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* Progress Bar */}
-                <div className="mb-4">
-                    <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
-                        <span>التقدم</span>
-                        <span>{requiredFilters}/{totalFilters}</span>
-                    </div>
-                    <div className="w-full bg-slate-700 rounded-full h-2">
-                        <div
-                            className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-500"
-                            style={{ width: `${(requiredFilters / totalFilters) * 100}%` }}
-                        />
-                    </div>
-                </div>
-
-                {/* Action Button */}
-                <div className="flex items-center justify-center space-x-2 rtl:space-x-reverse text-blue-400 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                    <Eye className="w-5 h-5" />
-                    <span className="font-semibold">إنشاء التقرير</span>
-                    <ArrowLeft className="w-4 h-4" />
-                </div>
+               
             </div>
 
             {/* Hover Effect Overlay */}
