@@ -76,7 +76,7 @@ const createApiClient = ({
 };
 
 const api = createApiClient({
-  baseURL: process.env.BASE_URL || "http://62.171.153.198:4300",
+  baseURL: process.env.NEXT_PUBLIC_BASE_URL || "",
   authRedirectPath: "/login",
 });
 

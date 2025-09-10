@@ -30,7 +30,7 @@ const InvoiceOrderConversionModal: React.FC<InvoiceOrderConversionModalProps> = 
     onSuccess
 }) => {
     // State
-    const [trayCount, setTrayCount] = useState<number>(0);
+    const [trayCount, setTrayCount] = useState<number | ''>('');
     const [discount, setDiscount] = useState<number>(0);
     const [additionalAmount, setAdditionalAmount] = useState<number>(0);
     const [initialPayment, setInitialPayment] = useState<number>(0);
@@ -64,7 +64,9 @@ const InvoiceOrderConversionModal: React.FC<InvoiceOrderConversionModalProps> = 
     const handleSubmit = () => {
         // Validate
         const newErrors: { [key: string]: string } = {};
-        if (trayCount < 0) {
+        if (trayCount === '' || trayCount === null || trayCount === undefined) {
+            newErrors.trayCount = 'عدد الفوارغ مطلوب';
+        } else if (trayCount < 0) {
             newErrors.trayCount = 'لا يمكن أن يكون عدد الفوارغ أقل من صفر';
         }
         if (discount < 0) {
@@ -89,7 +91,7 @@ const InvoiceOrderConversionModal: React.FC<InvoiceOrderConversionModalProps> = 
         // Prepare data based on payment type
         const invoiceData = {
             notes: notes.trim() || undefined,
-            trayCount,
+            trayCount: trayCount === '' ? 0 : trayCount,
             discount,
             additionalAmount,
         };
@@ -234,16 +236,17 @@ const InvoiceOrderConversionModal: React.FC<InvoiceOrderConversionModalProps> = 
 
                     {/* Tray Count - Always Rendered */}
                     <div className="space-y-2">
-                        <label className="block text-slate-200">عدد الفوارغ</label>
+                        <label className="block text-slate-200">عدد الفوارغ <span className="text-red-400">*</span></label>
                         <div className="relative">
                             <input
                                 id="trayCount"
                                 type="number"
                                 value={trayCount}
-                                onChange={(e) => setTrayCount(Number(e.target.value))}
+                                onChange={(e) => setTrayCount(e.target.value === '' ? '' : Number(e.target.value))}
                                 className={`w-full px-4 py-2 bg-slate-700/50 border ${errors.trayCount ? 'border-red-500/50' : 'border-slate-600/50'} rounded-lg text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30`}
                                 min="0"
-                                placeholder="عدد الفوارغ"
+                                placeholder="عدد الفوارغ *"
+                                required
                             />
                             {errors.trayCount && (
                                 <div className="text-red-400 text-sm mt-1">
