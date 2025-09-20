@@ -55,7 +55,12 @@ export const useReportsData = () => {
         label: category.name
     })});
 
-    const itemOptions = items.filter(item=>item.type=="raw").map((item: Item) => ({
+    const itemOptionsRaw = items.filter(item=>item.type=="raw").map((item: Item) => ({
+        value: item.id,
+        label: item.name
+    }));
+
+    const itemOptionsProduction = items.filter(item=>item.type=="production").map((item: Item) => ({
         value: item.id,
         label: item.name
     }));
@@ -93,7 +98,8 @@ export const useReportsData = () => {
         // Transformed options for filters
         customerOptions,
         customerCategoryOptions,
-        itemOptions,
+        itemOptionsRaw,
+        itemOptionsProduction,
         itemGroupOptions,
         debtOptions,
         shiftOptions,

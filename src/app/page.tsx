@@ -18,7 +18,7 @@ import TransactionTypeModal from "@/components/common/TransactionTypeModal";
 
 // Hooks
 import { useMokkBar } from "@/components/providers/MokkBarContext";
-import { useCurrentInvoices } from "@/hooks/invoices/useInvoice";
+import { useCurrentInvoices, useInvoices } from "@/hooks/invoices/useInvoice";
 import {
   QueryShiftType,
   useCloseShift,
@@ -53,7 +53,7 @@ const TABS = [
   { id: FundType.university, label: "جامعة" },
 ];
 
-// Enhanced Transfer Modal Component with Improved UI
+// Enhanced Transfer Modal Component with Current Shift Balance Calculation
 const EnhancedTransferModal = ({
   isOpen,
   onClose,
@@ -63,6 +63,7 @@ const EnhancedTransferModal = ({
   funds,
   sourceType = null,
   destinationType = "main",
+  currentInvoices, // إضافة الفواتير الحالية
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -77,6 +78,7 @@ const EnhancedTransferModal = ({
   }>;
   sourceType?: "general" | "booth" | "university" | "main" | null;
   destinationType?: "main" | "general";
+  currentInvoices: any; 
 }) => {
   const [amount, setAmount] = useState("");
   const [notes, setNotes] = useState("");
@@ -99,11 +101,65 @@ const EnhancedTransferModal = ({
     }
   };
 
-  // Get current balance of the source fund
-  const sourceBalance = funds.find(fund => fund.fundType === sourceType)?.currentBalance || 0;
+  // دالة حساب الرصيد الحالي من الفواتير في الواردية النشطة
+  const calculateCurrentShiftBalance = (fundType: string) => {
 
-  // Get destination fund balance
-  const destinationBalance = destinationType == "main" ? " " : funds.find(fund => fund.fundType === destinationType)?.currentBalance || 0;
+    if (!currentInvoices) {
+      console.log("No current invoices data");
+      return 0;
+    }
+
+    // الحصول على قسم الفواتير المناسب
+    const sectionKey = fundType === "general" ? "general" : 
+                      fundType === "booth" ? "booth" : 
+                      fundType === "university" ? "university" : null;
+    
+    if (!sectionKey) {
+      console.log("Invalid section key for fund type:", fundType);
+      return 0;
+    }
+
+    console.log("Looking for section:", sectionKey);
+    const section = currentInvoices[sectionKey];
+    console.log("Section data:", section);
+
+    if (!section) {
+      console.log("Section not found");
+      return 0;
+    }
+
+    // التحقق من هيكل البيانات - قد تكون الفواتير في section.invoices أو مباشرة في section
+    let invoices = [];
+    if (section.invoices && Array.isArray(section.invoices)) {
+      invoices = section.invoices;
+    } else if (Array.isArray(section)) {
+      invoices = section;
+    } else {
+      console.log("Invoices not found in expected format");
+      return 0;
+    }
+
+
+    // حساب إجمالي الدخل والمصروف من فواتير الواردية الحالية
+    const totalIncome = invoices
+      .filter((invoice: any) => invoice.invoiceType === 'income' && invoice.paidStatus == true)
+      .reduce((sum: number, invoice: any) => sum + (invoice.totalAmount || 0), 0);
+
+    const totalExpense = invoices
+      .filter((invoice: any) => invoice.invoiceType === 'expense'  && invoice.paidStatus == true)
+      .reduce((sum: number, invoice: any) => sum + (invoice.totalAmount || 0), 0);
+
+    // الرصيد المتاح = الدخل - المصروف
+    return totalIncome - totalExpense;
+  };
+
+  // Get current balance of the source fund from current shift invoices
+  const sourceBalance = sourceType ? calculateCurrentShiftBalance(sourceType) : 0;
+
+  // Get destination fund balance (for display only - not used in validation)
+  const destinationBalance = destinationType === "main" 
+    ? 0 // الخزينة الرئيسية لا تظهر رصيدها
+    : calculateCurrentShiftBalance(destinationType);
 
   // Get fund color by type (based on your screenshots)
   const getFundColor = (type: string): string => {
@@ -142,7 +198,7 @@ const EnhancedTransferModal = ({
         {/* Fund Balances Section - Styled to match screenshot */}
         <div className="mb-6">
           <div className="text-sm font-medium text-slate-400 mb-2 px-1">
-            أرصدة الخزائن
+            أرصدة الواردية الحالية
           </div>
           <div className="grid grid-cols-2 gap-3">
             {sourceType && (
@@ -151,16 +207,24 @@ const EnhancedTransferModal = ({
                 <div className={`text-lg font-bold ${getFundColor(sourceType)}`}>
                   {sourceBalance.toLocaleString()} ل.س
                 </div>
+                <div className="text-xs text-slate-500 mt-1">
+                  (رصيد الواردية الحالية)
+                </div>
               </div>
             )}
-            {destinationType == "general" && <div className="rounded-lg bg-slate-800/80 border border-slate-700/70 p-4 flex flex-col items-center">
-              <div className="text-xs text-slate-400 mb-2">
-                الصندوق العام
+            {destinationType === "general" && (
+              <div className="rounded-lg bg-slate-800/80 border border-slate-700/70 p-4 flex flex-col items-center">
+                <div className="text-xs text-slate-400 mb-2">
+                  الصندوق العام
+                </div>
+                <div className={`text-lg font-bold ${getFundColor(destinationType)}`}>
+                  {destinationBalance.toLocaleString()} ل.س
+                </div>
+                <div className="text-xs text-slate-500 mt-1">
+                  (رصيد الواردية الحالية)
+                </div>
               </div>
-              <div className={`text-lg font-bold ${getFundColor(destinationType)}`}>
-                {destinationBalance.toLocaleString()} ل.س
-              </div>
-            </div>}
+            )}
           </div>
         </div>
 
@@ -182,7 +246,10 @@ const EnhancedTransferModal = ({
               max={sourceBalance}
             />
             {Number(amount) > sourceBalance && (
-              <p className="text-red-400 text-xs">المبلغ أكبر من الرصيد المتاح</p>
+              <p className="text-red-400 text-xs">المبلغ أكبر من الرصيد المتاح في الواردية الحالية</p>
+            )}
+            {sourceBalance <= 0 && (
+              <p className="text-yellow-400 text-xs">لا يوجد رصيد متاح في الواردية الحالية</p>
             )}
           </div>
 
@@ -211,10 +278,10 @@ const EnhancedTransferModal = ({
             </button>
             <button
               onClick={() => {
-                if (!amount || Number(amount) > sourceBalance) return;
+                if (!amount || Number(amount) > sourceBalance || sourceBalance <= 0) return;
                 onSubmit({ amount: Number(amount), notes });
               }}
-              disabled={!amount || isPending || Number(amount) > sourceBalance}
+              disabled={!amount || isPending || Number(amount) > sourceBalance || sourceBalance <= 0}
               className="px-4 py-2 rounded-lg bg-cyan-600 text-white hover:bg-cyan-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {isPending ? (
@@ -270,6 +337,8 @@ export default function Page() {
 
   // Added funds query
   const { data: funds, isLoading: isFundsLoading } = useFunds();
+  const { data: invoices, isLoading: isInvoicesLoading } = useInvoices();
+
 
   const { hasAnyRole } = useRoles();
   // Derived State
@@ -697,6 +766,7 @@ export default function Page() {
             funds={funds}
             sourceType={transferSource}
             destinationType="general"
+            currentInvoices={currentInvoices}
           />
         )}
 
@@ -715,6 +785,8 @@ export default function Page() {
             funds={funds}
             sourceType={transferSource}
             destinationType="main"
+            currentInvoices={currentInvoices}
+
           />
         )}
       </AnimatePresence>

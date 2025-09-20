@@ -101,7 +101,8 @@ const ReportsPage = () => {
         customerOptions,
         customerCategoryOptions,
         orderCategories,
-        itemOptions,
+        itemOptionsRaw,
+        itemOptionsProduction,
         itemGroupOptions,
         debtOptions,
         shiftOptions,
@@ -133,7 +134,8 @@ const ReportsPage = () => {
             customerOptions,
             customerCategoryOptions,
             orderCategories: orderCategories.map((item)=>({value:item.id, label:item.name})),
-            itemOptions,
+            itemOptionsRaw,
+            itemOptionsProduction,
             itemGroupOptions,
           
             debtOptions,
@@ -143,7 +145,7 @@ const ReportsPage = () => {
         
         });
 
-    }, [customerOptions, customerCategoryOptions, itemOptions, itemGroupOptions, debtOptions, shiftOptions]);
+    }, [customerOptions, customerCategoryOptions, itemOptionsRaw , itemOptionsProduction, itemGroupOptions, debtOptions, shiftOptions]);
 
     // Filter and sort reports
     const filteredAndSortedReports = useMemo(() => {

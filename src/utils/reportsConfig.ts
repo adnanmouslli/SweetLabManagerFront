@@ -51,7 +51,8 @@ export const generateReportsConfig = (data: {
     customerCategoryOptions: Array<{ value: number; label: string }>;
     orderCategories: Array<{ value: number; label: string }>;
 
-    itemOptions: Array<{ value: number; label: string }>;
+    itemOptionsRaw: Array<{ value: number; label: string }>;
+    itemOptionsProduction: Array<{ value: number; label: string }>;
     itemGroupOptions: Array<{ value: number; label: string }>;
     debtOptions: Array<{ value: number; label: string }>;
     shiftOptions: Array<{ value: number; label: string }>;
@@ -99,7 +100,7 @@ export const generateReportsConfig = (data: {
                     key: 'itemIds',
                     label: 'مواد معينة',
                     type: FilterType.MULTISELECT,
-                    options: data.itemOptions,
+                    options: data.itemOptionsProduction,
                     multiple: true
                 },
                 {
@@ -151,7 +152,7 @@ export const generateReportsConfig = (data: {
                     key: 'itemIds',
                     label: 'مواد محددة',
                     type: FilterType.MULTISELECT,
-                    options: data.itemOptions,
+                    options: data.itemOptionsRaw,
                     multiple: true
                 }
             ],
@@ -236,7 +237,7 @@ export const generateReportsConfig = (data: {
                     key: 'itemId',
                     label: 'معرف المادة',
                     type: FilterType.SELECT,
-                    options: data.itemOptions,
+                    options: data.itemOptionsRaw,
                     required: true
                 },
                 {
@@ -267,7 +268,7 @@ export const generateReportsConfig = (data: {
                     key: 'itemId',
                     label: 'معرف المادة',
                     type: FilterType.SELECT,
-                    options: data.itemOptions,
+                    options: data.itemOptionsRaw,
                     required: true
                 },
                 {
@@ -355,7 +356,7 @@ export const generateReportsConfig = (data: {
                     key: 'itemIds',
                     label: 'معرفات المنتجات',
                     type: FilterType.MULTISELECT,
-                    options: data.itemOptions,
+                    options: data.itemOptionsProduction,
                     multiple: true,
                     required: true
                 },
@@ -538,7 +539,8 @@ export const generateReportsConfig = (data: {
 export const REPORTS: ReportConfig[] = generateReportsConfig({
     customerOptions: [],
     customerCategoryOptions: [],
-    itemOptions: [],
+    itemOptionsProduction: [],
+    itemOptionsRaw: [],
     itemGroupOptions: [],
     debtOptions: [],
     shiftOptions: [],

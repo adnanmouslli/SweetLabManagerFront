@@ -332,6 +332,13 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
 
                 if (field === 'itemId' && items && value) {
                     const selectedItem = items.find(item => item.id === parseInt(value as string));
+
+                     // التحقق من أن المادة من نوع الإنتاج
+                    if (selectedItem && selectedItem.type !== 'production') {
+                        console.error('يمكن اختيار مواد الإنتاج فقط');
+                        return prev; // إرجاع الحالة السابقة دون تغيير
+                    }
+                
                     if (selectedItem && selectedItem.units && selectedItem.units.length > 0) {
                         const defaultUnit = selectedItem.units.find(u => u.unit === selectedItem.defaultUnit) || selectedItem.units[0];
                         if (defaultUnit) {
@@ -355,8 +362,16 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
     const addItem = useCallback(() => {
         try {
             if (selectedItem > 0) {
+
+
                 const selectedItemObj = items?.find(item => item.id === selectedItem);
-                if (!selectedItemObj || quantity <= 0 || selectedUnitIndex < 0) return;
+                // التحقق من أن المادة من نوع الإنتاج
+                if (!selectedItemObj || selectedItemObj.type !== 'production') {
+                    console.error('يمكن إضافة مواد الإنتاج فقط');
+                    return;
+                }
+                
+                if (quantity <= 0 || selectedUnitIndex < 0) return;
 
                 const newItem: OrderItem = {
                     itemId: selectedItem,
@@ -578,8 +593,25 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
         return item ? item.name : '';
     }, [items]);
 
+    const filteredGroups = useMemo(() => {
+        if (!itemGroups || !items) return [];
+        
+        // فلترة التصنيفات التي تحتوي على مواد إنتاج فقط
+        return itemGroups.filter(group => {
+            // البحث عن مواد إنتاج في هذا التصنيف
+            const hasProductionItems = items.some(item => 
+                item.groupId === group.id && item.type === 'production'
+            );
+            return hasProductionItems;
+        });
+    }, [itemGroups, items]);
+
     const filteredItems = useMemo(() => {
         let filtered = items || [];
+
+            // فلترة مواد الإنتاج فقط
+         filtered = filtered.filter(item => item.type === 'production');
+
 
         if (selectedGroupId > 0) {
             filtered = filtered.filter(item => item.groupId === selectedGroupId);
@@ -867,7 +899,7 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
                     <div className="space-y-4">
                         <label className="block text-slate-200 mb-2">التصنيف</label>
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                            {itemGroups?.map(group => (
+                            {filteredGroups?.map(group => (
                                 <div
                                     key={group.id}
                                     onClick={() => {
@@ -889,7 +921,7 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
                         </div>
                     </div>
 
-                    {selectedGroupId > 0 && (
+                    {selectedGroupId > 0 && filteredGroups.some(group => group.id === selectedGroupId) && (
                         <>
                             <div className="space-y-4">
                                 <div className="flex justify-between items-center">

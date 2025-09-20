@@ -291,7 +291,8 @@ const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({
             itemId: item.itemId,
             unitPrice: Number(item.unitPrice),
             quantity: Number(item.quantity),
-            subTotal: Number(item.quantity * item.unitPrice), // Recalculate to ensure accuracy
+            unit: item.unit || 'قطعة',
+            subTotal: Number(item.quantity * item.unitPrice),
           })),
         };
       } else {
