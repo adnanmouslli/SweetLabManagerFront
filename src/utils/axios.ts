@@ -76,7 +76,7 @@ const createApiClient = ({
 };
 
 const api = createApiClient({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://62.171.153.198:4300",
+  baseURL: "http://62.171.153.198:4300",
   authRedirectPath: "/login",
 });
 

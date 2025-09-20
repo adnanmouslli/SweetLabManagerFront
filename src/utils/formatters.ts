@@ -55,7 +55,7 @@ export const getCustomerDisplayName = (
   if (notes && notes.trim()) {
     const nameMatch = notes.match(/w-([a-zA-Z\u0600-\u06FF]+)/);
     if (nameMatch && nameMatch[1]) {
-      return nameMatch[1];
+      return "ورشة : " + notes.split('w-')[1];
     }
   }
 
