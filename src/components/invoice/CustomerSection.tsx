@@ -135,13 +135,9 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
     return customer.invoices
       .filter((invoice) => invoice.isBreak && !invoice.paidStatus)
       .reduce((sum, invoice) => {
-        // For breakage invoices, calculate the remaining amount after initial payment
-        // If firstPayment is available, subtract it from net amount
+        // For breakage invoices, calculate the remaining amount
         const netAmount = invoice.totalAmount - invoice.discount;
-        const remainingAmount = invoice.firstPayment
-          ? netAmount - invoice.firstPayment
-          : netAmount;
-        return sum + Math.max(0, remainingAmount); // Ensure non-negative
+        return sum + Math.max(0, netAmount); // Ensure non-negative
       }, 0);
   };
 
