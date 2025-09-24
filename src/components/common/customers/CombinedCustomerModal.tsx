@@ -44,7 +44,7 @@ const CombinedCustomerModal = ({
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
-    categoryId: null,
+    categoryId: null as number | null,
     notes: "",
     customerType: CustomerTypeEnum.CUSTOMER,
     isUniversity: false, // إضافة الحقل الجديد
@@ -80,7 +80,7 @@ const CombinedCustomerModal = ({
         setFormData({
           name: customerData.name || "",
           phone: customerData.phone || "",
-          categoryId: customerData.categoryId || 0,
+          categoryId: customerData.categoryId ?? null,
           notes: customerData.notes || "",
           customerType: customerData.customerType || CustomerTypeEnum.CUSTOMER,
           isUniversity: customerData.isUniversity || false, // إضافة القيمة من البيانات الموجودة
@@ -410,7 +410,7 @@ const CombinedCustomerModal = ({
                 </label>
                 <select
                   name="categoryId"
-                  value={formData.categoryId}
+                  value={formData.categoryId || ""}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/30"
                 >
