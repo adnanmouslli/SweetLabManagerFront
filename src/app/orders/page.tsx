@@ -130,6 +130,31 @@ const OrdersPage: React.FC = () => {
     const [selectedDate, setSelectedDate] = useState<string>(""); // State for selected date
     const [paymentStatus, setPaymentStatus] = useState<"all" | "paid" | "unpaid" | "break">("all"); // State for payment status
 
+    // Function to clear date filter
+    const handleClearDate = () => {
+        setSelectedDate("");
+    };
+
+    // Function to handle date change
+    const handleDateChange = (date: string) => {
+        setSelectedDate(date);
+    };
+
+    // Function to clear date filter (alias)
+    const clearDateFilter = () => {
+        setSelectedDate("");
+    };
+
+    // Function to handle payment status change
+    const handlePaymentStatusChange = (status: "all" | "paid" | "unpaid" | "break") => {
+        setPaymentStatus(status);
+    };
+
+    // Function to clear payment status filter
+    const clearPaymentStatusFilter = () => {
+        setPaymentStatus("all");
+    };
+
     // Filter parameters (unchanged, as filtering is done client-side)
     const getAllFilters = (): FilterOrders | undefined => {
         if (selectedDate) {
@@ -167,10 +192,18 @@ const OrdersPage: React.FC = () => {
         isTomorrowOrdersLoading ||
         isCategoriesLoading;
 
-    // Filter orders based on search term and payment status
+    // Filter orders based on search term, payment status, and selected date
     const filteredAllOrders = useMemo(() => {
         if (!allOrders) return [];
         let filtered = allOrders;
+
+        // Apply date filter
+        if (selectedDate) {
+            filtered = filtered.filter((order) => {
+                const orderDate = order.createdAt ? new Date(order.createdAt).toISOString().split('T')[0] : '';
+                return orderDate === selectedDate;
+            });
+        }
 
         // Apply search term filter
         if (searchTerm) {
@@ -195,12 +228,20 @@ const OrdersPage: React.FC = () => {
         }
 
         return filtered;
-    }, [allOrders, searchTerm, paymentStatus]);
+    }, [allOrders, searchTerm, paymentStatus, selectedDate]);
 
     const filteredTodayOrders = useMemo(() => {
         if (!todayOrders) return [];
         let filtered = todayOrders;
 
+        // Apply date filter
+        if (selectedDate) {
+            filtered = filtered.filter((order) => {
+                const orderDate = order.createdAt ? new Date(order.createdAt).toISOString().split('T')[0] : '';
+                return orderDate === selectedDate;
+            });
+        }
+
         // Apply search term filter
         if (searchTerm) {
             const searchLower = searchTerm.toLowerCase();
@@ -224,11 +265,19 @@ const OrdersPage: React.FC = () => {
         }
 
         return filtered;
-    }, [todayOrders, searchTerm, paymentStatus]);
+    }, [todayOrders, searchTerm, paymentStatus, selectedDate]);
 
     const filteredTomorrowOrders = useMemo(() => {
         if (!tomorrowOrders) return [];
         let filtered = tomorrowOrders;
+
+        // Apply date filter
+        if (selectedDate) {
+            filtered = filtered.filter((order) => {
+                const orderDate = order.createdAt ? new Date(order.createdAt).toISOString().split('T')[0] : '';
+                return orderDate === selectedDate;
+            });
+        }
 
         // Apply search term filter
         if (searchTerm) {
@@ -253,7 +302,7 @@ const OrdersPage: React.FC = () => {
         }
 
         return filtered;
-    }, [tomorrowOrders, searchTerm, paymentStatus]);
+    }, [tomorrowOrders, searchTerm, paymentStatus, selectedDate]);
 
     // Handle customer selection
     const handleSelectCustomer = (customer: OrderCustomer, categoryId: number) => {
