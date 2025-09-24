@@ -13,7 +13,7 @@ import {
   BellDot,
   Package,
   Plus,
-  Minus
+  Minus,
 } from "lucide-react";
 import { formatDate, getCustomerDisplayName } from "@/utils/formatters";
 import { ShiftsInvoices } from "@/types/shifts.type";
@@ -36,12 +36,12 @@ const ActionsMenu = ({
   invoice,
   onView,
   onEdit,
-  onDelete
+  onDelete,
 }: {
-  invoice: any,
-  onView: (invoice: any) => void,
-  onEdit: (invoice: any) => void,
-  onDelete: (invoice: any) => void
+  invoice: any;
+  onView: (invoice: any) => void;
+  onEdit: (invoice: any) => void;
+  onDelete: (invoice: any) => void;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -54,9 +54,9 @@ const ActionsMenu = ({
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -130,7 +130,11 @@ const PaginationControls = ({
     let visiblePages = [1, totalPages];
 
     // Pages around current
-    for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+    for (
+      let i = Math.max(2, currentPage - 1);
+      i <= Math.min(totalPages - 1, currentPage + 1);
+      i++
+    ) {
       visiblePages.push(i);
     }
 
@@ -154,20 +158,29 @@ const PaginationControls = ({
       <div className="flex items-center gap-1">
         {showPageNumbers().map((number, index) => {
           if (number === -1) {
-            return <span key={`ellipsis-left-${index}`} className="text-slate-400">...</span>;
+            return (
+              <span key={`ellipsis-left-${index}`} className="text-slate-400">
+                ...
+              </span>
+            );
           }
           if (number === -2) {
-            return <span key={`ellipsis-right-${index}`} className="text-slate-400">...</span>;
+            return (
+              <span key={`ellipsis-right-${index}`} className="text-slate-400">
+                ...
+              </span>
+            );
           }
 
           return (
             <button
               key={number}
               onClick={() => onPageChange(number)}
-              className={`px-3 py-1 rounded-lg text-sm transition-colors ${currentPage === number
-                ? "bg-slate-700/50 text-slate-200"
-                : "text-slate-400 hover:text-slate-200 hover:bg-slate-700/25"
-                }`}
+              className={`px-3 py-1 rounded-lg text-sm transition-colors ${
+                currentPage === number
+                  ? "bg-slate-700/50 text-slate-200"
+                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-700/25"
+              }`}
             >
               {number}
             </button>
@@ -187,19 +200,25 @@ const PaginationControls = ({
 };
 
 // Column header for sorting
-type SortField = 'id' | 'customerName' | 'createdAt' | 'totalAmount' | 'paidStatus' | 'invoiceType';
-type SortDirection = 'asc' | 'desc';
+type SortField =
+  | "id"
+  | "customerName"
+  | "createdAt"
+  | "totalAmount"
+  | "paidStatus"
+  | "invoiceType";
+type SortDirection = "asc" | "desc";
 
 const SortableHeader = ({
   field,
   title,
   currentSort,
-  setSort
+  setSort,
 }: {
-  field: SortField,
-  title: string,
-  currentSort: { field: SortField | null, direction: SortDirection },
-  setSort: (field: SortField) => void
+  field: SortField;
+  title: string;
+  currentSort: { field: SortField | null; direction: SortDirection };
+  setSort: (field: SortField) => void;
 }) => {
   const isActive = currentSort.field === field;
 
@@ -212,7 +231,7 @@ const SortableHeader = ({
         {title}
         <div className="flex flex-col h-4 w-4 justify-center items-center">
           {isActive ? (
-            currentSort.direction === 'asc' ? (
+            currentSort.direction === "asc" ? (
               <ChevronUp className="h-4 w-4 text-blue-400" />
             ) : (
               <ChevronDown className="h-4 w-4 text-blue-400" />
@@ -227,7 +246,13 @@ const SortableHeader = ({
 };
 
 // Component to display invoice items
-const InvoiceItemsRow = ({ invoice, isExpanded }: { invoice: any, isExpanded: boolean }) => {
+const InvoiceItemsRow = ({
+  invoice,
+  isExpanded,
+}: {
+  invoice: any;
+  isExpanded: boolean;
+}) => {
   // Check if invoice has items
   const hasItems = (invoice: any) => {
     return invoice.items && invoice.items.length > 0;
@@ -246,40 +271,65 @@ const InvoiceItemsRow = ({ invoice, isExpanded }: { invoice: any, isExpanded: bo
         <div className="p-4 bg-slate-700/20">
           <div className="flex items-center gap-2 mb-3">
             <Package className="h-4 w-4 text-blue-400" />
-            <span className="text-sm font-medium text-blue-400">أصناف الفاتورة</span>
-            <span className="text-xs text-gray-400">({invoice.items.length} صنف)</span>
+            <span className="text-sm font-medium text-blue-400">
+              أصناف الفاتورة
+            </span>
+            <span className="text-xs text-gray-400">
+              ({invoice.items.length} صنف)
+            </span>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/10">
-                  <th className="text-right py-2 px-3 text-gray-400 font-medium">المنتج</th>
-                  <th className="text-right py-2 px-3 text-gray-400 font-medium">الكمية</th>
-                  <th className="text-right py-2 px-3 text-gray-400 font-medium">سعر الوحدة</th>
-                  <th className="text-right py-2 px-3 text-gray-400 font-medium">الوحدة</th>
-                  <th className="text-right py-2 px-3 text-gray-400 font-medium">المجموع الفرعي</th>
+                  <th className="text-right py-2 px-3 text-gray-400 font-medium">
+                    المنتج
+                  </th>
+                  <th className="text-right py-2 px-3 text-gray-400 font-medium">
+                    الكمية
+                  </th>
+                  <th className="text-right py-2 px-3 text-gray-400 font-medium">
+                    سعر الوحدة
+                  </th>
+                  <th className="text-right py-2 px-3 text-gray-400 font-medium">
+                    الوحدة
+                  </th>
+                  <th className="text-right py-2 px-3 text-gray-400 font-medium">
+                    المجموع الفرعي
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {invoice.items.map((item: any, index: number) => {
-
                   console.log("item => ", item);
 
                   return (
-                    <tr key={item.id || index} className="border-b border-white/5 hover:bg-white/5">
+                    <tr
+                      key={item.id || index}
+                      className="border-b border-white/5 hover:bg-white/5"
+                    >
                       <td className="py-2 px-3 text-white">{item.title}</td>
                       <td className="py-2 px-3 text-white">{item.quantity}</td>
-                      <td className="py-2 px-3 text-white">{item.unitPrice.toLocaleString()} ليرة</td>
-                      <td className="py-2 px-3 text-white">{item.unit || "-"}</td>
-                      <td className="py-2 px-3 text-white font-medium">{item.subTotal.toLocaleString()} ليرة</td>
+                      <td className="py-2 px-3 text-white">
+                        {item.unitPrice.toLocaleString()} ليرة
+                      </td>
+                      <td className="py-2 px-3 text-white">
+                        {item.unit || "-"}
+                      </td>
+                      <td className="py-2 px-3 text-white font-medium">
+                        {item.subTotal.toLocaleString()} ليرة
+                      </td>
                     </tr>
-                  )
+                  );
                 })}
               </tbody>
               <tfoot>
                 <tr className="border-t border-white/10 bg-slate-600/20">
-                  <td colSpan={4} className="py-2 px-3 text-right text-gray-300 font-medium">
+                  <td
+                    colSpan={4}
+                    className="py-2 px-3 text-right text-gray-300 font-medium"
+                  >
                     المجموع الكلي:
                   </td>
                   <td className="py-2 px-3 text-white font-bold">
@@ -295,24 +345,34 @@ const InvoiceItemsRow = ({ invoice, isExpanded }: { invoice: any, isExpanded: bo
   );
 };
 
-const InvoicesModal = ({
-  type,
-  data,
-  onClose
-}: InvoicesModalProps) => {
-  const [invoiceFilter, setInvoiceFilter] = useState<"all" | "income" | "expense">("all");
-  const [sort, setSort] = useState<{ field: SortField | null, direction: SortDirection }>({
+const InvoicesModal = ({ type, data, onClose }: InvoicesModalProps) => {
+  const [invoiceFilter, setInvoiceFilter] = useState<
+    "all" | "income" | "expense"
+  >("all");
+  const [paymentFilter, setPaymentFilter] = useState<"all" | "paid" | "unpaid">(
+    "all"
+  );
+  const [sort, setSort] = useState<{
+    field: SortField | null;
+    direction: SortDirection;
+  }>({
     field: null,
-    direction: 'asc'
+    direction: "asc",
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
   const PAGE_SIZE = 10;
-  const { setSnackbarConfig } = useMokkBar()
+  const { setSnackbarConfig } = useMokkBar();
   // State for modal actions
-  const [selectedInvoiceForView, setSelectedInvoiceForView] = useState<any | null>(null);
-  const [selectedInvoiceForEdit, setSelectedInvoiceForEdit] = useState<any | null>(null);
-  const [selectedInvoiceForDelete, setSelectedInvoiceForDelete] = useState<any | null>(null);
+  const [selectedInvoiceForView, setSelectedInvoiceForView] = useState<
+    any | null
+  >(null);
+  const [selectedInvoiceForEdit, setSelectedInvoiceForEdit] = useState<
+    any | null
+  >(null);
+  const [selectedInvoiceForDelete, setSelectedInvoiceForDelete] = useState<
+    any | null
+  >(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
 
@@ -322,14 +382,14 @@ const InvoicesModal = ({
       setIsMobile(window.innerWidth < 768);
     };
     checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
   // Reset page when filter changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [invoiceFilter]);
+  }, [invoiceFilter, paymentFilter]);
 
   // Handle sorting
   const handleSort = (field: SortField) => {
@@ -337,13 +397,13 @@ const InvoicesModal = ({
       // Toggle direction if same field
       setSort({
         field,
-        direction: sort.direction === 'asc' ? 'desc' : 'asc'
+        direction: sort.direction === "asc" ? "desc" : "asc",
       });
     } else {
       // New field, default to ascending
       setSort({
         field,
-        direction: 'asc'
+        direction: "asc",
       });
     }
   };
@@ -386,7 +446,7 @@ const InvoicesModal = ({
 
   // Handle row expansion
   const toggleRowExpansion = (invoiceId: number) => {
-    setExpandedRows(prev => {
+    setExpandedRows((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(invoiceId)) {
         newSet.delete(invoiceId);
@@ -429,14 +489,32 @@ const InvoicesModal = ({
         break;
     }
 
-    // Filter invoices based on the selected filter
+    // Filter invoices based on the selected filters
+    let filteredInvoices = invoices;
+
+    // Apply invoice type filter
     if (invoiceFilter === "income") {
-      return invoices.filter(invoice => invoice.invoiceType === "income");
+      filteredInvoices = filteredInvoices.filter(
+        (invoice) => invoice.invoiceType === "income"
+      );
     } else if (invoiceFilter === "expense") {
-      return invoices.filter(invoice => invoice.invoiceType === "expense");
+      filteredInvoices = filteredInvoices.filter(
+        (invoice) => invoice.invoiceType === "expense"
+      );
     }
 
-    return invoices;
+    // Apply payment status filter
+    if (paymentFilter === "paid") {
+      filteredInvoices = filteredInvoices.filter(
+        (invoice) => invoice.paidStatus === true
+      );
+    } else if (paymentFilter === "unpaid") {
+      filteredInvoices = filteredInvoices.filter(
+        (invoice) => invoice.paidStatus === false
+      );
+    }
+
+    return filteredInvoices;
   };
 
   // Get and sort invoices
@@ -447,27 +525,27 @@ const InvoicesModal = ({
       let valueA, valueB;
 
       switch (sort.field) {
-        case 'id':
+        case "id":
           valueA = a.id;
           valueB = b.id;
           break;
-        case 'customerName':
-          valueA = a.customer?.name || '';
-          valueB = b.customer?.name || '';
+        case "customerName":
+          valueA = a.customer?.name || "";
+          valueB = b.customer?.name || "";
           break;
-        case 'createdAt':
+        case "createdAt":
           valueA = new Date(a.createdAt).getTime();
           valueB = new Date(b.createdAt).getTime();
           break;
-        case 'totalAmount':
+        case "totalAmount":
           valueA = a.totalAmount;
           valueB = b.totalAmount;
           break;
-        case 'paidStatus':
+        case "paidStatus":
           valueA = a.paidStatus ? 1 : 0;
           valueB = b.paidStatus ? 1 : 0;
           break;
-        case 'invoiceType':
+        case "invoiceType":
           valueA = a.invoiceType;
           valueB = b.invoiceType;
           break;
@@ -476,13 +554,13 @@ const InvoicesModal = ({
       }
 
       // Compare values based on direction
-      if (typeof valueA === 'string' && typeof valueB === 'string') {
-        return sort.direction === 'asc'
+      if (typeof valueA === "string" && typeof valueB === "string") {
+        return sort.direction === "asc"
           ? valueA.localeCompare(valueB)
           : valueB.localeCompare(valueA);
       }
 
-      return sort.direction === 'asc'
+      return sort.direction === "asc"
         ? (valueA as number) - (valueB as number)
         : (valueB as number) - (valueA as number);
     });
@@ -497,18 +575,63 @@ const InvoicesModal = ({
   const endIndex = startIndex + PAGE_SIZE;
   const paginatedInvoices = sortedInvoices.slice(startIndex, endIndex);
 
-  // Calculate totals for each type
-  const allInvoices = getInvoices();
-  const incomeInvoices = allInvoices.filter(invoice => invoice.invoiceType === "income");
-  const expenseInvoices = allInvoices.filter(invoice => invoice.invoiceType === "expense");
+  // Get base invoices for calculations (without payment filter)
+  const getBaseInvoices = () => {
+    if (!data) return [];
+    let invoices;
 
-  const incomeTotal = incomeInvoices.reduce((sum, invoice) => sum + invoice.totalAmount, 0);
-  const expenseTotal = expenseInvoices.reduce((sum, invoice) => sum + invoice.totalAmount, 0);
+    switch (type) {
+      case "boothInvoices":
+        invoices = data.boothInvoices;
+        break;
+      case "universityInvoices":
+        invoices = data.universityInvoices;
+        break;
+      case "generalInvoices":
+        invoices = data.generalInvoices;
+        break;
+    }
+
+    // Only apply invoice type filter for totals
+    if (invoiceFilter === "income") {
+      return invoices.filter((invoice) => invoice.invoiceType === "income");
+    } else if (invoiceFilter === "expense") {
+      return invoices.filter((invoice) => invoice.invoiceType === "expense");
+    }
+
+    return invoices;
+  };
+
+  // Calculate totals for each type
+  const allInvoices = getBaseInvoices();
+  const incomeInvoices = allInvoices.filter(
+    (invoice) => invoice.invoiceType === "income"
+  );
+  const expenseInvoices = allInvoices.filter(
+    (invoice) => invoice.invoiceType === "expense"
+  );
+
+  // Calculate payment status counts
+  const paidInvoices = allInvoices.filter(
+    (invoice) => invoice.paidStatus === true
+  );
+  const unpaidInvoices = allInvoices.filter(
+    (invoice) => invoice.paidStatus === false
+  );
+
+  const incomeTotal = incomeInvoices.reduce(
+    (sum, invoice) => sum + invoice.totalAmount,
+    0
+  );
+  const expenseTotal = expenseInvoices.reduce(
+    (sum, invoice) => sum + invoice.totalAmount,
+    0
+  );
   const netTotal = incomeTotal - expenseTotal;
 
   // Helper function to check if invoice has notes
   const hasNotes = (invoice: any) => {
-    return invoice.notes && invoice.notes.trim() !== '';
+    return invoice.notes && invoice.notes.trim() !== "";
   };
 
   // Mobile sorting options component
@@ -517,27 +640,29 @@ const InvoicesModal = ({
       <div className="text-sm text-gray-400 mb-2">ترتيب حسب:</div>
       <div className="flex flex-wrap gap-2">
         {[
-          { field: 'id', label: 'رقم الفاتورة' },
-          { field: 'createdAt', label: 'التاريخ' },
-          { field: 'customerName', label: 'العميل' },
-          { field: 'totalAmount', label: 'المبلغ' },
-          { field: 'paidStatus', label: 'الحالة' }
+          { field: "id", label: "رقم الفاتورة" },
+          { field: "createdAt", label: "التاريخ" },
+          { field: "customerName", label: "العميل" },
+          { field: "totalAmount", label: "المبلغ" },
+          { field: "paidStatus", label: "الحالة" },
         ].map((item) => (
           <button
             key={item.field}
             onClick={() => handleSort(item.field as SortField)}
             className={`px-3 py-1 rounded-lg text-xs flex items-center gap-1 transition-colors
-              ${sort.field === item.field
-                ? "bg-indigo-500/20 text-indigo-400"
-                : "bg-white/5 text-gray-300"
+              ${
+                sort.field === item.field
+                  ? "bg-indigo-500/20 text-indigo-400"
+                  : "bg-white/5 text-gray-300"
               }`}
           >
             {item.label}
-            {sort.field === item.field && (
-              sort.direction === 'asc'
-                ? <ChevronUp className="h-3 w-3" />
-                : <ChevronDown className="h-3 w-3" />
-            )}
+            {sort.field === item.field &&
+              (sort.direction === "asc" ? (
+                <ChevronUp className="h-3 w-3" />
+              ) : (
+                <ChevronDown className="h-3 w-3" />
+              ))}
           </button>
         ))}
       </div>
@@ -574,52 +699,95 @@ const InvoicesModal = ({
               <h2 className="text-xl font-semibold text-white">{getTitle()}</h2>
             </div>
             <div className="text-gray-400">
-              عدد الفواتير: {filteredInvoices.length} | الإجمالي: {netTotal > 0 ? '+' : ''}{netTotal.toLocaleString()}{" "}
-              ليرة
+              عدد الفواتير: {filteredInvoices.length} | الإجمالي:{" "}
+              {netTotal > 0 ? "+" : ""}
+              {netTotal.toLocaleString()} ليرة
             </div>
           </div>
 
           {/* Filter Toggle */}
-          <div className="px-6 pt-4 flex flex-col sm:flex-row gap-4 justify-between items-center">
-            <div className="bg-slate-700/50 p-1 rounded-lg flex text-sm">
-              <button
-                onClick={() => setInvoiceFilter("all")}
-                className={`px-4 py-2 rounded-md transition-colors ${invoiceFilter === "all"
-                  ? "bg-indigo-500 text-white"
-                  : "text-gray-300 hover:bg-slate-700"
+          <div className="px-6 pt-4">
+            <div className="flex flex-wrap items-center gap-3 text-sm">
+              {/* Invoice Type Filter */}
+              <div className="bg-slate-700/50 p-1 rounded-lg flex">
+                <button
+                  onClick={() => setInvoiceFilter("all")}
+                  className={`px-3 py-1 rounded-md transition-colors text-xs ${
+                    invoiceFilter === "all"
+                      ? "bg-indigo-500 text-white"
+                      : "text-gray-300 hover:bg-slate-700"
                   }`}
-              >
-                جميع الفواتير ({allInvoices.length})
-              </button>
-              <button
-                onClick={() => setInvoiceFilter("income")}
-                className={`px-4 py-2 rounded-md transition-colors ${invoiceFilter === "income"
-                  ? "bg-emerald-500 text-white"
-                  : "text-gray-300 hover:bg-slate-700"
+                >
+                  الكل ({allInvoices.length})
+                </button>
+                <button
+                  onClick={() => setInvoiceFilter("income")}
+                  className={`px-3 py-1 rounded-md transition-colors text-xs ${
+                    invoiceFilter === "income"
+                      ? "bg-emerald-500 text-white"
+                      : "text-gray-300 hover:bg-slate-700"
                   }`}
-              >
-                الدخل ({incomeInvoices.length})
-              </button>
-              <button
-                onClick={() => setInvoiceFilter("expense")}
-                className={`px-4 py-2 rounded-md transition-colors ${invoiceFilter === "expense"
-                  ? "bg-red-500 text-white"
-                  : "text-gray-300 hover:bg-slate-700"
+                >
+                  الدخل ({incomeInvoices.length})
+                </button>
+                <button
+                  onClick={() => setInvoiceFilter("expense")}
+                  className={`px-3 py-1 rounded-md transition-colors text-xs ${
+                    invoiceFilter === "expense"
+                      ? "bg-red-500 text-white"
+                      : "text-gray-300 hover:bg-slate-700"
                   }`}
-              >
-                الصرف ({expenseInvoices.length})
-              </button>
-            </div>
+                >
+                  الصرف ({expenseInvoices.length})
+                </button>
+              </div>
 
-            <div className="flex gap-4 text-sm">
-              <div className="px-3 py-1 rounded-lg bg-emerald-500/10 text-emerald-400">
-                الدخل: {incomeTotal.toLocaleString()} ليرة
+              {/* Payment Status Filter */}
+              <div className="bg-slate-700/50 p-1 rounded-lg flex">
+                <button
+                  onClick={() => setPaymentFilter("all")}
+                  className={`px-3 py-1 rounded-md transition-colors text-xs ${
+                    paymentFilter === "all"
+                      ? "bg-blue-500 text-white"
+                      : "text-gray-300 hover:bg-slate-700"
+                  }`}
+                >
+                  الكل
+                </button>
+                <button
+                  onClick={() => setPaymentFilter("paid")}
+                  className={`px-3 py-1 rounded-md transition-colors text-xs ${
+                    paymentFilter === "paid"
+                      ? "bg-green-500 text-white"
+                      : "text-gray-300 hover:bg-slate-700"
+                  }`}
+                >
+                  مدفوع ({paidInvoices.length})
+                </button>
+                <button
+                  onClick={() => setPaymentFilter("unpaid")}
+                  className={`px-3 py-1 rounded-md transition-colors text-xs ${
+                    paymentFilter === "unpaid"
+                      ? "bg-orange-500 text-white"
+                      : "text-gray-300 hover:bg-slate-700"
+                  }`}
+                >
+                  غير مدفوع ({unpaidInvoices.length})
+                </button>
               </div>
-              <div className="px-3 py-1 rounded-lg bg-red-500/10 text-red-400">
-                الصرف: {expenseTotal.toLocaleString()} ليرة
-              </div>
-              <div className="px-3 py-1 rounded-lg bg-indigo-500/10 text-indigo-400">
-                الصافي: {netTotal > 0 ? '+' : ''}{netTotal.toLocaleString()} ليرة
+
+              {/* Financial Totals */}
+              <div className="flex gap-2 text-xs">
+                <span className="text-emerald-400">
+                  الدخل: {incomeTotal.toLocaleString()}
+                </span>
+                <span className="text-red-400">
+                  الصرف: {expenseTotal.toLocaleString()}
+                </span>
+                <span className="text-indigo-400 font-medium">
+                  الصافي: {netTotal > 0 ? "+" : ""}
+                  {netTotal.toLocaleString()}
+                </span>
               </div>
             </div>
           </div>
@@ -690,18 +858,25 @@ const InvoicesModal = ({
                         return (
                           <React.Fragment key={invoice.id}>
                             <tr
-                              className={`border-b border-white/5 hover:bg-white/5 transition-colors ${invoice.invoiceType === "expense"
-                                ? "bg-red-500/5"
-                                : "bg-emerald-500/5"
-                                }`}
+                              className={`border-b border-white/5 hover:bg-white/5 transition-colors ${
+                                invoice.invoiceType === "expense"
+                                  ? "bg-red-500/5"
+                                  : "bg-emerald-500/5"
+                              }`}
                             >
                               <td className="py-3 px-4 text-white">
                                 <div className="flex items-center gap-2">
                                   {hasInvoiceItems && (
                                     <button
-                                      onClick={() => toggleRowExpansion(invoice.id)}
+                                      onClick={() =>
+                                        toggleRowExpansion(invoice.id)
+                                      }
                                       className="p-1 rounded hover:bg-white/10 transition-colors"
-                                      title={isExpanded ? "إخفاء الأصناف" : "عرض الأصناف"}
+                                      title={
+                                        isExpanded
+                                          ? "إخفاء الأصناف"
+                                          : "عرض الأصناف"
+                                      }
                                     >
                                       {isExpanded ? (
                                         <Minus className="h-4 w-4 text-blue-400" />
@@ -713,7 +888,10 @@ const InvoicesModal = ({
                                   <div className="flex items-center">
                                     #{invoice.id}
                                     {hasNotes(invoice) && (
-                                      <div className="mx-2 text-red-500" title="يحتوي على ملاحظات">
+                                      <div
+                                        className="mx-2 text-red-500"
+                                        title="يحتوي على ملاحظات"
+                                      >
                                         <BellDot className="h-4 w-4" />
                                       </div>
                                     )}
@@ -721,7 +899,10 @@ const InvoicesModal = ({
                                 </div>
                               </td>
                               <td className="py-3 px-4 text-white">
-                                {getCustomerDisplayName(invoice.customer, invoice.notes)}
+                                {getCustomerDisplayName(
+                                  invoice.customer,
+                                  invoice.notes
+                                )}
                               </td>
                               <td className="py-3 px-4 text-white">
                                 {formatDate(invoice.createdAt)}
@@ -729,16 +910,20 @@ const InvoicesModal = ({
                               <td className="py-3 px-4 text-white">
                                 {invoice.totalAmount.toLocaleString()} ليرة
                               </td>
-                              <td className="py-3 px-4 text-white max-w-40 truncate" title={invoice.notes || ''}>
+                              <td
+                                className="py-3 px-4 text-white max-w-40 truncate"
+                                title={invoice.notes || ""}
+                              >
                                 {invoice.notes || "-"}
                               </td>
                               <td className="py-3 px-4">
                                 <span
                                   className={`
                                     px-3 py-1 rounded-full text-sm font-medium
-                                    ${invoice.paidStatus
-                                      ? "bg-emerald-500/10 text-emerald-400"
-                                      : "bg-red-500/10 text-red-400"
+                                    ${
+                                      invoice.paidStatus
+                                        ? "bg-emerald-500/10 text-emerald-400"
+                                        : "bg-red-500/10 text-red-400"
                                     }
                                   `}
                                 >
@@ -749,13 +934,16 @@ const InvoicesModal = ({
                                 <span
                                   className={`
                                     px-3 py-1 rounded-full text-sm font-medium
-                                    ${invoice.invoiceType === "expense"
-                                      ? "bg-red-500/10 text-red-400"
-                                      : "bg-emerald-500/10 text-emerald-400"
+                                    ${
+                                      invoice.invoiceType === "expense"
+                                        ? "bg-red-500/10 text-red-400"
+                                        : "bg-emerald-500/10 text-emerald-400"
                                     }
                                   `}
                                 >
-                                  {invoice.invoiceType === "expense" ? "صرف" : "دخل"}
+                                  {invoice.invoiceType === "expense"
+                                    ? "صرف"
+                                    : "دخل"}
                                 </span>
                               </td>
                               <td className="py-3 px-4">

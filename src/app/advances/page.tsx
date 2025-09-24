@@ -40,6 +40,27 @@ const AdvancesPage = () => {
   const { data: selectedAdvance, isLoading: isLoadingDetails } =
     useAdvanceDetails(selectedAdvanceId || 0);
 
+  // Get the original fundId from the advance's related invoices
+  const getOriginalFundId = (advanceId: number): number => {
+    const advance = activeAdvances?.find((adv) => adv.id === advanceId);
+    if (advance?.relatedInvoices && advance.relatedInvoices.length > 0) {
+      // Find the original advance invoice (income type)
+      const originalInvoice = advance.relatedInvoices.find(
+        (invoice) =>
+          invoice.invoiceType === "income" &&
+          invoice.invoiceCategory === "advance"
+      );
+      if (originalInvoice?.fundId) {
+        console.log(
+          `Using original fund ${originalInvoice.fundId} for advance ${advanceId} repayment`
+        );
+        return originalInvoice.fundId;
+      }
+    }
+    console.log(`Using default fund (1) for advance ${advanceId} repayment`);
+    return 1; // Default to general fund
+  };
+
   // Filter advances based on search term
   const filteredAdvances = activeAdvances?.filter((advance) => {
     const lowerCaseSearch = searchTerm.toLowerCase();
@@ -337,7 +358,7 @@ const AdvancesPage = () => {
                                     ((selectedAdvance.totalAmount -
                                       selectedAdvance.remainingAmount) /
                                       selectedAdvance.totalAmount) *
-                                    100
+                                      100
                                   )}%`,
                                 }}
                               ></div>
@@ -347,7 +368,7 @@ const AdvancesPage = () => {
                                 ((selectedAdvance.totalAmount -
                                   selectedAdvance.remainingAmount) /
                                   selectedAdvance.totalAmount) *
-                                100
+                                  100
                               )}
                               % مكتمل
                             </div>
@@ -463,13 +484,13 @@ const AdvancesPage = () => {
         <InvoiceForm
           type={InvoiceCategory.ADVANCE}
           mode="expense"
-          fundId={1}
+          fundId={getOriginalFundId(repayAdvanceId)}
           onClose={handleCloseRepayForm}
           customerId={
             selectedAdvanceId
               ? selectedAdvance?.customer?.id
               : activeAdvances?.find((adv) => adv.id === repayAdvanceId)
-                ?.customer?.id
+                  ?.customer?.id
           }
         />
       )}

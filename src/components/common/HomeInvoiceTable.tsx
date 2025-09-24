@@ -1,5 +1,5 @@
 import { formatSYP } from "@/hooks/invoices/useInvoiceStats";
-import { Invoice } from "@/types/invoice.type";
+import { Invoice, InvoiceCategory } from "@/types/invoice.type";
 import { formatDate, getCustomerDisplayName } from "@/utils/formatters";
 import { motion } from "framer-motion";
 import {
@@ -12,10 +12,36 @@ import {
   Clipboard,
   CreditCard,
   FileText,
-  User
+  User,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import InvoicesActionsMenu from "./InvoicesActionsMenu";
+
+// Helper function to get Arabic invoice type names
+const getInvoiceTypeName = (invoice: Invoice): string => {
+  switch (invoice.invoiceCategory) {
+    case InvoiceCategory.PRODUCTS:
+      return "منتجات";
+    case InvoiceCategory.DIRECT:
+      return "مباشر";
+    case InvoiceCategory.DEBT:
+      return "تحصيل دين";
+    case InvoiceCategory.ADVANCE:
+      return invoice.invoiceType === "income" ? "سلفة" : "إرجاع سلفة";
+    case InvoiceCategory.EMPLOYEE:
+      return "موظف";
+    case InvoiceCategory.EMPLOYEE_DEBT:
+      return "دين موظف";
+    case InvoiceCategory.EMPLOYEE_WITHDRAWAL:
+      return "سحب موظف";
+    case InvoiceCategory.EMPLOYEE_WITHDRAWAL_RETURN:
+      return "إرجاع سحب موظف";
+    case InvoiceCategory.DAILY_EMPLOYEE_RENT:
+      return "إيجار يومي";
+    default:
+      return "غير محدد";
+  }
+};
 
 interface HomeInvoiceTableProps {
   data: Invoice[];
@@ -25,8 +51,14 @@ interface HomeInvoiceTableProps {
 }
 
 // Define sort types
-type SortField = 'invoiceNumber' | 'createdAt' | 'invoiceType' | 'customer' | 'amount' | 'paidStatus';
-type SortDirection = 'asc' | 'desc';
+type SortField =
+  | "invoiceNumber"
+  | "createdAt"
+  | "invoiceType"
+  | "customer"
+  | "amount"
+  | "paidStatus";
+type SortDirection = "asc" | "desc";
 
 const PaginationControls = ({
   currentPage,
@@ -48,7 +80,11 @@ const PaginationControls = ({
     const visiblePages = [1, totalPages];
 
     // Pages around current
-    for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+    for (
+      let i = Math.max(2, currentPage - 1);
+      i <= Math.min(totalPages - 1, currentPage + 1);
+      i++
+    ) {
       visiblePages.push(i);
     }
 
@@ -78,10 +114,18 @@ const PaginationControls = ({
       <div className="flex flex-wrap items-center justify-center gap-1">
         {showPageNumbers().map((number, index) => {
           if (number === -1) {
-            return <span key={`ellipsis-left-${index}`} className="text-slate-400">...</span>;
+            return (
+              <span key={`ellipsis-left-${index}`} className="text-slate-400">
+                ...
+              </span>
+            );
           }
           if (number === -2) {
-            return <span key={`ellipsis-right-${index}`} className="text-slate-400">...</span>;
+            return (
+              <span key={`ellipsis-right-${index}`} className="text-slate-400">
+                ...
+              </span>
+            );
           }
 
           return (
@@ -90,10 +134,11 @@ const PaginationControls = ({
               onClick={() => onPageChange(number)}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className={`min-w-[28px] px-2 py-1 rounded-lg text-sm transition-colors ${currentPage === number
-                ? "bg-slate-700/50 text-slate-200"
-                : "text-slate-400 hover:text-slate-200 hover:bg-slate-700/25"
-                }`}
+              className={`min-w-[28px] px-2 py-1 rounded-lg text-sm transition-colors ${
+                currentPage === number
+                  ? "bg-slate-700/50 text-slate-200"
+                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-700/25"
+              }`}
               aria-label={`الصفحة ${number}`}
               aria-current={currentPage === number ? "page" : undefined}
             >
@@ -123,15 +168,24 @@ const SortableHeader: React.FC<{
   onClick: (field: SortField) => void;
   title: string;
   className?: string;
-}> = ({ field, currentSortField, sortDirection, onClick, title, className }) => (
+}> = ({
+  field,
+  currentSortField,
+  sortDirection,
+  onClick,
+  title,
+  className,
+}) => (
   <th
-    className={`p-3 text-slate-300 text-sm cursor-pointer hover:bg-slate-700/20 transition-colors ${className || ''}`}
+    className={`p-3 text-slate-300 text-sm cursor-pointer hover:bg-slate-700/20 transition-colors ${
+      className || ""
+    }`}
     onClick={() => onClick(field)}
   >
     <div className="flex items-center justify-center gap-1">
       {title}
       {currentSortField === field ? (
-        sortDirection === 'asc' ? (
+        sortDirection === "asc" ? (
           <ChevronUp className="h-4 w-4" />
         ) : (
           <ChevronDown className="h-4 w-4" />
@@ -154,7 +208,7 @@ export const HomeInvoiceTable: React.FC<HomeInvoiceTableProps> = ({
 
   // Sorting state
   const [sortField, setSortField] = useState<SortField | null>(null);
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
   // Reset to first page when data changes
   useEffect(() => {
@@ -165,11 +219,11 @@ export const HomeInvoiceTable: React.FC<HomeInvoiceTableProps> = ({
   const handleSort = (field: SortField) => {
     if (sortField === field) {
       // Toggle direction if clicking the same field
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
       // New field, set to ascending by default
       setSortField(field);
-      setSortDirection('asc');
+      setSortDirection("asc");
     }
   };
 
@@ -181,27 +235,35 @@ export const HomeInvoiceTable: React.FC<HomeInvoiceTableProps> = ({
 
     // Get comparative values based on sort field
     switch (sortField) {
-      case 'invoiceNumber':
+      case "invoiceNumber":
         valueA = a.invoiceNumber;
         valueB = b.invoiceNumber;
         break;
-      case 'createdAt':
+      case "createdAt":
         valueA = new Date(a.createdAt).getTime();
         valueB = new Date(b.createdAt).getTime();
         break;
-      case 'invoiceType':
+      case "invoiceType":
         valueA = a.invoiceType;
         valueB = b.invoiceType;
         break;
-      case 'customer':
-        valueA = getCustomerDisplayName(a.customer, a.notes, a.relatedEmployee ? `موظف: ${a.relatedEmployee.name}` : '');
-        valueB = getCustomerDisplayName(b.customer, b.notes, b.relatedEmployee ? `موظف: ${b.relatedEmployee.name}` : '');
+      case "customer":
+        valueA = getCustomerDisplayName(
+          a.customer,
+          a.notes,
+          a.relatedEmployee ? `موظف: ${a.relatedEmployee.name}` : ""
+        );
+        valueB = getCustomerDisplayName(
+          b.customer,
+          b.notes,
+          b.relatedEmployee ? `موظف: ${b.relatedEmployee.name}` : ""
+        );
         break;
-      case 'amount':
+      case "amount":
         valueA = a.totalAmount - a.discount;
         valueB = b.totalAmount - b.discount;
         break;
-      case 'paidStatus':
+      case "paidStatus":
         valueA = a.paidStatus ? 1 : 0;
         valueB = b.paidStatus ? 1 : 0;
         break;
@@ -210,14 +272,14 @@ export const HomeInvoiceTable: React.FC<HomeInvoiceTableProps> = ({
     }
 
     // String comparison for string values
-    if (typeof valueA === 'string' && typeof valueB === 'string') {
-      return sortDirection === 'asc'
+    if (typeof valueA === "string" && typeof valueB === "string") {
+      return sortDirection === "asc"
         ? valueA.localeCompare(valueB)
         : valueB.localeCompare(valueA);
     }
 
     // Numeric comparison for numbers
-    return sortDirection === 'asc'
+    return sortDirection === "asc"
       ? (valueA as number) - (valueB as number)
       : (valueB as number) - (valueA as number);
   });
@@ -236,13 +298,13 @@ export const HomeInvoiceTable: React.FC<HomeInvoiceTableProps> = ({
 
   // Helper function to check if invoice has notes
   const hasNotes = (invoice: Invoice) => {
-    return invoice.notes && invoice.notes.trim() !== '';
+    return invoice.notes && invoice.notes.trim() !== "";
   };
 
   return (
     <>
       {/* Desktop view - Full table */}
-      <div className="hidden md:block overflow-x-auto overflow-y-auto no-scrollbar" >
+      <div className="hidden md:block overflow-x-auto overflow-y-auto no-scrollbar">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -273,6 +335,7 @@ export const HomeInvoiceTable: React.FC<HomeInvoiceTableProps> = ({
                   onClick={handleSort}
                   title="العميل"
                 />
+                <th className="p-3 text-slate-300 text-sm">نوع الفاتورة</th>
                 <SortableHeader
                   field="amount"
                   currentSortField={sortField}
@@ -304,27 +367,62 @@ export const HomeInvoiceTable: React.FC<HomeInvoiceTableProps> = ({
                     <div className="flex items-center">
                       {invoice.invoiceNumber}
                       {hasNotes(invoice) && (
-                        <div className="mx-2 text-red-500 " title="يحتوي على ملاحظات">
+                        <div
+                          className="mx-2 text-red-500 "
+                          title="يحتوي على ملاحظات"
+                        >
                           <BellDot className="h-4 w-4" />
                         </div>
                       )}
                     </div>
                   </td>
-                  <td className="p-3 text-center text-slate-300 text-sm">{formatDate(invoice.createdAt)}</td>
                   <td className="p-3 text-center text-slate-300 text-sm">
-                    {getCustomerDisplayName(invoice.customer, invoice.notes, invoice.relatedEmployee ? `موظف: ${invoice.relatedEmployee.name}` : '')}
+                    {formatDate(invoice.createdAt)}
+                  </td>
+                  <td className="p-3 text-center text-slate-300 text-sm">
+                    {getCustomerDisplayName(
+                      invoice.customer,
+                      invoice.notes,
+                      invoice.relatedEmployee
+                        ? `موظف: ${invoice.relatedEmployee.name}`
+                        : ""
+                    )}
+                  </td>
+                  <td className="p-3 text-center text-slate-300 text-sm">
+                    <span
+                      className={`inline-flex px-2 py-1 rounded-full text-xs ${
+                        invoice.invoiceCategory === InvoiceCategory.PRODUCTS
+                          ? "bg-blue-500/10 text-blue-400"
+                          : invoice.invoiceCategory === InvoiceCategory.DIRECT
+                          ? "bg-green-500/10 text-green-400"
+                          : invoice.invoiceCategory === InvoiceCategory.DEBT
+                          ? "bg-purple-500/10 text-purple-400"
+                          : invoice.invoiceCategory === InvoiceCategory.ADVANCE
+                          ? "bg-orange-500/10 text-orange-400"
+                          : invoice.invoiceCategory === InvoiceCategory.EMPLOYEE
+                          ? "bg-cyan-500/10 text-cyan-400"
+                          : "bg-slate-500/10 text-slate-400"
+                      }`}
+                    >
+                      {getInvoiceTypeName(invoice)}
+                    </span>
                   </td>
                   <td className="p-3 text-center text-slate-300 text-sm">
                     {formatSYP(invoice.totalAmount - invoice.discount)}
                   </td>
                   <td className="p-3 text-center">
                     <span
-                      className={`inline-flex px-2 py-1 rounded-full text-xs ${invoice.paidStatus
-                        ? "bg-emerald-500/10 text-emerald-400"
-                        : "bg-yellow-500/10 text-yellow-400"
-                        }`}
+                      className={`inline-flex px-2 py-1 rounded-full text-xs ${
+                        invoice.paidStatus
+                          ? "bg-emerald-500/10 text-emerald-400"
+                          : "bg-yellow-500/10 text-yellow-400"
+                      }`}
                     >
-                      {invoice.isBreak ? "كسر" : invoice.paidStatus ? "نقدي" : "آجل"}
+                      {invoice.isBreak
+                        ? "كسر"
+                        : invoice.paidStatus
+                        ? "نقدي"
+                        : "آجل"}
                     </span>
                   </td>
                   <td className="p-3  text-center">
@@ -339,7 +437,7 @@ export const HomeInvoiceTable: React.FC<HomeInvoiceTableProps> = ({
               ))}
               {data.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="p-4 text-center text-slate-400">
+                  <td colSpan={8} className="p-4 text-center text-slate-400">
                     لا توجد فواتير متطابقة مع معايير البحث
                   </td>
                 </tr>
@@ -387,26 +485,28 @@ export const HomeInvoiceTable: React.FC<HomeInvoiceTableProps> = ({
               <div className="text-sm text-slate-300 mb-2">ترتيب حسب:</div>
               <div className="flex flex-wrap gap-2">
                 {[
-                  { field: 'invoiceNumber', label: 'رقم الفاتورة' },
-                  { field: 'createdAt', label: 'التاريخ' },
-                  { field: 'amount', label: 'المبلغ' },
-                  { field: 'paidStatus', label: 'الحالة' }
+                  { field: "invoiceNumber", label: "رقم الفاتورة" },
+                  { field: "createdAt", label: "التاريخ" },
+                  { field: "amount", label: "المبلغ" },
+                  { field: "paidStatus", label: "الحالة" },
                 ].map((item) => (
                   <button
                     key={item.field}
                     onClick={() => handleSort(item.field as SortField)}
                     className={`px-3 py-1 rounded-lg text-xs flex items-center gap-1 transition-colors
-                      ${sortField === item.field
-                        ? "bg-blue-500/20 text-blue-400"
-                        : "bg-slate-700/30 text-slate-300"
+                      ${
+                        sortField === item.field
+                          ? "bg-blue-500/20 text-blue-400"
+                          : "bg-slate-700/30 text-slate-300"
                       }`}
                   >
                     {item.label}
-                    {sortField === item.field && (
-                      sortDirection === 'asc'
-                        ? <ChevronUp className="h-3 w-3" />
-                        : <ChevronDown className="h-3 w-3" />
-                    )}
+                    {sortField === item.field &&
+                      (sortDirection === "asc" ? (
+                        <ChevronUp className="h-3 w-3" />
+                      ) : (
+                        <ChevronDown className="h-3 w-3" />
+                      ))}
                   </button>
                 ))}
               </div>
@@ -429,7 +529,10 @@ export const HomeInvoiceTable: React.FC<HomeInvoiceTableProps> = ({
                         <FileText className="h-4 w-4 text-slate-400" />
                         <span>{invoice.invoiceNumber}</span>
                         {hasNotes(invoice) && (
-                          <div className="mx-1 text-sky-400" title="يحتوي على ملاحظات">
+                          <div
+                            className="mx-1 text-sky-400"
+                            title="يحتوي على ملاحظات"
+                          >
                             <Clipboard className="h-4 w-4" />
                           </div>
                         )}
@@ -453,28 +556,59 @@ export const HomeInvoiceTable: React.FC<HomeInvoiceTableProps> = ({
                     <div className="flex items-center gap-1 text-xs text-slate-400">
                       <User className="h-3 w-3" />
                       <span className="truncate max-w-[150px]">
-                        {getCustomerDisplayName(invoice.customer, invoice.notes, invoice.relatedEmployee ? `موظف: ${invoice.relatedEmployee.name}` : '')}
+                        {getCustomerDisplayName(
+                          invoice.customer,
+                          invoice.notes,
+                          invoice.relatedEmployee
+                            ? `موظف: ${invoice.relatedEmployee.name}`
+                            : ""
+                        )}
                       </span>
                     </div>
                   </div>
 
                   <div className="flex justify-between items-center pt-1">
-                    <span className={`px-2 py-1 rounded-full text-xs ${invoice.invoiceType === "income"
-                      ? "bg-blue-500/10 text-blue-400"
-                      : "bg-red-500/10 text-red-400"
-                      }`}>
-                      {invoice.invoiceType === "income" ? "دخل" : "مصروف"}
-                    </span>
+                    <div className="flex flex-col gap-1">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs ${
+                          invoice.invoiceType === "income"
+                            ? "bg-blue-500/10 text-blue-400"
+                            : "bg-red-500/10 text-red-400"
+                        }`}
+                      >
+                        {invoice.invoiceType === "income" ? "دخل" : "مصروف"}
+                      </span>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs ${
+                          invoice.invoiceCategory === InvoiceCategory.PRODUCTS
+                            ? "bg-blue-500/10 text-blue-400"
+                            : invoice.invoiceCategory === InvoiceCategory.DIRECT
+                            ? "bg-green-500/10 text-green-400"
+                            : invoice.invoiceCategory === InvoiceCategory.DEBT
+                            ? "bg-purple-500/10 text-purple-400"
+                            : invoice.invoiceCategory ===
+                              InvoiceCategory.ADVANCE
+                            ? "bg-orange-500/10 text-orange-400"
+                            : invoice.invoiceCategory ===
+                              InvoiceCategory.EMPLOYEE
+                            ? "bg-cyan-500/10 text-cyan-400"
+                            : "bg-slate-500/10 text-slate-400"
+                        }`}
+                      >
+                        {getInvoiceTypeName(invoice)}
+                      </span>
+                    </div>
 
                     <div className="flex items-end flex-col">
                       <span className="text-emerald-400 font-medium text-sm">
                         {formatSYP(invoice.totalAmount - invoice.discount)}
                       </span>
                       <span
-                        className={`mt-1 inline-flex items-center px-2 py-1 rounded-full text-xs ${invoice.paidStatus
-                          ? "bg-emerald-500/10 text-emerald-400"
-                          : "bg-yellow-500/10 text-yellow-400"
-                          }`}
+                        className={`mt-1 inline-flex items-center px-2 py-1 rounded-full text-xs ${
+                          invoice.paidStatus
+                            ? "bg-emerald-500/10 text-emerald-400"
+                            : "bg-yellow-500/10 text-yellow-400"
+                        }`}
                       >
                         <CreditCard className="h-3 w-3 mx-1" />
                         {invoice.paidStatus ? "نقدي" : "آجل"}
