@@ -12,6 +12,7 @@ interface Fund {
   fundType: "main" | "general" | "booth" | "university";
   currentBalance: number;
   lastUpdate: string; // ISO date string
+  shiftBalance? : number
 }
 
 interface TransferToMainDTO {

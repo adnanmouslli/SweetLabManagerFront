@@ -178,7 +178,7 @@ const Page = () => {
     if (!amount || amount <= 0) return;
 
     const generalFund =
-      fundsData?.find((f) => f.fundType === "general")?.currentBalance || 0;
+      parseInt(fundsData?.find((fund) => fund.fundType == "general")?.currentBalance.toFixed(2)!)   - parseInt(fundsData?.find((fund) => fund.fundType == "general")?.shiftBalance!.toFixed(2)!) || 0;
 
     if (amount > generalFund) {
       setSnackbarConfig({
@@ -278,23 +278,19 @@ const Page = () => {
     {
       icon: Receipt,
       label: "الصندوق البسطة",
-      value: fundsData?.find((fund) => fund.fundType == "booth")
-        ?.currentBalance,
+      value: parseInt(fundsData?.find((fund) => fund.fundType == "booth")?.currentBalance.toFixed(2)!)   - parseInt(fundsData?.find((fund) => fund.fundType == "booth")?.shiftBalance!.toFixed(2)!) ,
       color: "text-slate-200",
     },
     {
       icon: Receipt,
       label: "الصندوق الجامعة",
-      value: fundsData?.find((fund) => fund.fundType == "university")
-        ?.currentBalance,
+      value: parseInt(fundsData?.find((fund) => fund.fundType == "university")?.currentBalance.toFixed(2)!)   - parseInt(fundsData?.find((fund) => fund.fundType == "university")?.shiftBalance!.toFixed(2)!) ,
       color: "text-slate-200",
     },
     {
       icon: Receipt,
       label: "الصندوق العام",
-      value: fundsData
-        ?.find((fund) => fund.fundType == "general")
-        ?.currentBalance.toFixed(2),
+      value: parseInt(fundsData?.find((fund) => fund.fundType == "general")?.currentBalance.toFixed(2)!)   - parseInt(fundsData?.find((fund) => fund.fundType == "general")?.shiftBalance!.toFixed(2)!) ,
       color: "text-slate-200",
     },
     {
@@ -507,9 +503,8 @@ const Page = () => {
                         </div>
                         <p className="text-xl sm:text-2xl font-semibold text-slate-200">
                           {fundsData
-                            ? fundsData
-                              .find((f) => f.fundType === "general")
-                              ?.currentBalance.toFixed(2) || 0
+                            ? parseInt(fundsData?.find((fund) => fund.fundType == "general")?.currentBalance.toFixed(2)!)   - parseInt(fundsData?.find((fund) => fund.fundType == "general")?.shiftBalance!.toFixed(2)!)
+                             || 0
                             : "0"}
                         </p>
                       </div>

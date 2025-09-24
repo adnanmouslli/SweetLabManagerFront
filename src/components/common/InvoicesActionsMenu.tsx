@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Edit, Eye, FileText, Trash, DollarSign, FileX, Package } from "lucide-react";
+import { Edit, Eye, FileText, Trash, DollarSign, FileX, Package, Printer } from "lucide-react";
 import { Invoice } from "@/types/invoice.type";
 import BreakageConversionModal from "@/components/common/invoices/BreakageConversionModal";
 import InvoiceTemplateModal from "@/components/common/InvoiceTemplateModal";
 import { useMarkInvoiceAsBreak } from "@/hooks/invoices/useInvoice";
 import { useMokkBar } from "@/components/providers/MokkBarContext";
-import { useMarkInvoiceAsPaid } from "@/hooks/invoices/useInvoice"; // New hook for marking as paid
+import { useMarkInvoiceAsPaid } from "@/hooks/invoices/useInvoice";
+import { apiClient } from "@/utils/axios";
 
 interface InvoicesActionsMenuProps {
   invoice: Invoice;
@@ -28,7 +29,7 @@ const InvoicesActionsMenu: React.FC<InvoicesActionsMenuProps> = ({
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const markAsBreak = useMarkInvoiceAsBreak();
-  const markAsPaid = useMarkInvoiceAsPaid(); // New hook
+  const markAsPaid = useMarkInvoiceAsPaid();
   const { setSnackbarConfig } = useMokkBar();
 
   // Calculate menu position
@@ -37,7 +38,7 @@ const InvoicesActionsMenu: React.FC<InvoicesActionsMenuProps> = ({
       const rect = buttonRef.current.getBoundingClientRect();
       setMenuPosition({
         top: rect.bottom + 4,
-        left: rect.left - 80, // Adjust based on menu width
+        left: rect.left - 80,
       });
     }
   };
@@ -118,6 +119,44 @@ const InvoicesActionsMenu: React.FC<InvoicesActionsMenuProps> = ({
     }
   };
 
+  // Handle print invoice
+  const handlePrintInvoice = async (invoice: Invoice) => {
+    try {
+      const response = await apiClient.get(`/reports/invoice-receipt/${invoice.id}`, {
+       headers: {
+                    'Accept': 'text/html',
+                },
+      });
+
+      if (!response) {
+        throw new Error('Failed to fetch invoice receipt');
+      }
+
+      const htmlContent = await response;
+      
+      // Open in new window and trigger print
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(htmlContent as string);
+        printWindow.document.close();
+        // The print will be triggered by the window.onload in the HTML
+      }
+
+      setSnackbarConfig({
+        open: true,
+        severity: "success",
+        message: "تم فتح نافذة الطباعة",
+      });
+    } catch (error) {
+      console.error("Error printing invoice:", error);
+      setSnackbarConfig({
+        open: true,
+        severity: "error",
+        message: "حدث خطأ أثناء طباعة الفاتورة",
+      });
+    }
+  };
+
   return (
     <div className="relative">
       <button
@@ -150,6 +189,19 @@ const InvoicesActionsMenu: React.FC<InvoicesActionsMenuProps> = ({
               <FileText className="h-4 w-4" />
               عرض
             </button>
+            
+            {/* Print invoice button */}
+            <button
+              onClick={() => {
+                handlePrintInvoice(invoice);
+                setIsOpen(false);
+              }}
+              className="text-slate-300 hover:text-slate-100 transition-colors flex items-center gap-1 text-sm px-2 py-1 rounded-md hover:bg-slate-700/50 w-full justify-start"
+            >
+              <Printer className="h-4 w-4" />
+              طباعة
+            </button>
+
             {/* Show items button only if invoice has items */}
             {invoice.items && invoice.items.length > 0 && (
               <button
@@ -163,6 +215,7 @@ const InvoicesActionsMenu: React.FC<InvoicesActionsMenuProps> = ({
                 العناصر
               </button>
             )}
+            
             <button
               onClick={() => handleActionClick(onEditInvoice)}
               className="text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1 text-sm px-2 py-1 rounded-md hover:bg-slate-700/50 w-full justify-start"
@@ -170,6 +223,7 @@ const InvoicesActionsMenu: React.FC<InvoicesActionsMenuProps> = ({
               <Edit className="h-4 w-4" />
               تعديل
             </button>
+            
             {/* Show paid/breakage options only for unpaid invoices */}
             {!invoice.paidStatus && !invoice.isBreak && (
               <>
@@ -197,6 +251,7 @@ const InvoicesActionsMenu: React.FC<InvoicesActionsMenuProps> = ({
                 )}
               </>
             )}
+            
             {onDeleteInvoice && (
               <button
                 onClick={() => handleActionClick(onDeleteInvoice)}
