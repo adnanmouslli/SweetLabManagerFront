@@ -17,7 +17,11 @@ import {
 } from "@/hooks/advances/useAdvances";
 
 // Import types
-import { DirectDebtDTO, ExpenseProductsDTO, IncomeProductsDTO } from "@/types/invoice.type";
+import {
+  DirectDebtDTO,
+  ExpenseProductsDTO,
+  IncomeProductsDTO,
+} from "@/types/invoice.type";
 import AmountInput from "./AmountInput";
 import CustomerSection from "./CustomerSection";
 import EmployeeInvoiceForm from "./EmployeeInvoiceForm";
@@ -98,7 +102,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
   // Auto-update supplier payment amount when total amount changes for expense invoices
   useEffect(() => {
     if (mode === "expense" && type === InvoiceCategory.PRODUCTS) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         supplierPaymentAmount: prev.totalAmount,
       }));
@@ -158,7 +162,9 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
         open: true,
         severity: "success",
         message:
-          type === InvoiceCategory.DEBT ? "تم تسجيل الدين بنجاح" : "تم إضافة المعاملة بنجاح",
+          type === InvoiceCategory.DEBT
+            ? "تم تسجيل الدين بنجاح"
+            : "تم إضافة المعاملة بنجاح",
       });
       onClose();
     },
@@ -213,10 +219,10 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
       ...prev,
       [name]:
         name === "totalAmount" ||
-          name === "discount" ||
-          name === "firstPayment" ||
-          name === "additionalAmount" ||
-          name === "supplierPaymentAmount"
+        name === "discount" ||
+        name === "firstPayment" ||
+        name === "additionalAmount" ||
+        name === "supplierPaymentAmount"
           ? Number(value)
           : value,
     }));
@@ -239,7 +245,8 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
       ...prev,
       totalAmount: newTotalAmount,
       // Auto-update supplier payment amount for expense invoices
-      supplierPaymentAmount: mode === "expense" ? newTotalAmount : prev.supplierPaymentAmount,
+      supplierPaymentAmount:
+        mode === "expense" ? newTotalAmount : prev.supplierPaymentAmount,
     }));
   };
 
@@ -253,7 +260,8 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
       ...prev,
       totalAmount: newTotalAmount,
       // Auto-update supplier payment amount for expense invoices
-      supplierPaymentAmount: mode === "expense" ? newTotalAmount : prev.supplierPaymentAmount,
+      supplierPaymentAmount:
+        mode === "expense" ? newTotalAmount : prev.supplierPaymentAmount,
     }));
   };
 
@@ -409,14 +417,14 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
               type === InvoiceCategory.DIRECT ||
               type === InvoiceCategory.DEBT ||
               type === InvoiceCategory.ADVANCE) && (
-                <CustomerSection
-                  formData={formData}
-                  setFormData={setFormData}
-                  type={type}
-                  mode={mode}
-                  customerId={customerId}
-                />
-              )}
+              <CustomerSection
+                formData={formData}
+                setFormData={setFormData}
+                type={type}
+                mode={mode}
+                customerId={customerId}
+              />
+            )}
 
             {/* Amount */}
             <AmountInput
@@ -429,7 +437,9 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
             {/* Supplier Payment Amount Field (Only show for expense invoices) */}
             {mode === "expense" && (
               <div className="space-y-2">
-                <label className="block text-slate-200">المبلغ المدفوع للمورد</label>
+                <label className="block text-slate-200">
+                  المبلغ المدفوع للمورد
+                </label>
                 <div className="relative">
                   <input
                     type="number"
@@ -442,7 +452,8 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                   />
                 </div>
                 <p className="text-xs text-slate-400">
-                  المبلغ المدفوع للمورد (يتم تعيينه تلقائياً بقيمة الفاتورة الكاملة)
+                  المبلغ المدفوع للمورد (يتم تعيينه تلقائياً بقيمة الفاتورة
+                  الكاملة)
                 </p>
               </div>
             )}

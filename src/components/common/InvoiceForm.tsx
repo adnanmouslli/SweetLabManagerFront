@@ -34,7 +34,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = (props) => {
     modifiedProps = {
       ...props,
       type: InvoiceCategory.EMPLOYEE,
-      subType: operationType || subType
+      subType: operationType || subType,
     };
   }
 

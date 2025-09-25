@@ -136,10 +136,6 @@ const CombinedCustomerModal = ({
         );
         return;
       }
-      if (!formData.phone.trim()) {
-        setError(`رقم الهاتف مطلوب`);
-        return;
-      }
 
       // Prepare the data with customerType always included
       const requestData = {
@@ -244,8 +240,14 @@ const CombinedCustomerModal = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-slate-800 rounded-xl border border-slate-700 w-full max-w-md max-h-[90vh] overflow-y-auto">
+    <div
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-slate-800 rounded-xl border border-slate-700 w-full max-w-md max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-slate-700">
           <div>

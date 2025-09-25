@@ -1,28 +1,29 @@
 "use client";
+import InvoiceForm from "@/components/common/InvoiceForm";
 import Navbar from "@/components/common/Navbar";
 import PageSpinner from "@/components/common/PageSpinner";
 import SplineBackground from "@/components/common/SplineBackground";
-import InvoiceForm from "@/components/common/InvoiceForm";
 import {
   useActiveAdvances,
   useAdvanceDetails,
 } from "@/hooks/advances/useAdvances";
+import { useFunds } from "@/hooks/funds/useFunds";
+import { InvoiceCategory } from "@/types/invoice.type";
 import { formatDate } from "@/utils/formatters";
 import { motion } from "framer-motion";
 import {
+  ArrowDown,
   ArrowUpRight,
   Calendar,
   ChevronLeft,
   FileText,
   Loader2,
+  RefreshCw,
   Search,
   User,
   X,
-  RefreshCw,
-  ArrowDown,
 } from "lucide-react";
 import { useState } from "react";
-import { InvoiceCategory } from "@/types/invoice.type";
 
 const AdvancesPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -31,6 +32,8 @@ const AdvancesPage = () => {
   );
   const [showRepayForm, setShowRepayForm] = useState(false);
   const [repayAdvanceId, setRepayAdvanceId] = useState<number | null>(null);
+  const [showFundSelection, setShowFundSelection] = useState(false);
+  const [selectedFundId, setSelectedFundId] = useState<number | null>(null);
 
   // Fetch active advances
   const { data: activeAdvances, isLoading: isLoadingAdvances } =
@@ -40,26 +43,8 @@ const AdvancesPage = () => {
   const { data: selectedAdvance, isLoading: isLoadingDetails } =
     useAdvanceDetails(selectedAdvanceId || 0);
 
-  // Get the original fundId from the advance's related invoices
-  const getOriginalFundId = (advanceId: number): number => {
-    const advance = activeAdvances?.find((adv) => adv.id === advanceId);
-    if (advance?.relatedInvoices && advance.relatedInvoices.length > 0) {
-      // Find the original advance invoice (income type)
-      const originalInvoice = advance.relatedInvoices.find(
-        (invoice) =>
-          invoice.invoiceType === "income" &&
-          invoice.invoiceCategory === "advance"
-      );
-      if (originalInvoice?.fundId) {
-        console.log(
-          `Using original fund ${originalInvoice.fundId} for advance ${advanceId} repayment`
-        );
-        return originalInvoice.fundId;
-      }
-    }
-    console.log(`Using default fund (1) for advance ${advanceId} repayment`);
-    return 1; // Default to general fund
-  };
+  // Fetch funds for selection
+  const { data: funds, isLoading: isLoadingFunds } = useFunds();
 
   // Filter advances based on search term
   const filteredAdvances = activeAdvances?.filter((advance) => {
@@ -81,9 +66,16 @@ const AdvancesPage = () => {
     setSelectedAdvanceId(null);
   };
 
-  // Open repay form
+  // Open fund selection for repay
   const handleOpenRepayForm = (advanceId: number) => {
     setRepayAdvanceId(advanceId);
+    setShowFundSelection(true);
+  };
+
+  // Handle fund selection and proceed to repay form
+  const handleFundSelected = (fundId: number) => {
+    setSelectedFundId(fundId);
+    setShowFundSelection(false);
     setShowRepayForm(true);
   };
 
@@ -91,11 +83,21 @@ const AdvancesPage = () => {
   const handleCloseRepayForm = () => {
     setShowRepayForm(false);
     setRepayAdvanceId(null);
+    setSelectedFundId(null);
+  };
+
+  // Close fund selection
+  const handleCloseFundSelection = () => {
+    setShowFundSelection(false);
+    setRepayAdvanceId(null);
+    setSelectedFundId(null);
   };
 
   return (
     <div className="min-h-screen bg-background relative transition-colors duration-300">
-      {(isLoadingAdvances || isLoadingDetails) && <PageSpinner />}
+      {(isLoadingAdvances || isLoadingDetails || isLoadingFunds) && (
+        <PageSpinner />
+      )}
       <SplineBackground activeTab="advances" />
 
       <div className="relative z-10">
@@ -479,12 +481,65 @@ const AdvancesPage = () => {
         </main>
       </div>
 
+      {/* Fund Selection Modal */}
+      {showFundSelection && repayAdvanceId && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-slate-800 border border-slate-700/50 rounded-lg p-6 w-full max-w-md mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-medium text-slate-200">
+                اختر الصندوق للسداد
+              </h3>
+              <button
+                onClick={handleCloseFundSelection}
+                className="text-slate-400 hover:text-slate-200 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {isLoadingFunds ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-blue-400" />
+                  <span className="text-slate-400 mr-2">
+                    جاري تحميل الصناديق...
+                  </span>
+                </div>
+              ) : (
+                funds?.map((fund) => (
+                  <button
+                    key={fund.id}
+                    onClick={() => handleFundSelected(fund.id)}
+                    className="w-full p-4 text-right bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded-lg transition-colors border border-blue-500/20"
+                  >
+                    <div className="font-medium">
+                      {fund.fundType === "main"
+                        ? "الخزنة"
+                        : fund.fundType === "booth"
+                        ? "بسطة"
+                        : fund.fundType === "university"
+                        ? "الجامعة"
+                        : fund.fundType === "general"
+                        ? "عام"
+                        : fund.fundType}
+                    </div>
+                    <div className="text-sm opacity-75">
+                      الرصيد: {fund.currentBalance.toLocaleString()} ل.س
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Repay Advance Form */}
-      {showRepayForm && repayAdvanceId && (
+      {showRepayForm && repayAdvanceId && selectedFundId && (
         <InvoiceForm
           type={InvoiceCategory.ADVANCE}
           mode="expense"
-          fundId={getOriginalFundId(repayAdvanceId)}
+          fundId={selectedFundId}
           onClose={handleCloseRepayForm}
           customerId={
             selectedAdvanceId

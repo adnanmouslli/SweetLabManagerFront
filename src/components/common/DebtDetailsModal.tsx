@@ -1,7 +1,13 @@
 import { useApplyDiscount } from "@/hooks/debts/useDebts";
 import { Debt } from "@/types/debts.type";
 import { formatCurrency, formatDate } from "@/utils/formatters";
-import { Backdrop, CircularProgress, Dialog, DialogContent, DialogTitle } from "@mui/material";
+import {
+  Backdrop,
+  CircularProgress,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from "@mui/material";
 import {
   AlertCircle,
   CalendarDays,
@@ -10,7 +16,7 @@ import {
   Receipt,
   Tag,
   User,
-  X
+  X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -60,28 +66,28 @@ const DebtDetailsModal: React.FC<DebtDetailsModalProps> = ({
       return;
     }
 
-    if (!discountReason.trim()) {
-      setDiscountError("يرجى إدخال سبب الخصم");
-      return;
-    }
-
-    applyDiscount.mutate({
-      debtId: debt.id,
-      data: {
-        discountAmount: amount,
-        notes: discountReason
-      }
-    }, {
-      onSuccess: () => {
-        setActiveTab("details");
-        setDiscountAmount("");
-        setDiscountReason("");
+    applyDiscount.mutate(
+      {
+        debtId: debt.id,
+        data: {
+          discountAmount: amount,
+          notes: discountReason,
+        },
       },
-      onError: (error) => {
-        setDiscountError("حدث خطأ أثناء تطبيق الخصم. يرجى المحاولة مرة أخرى.");
-        console.error("Discount application error:", error);
+      {
+        onSuccess: () => {
+          setActiveTab("details");
+          setDiscountAmount("");
+          setDiscountReason("");
+        },
+        onError: (error) => {
+          setDiscountError(
+            "حدث خطأ أثناء تطبيق الخصم. يرجى المحاولة مرة أخرى."
+          );
+          console.error("Discount application error:", error);
+        },
       }
-    });
+    );
   };
 
   if (!debt) return null;
@@ -97,7 +103,9 @@ const DebtDetailsModal: React.FC<DebtDetailsModalProps> = ({
   const tabs = [
     { id: "details", label: "التفاصيل" },
     { id: "invoices", label: "الفواتير المرتبطة" },
-    ...(debt.status === "active" ? [{ id: "discount", label: "إضافة خصم" }] : [])
+    ...(debt.status === "active"
+      ? [{ id: "discount", label: "إضافة خصم" }]
+      : []),
   ];
 
   return (
@@ -142,10 +150,11 @@ const DebtDetailsModal: React.FC<DebtDetailsModalProps> = ({
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-6 py-3 text-sm font-medium transition-colors whitespace-nowrap ${activeTab === tab.id
-                  ? "text-blue-400 border-b-2 border-blue-400"
-                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-700/30"
-                  }`}
+                className={`px-6 py-3 text-sm font-medium transition-colors whitespace-nowrap ${
+                  activeTab === tab.id
+                    ? "text-blue-400 border-b-2 border-blue-400"
+                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-700/30"
+                }`}
               >
                 {tab.label}
                 {tab.id === "invoices" && (
@@ -166,14 +175,21 @@ const DebtDetailsModal: React.FC<DebtDetailsModalProps> = ({
                   {/* Header with status */}
                   <div className="flex justify-between items-center p-4 bg-slate-700/30">
                     <div className="flex items-center gap-3 gap-reverse">
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${debt.status === "active"
-                        ? "bg-yellow-500/20 text-yellow-400"
-                        : debt.status === "paid"
-                          ? "bg-emerald-500/20 text-emerald-400"
-                          : "bg-slate-500/20 text-slate-400"
-                        }`}>
+                      <span
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                          debt.status === "active"
+                            ? "bg-yellow-500/20 text-yellow-400"
+                            : debt.status === "paid"
+                            ? "bg-emerald-500/20 text-emerald-400"
+                            : "bg-slate-500/20 text-slate-400"
+                        }`}
+                      >
                         <AlertCircle className="h-4 w-4 mx-1" />
-                        {debt.status === "active" ? "دين نشط" : debt.status === "paid" ? "مدفوع" : debt.status}
+                        {debt.status === "active"
+                          ? "دين نشط"
+                          : debt.status === "paid"
+                          ? "مدفوع"
+                          : debt.status}
                       </span>
 
                       {hasDiscount && (
@@ -184,9 +200,7 @@ const DebtDetailsModal: React.FC<DebtDetailsModalProps> = ({
                       )}
                     </div>
 
-                    <div className="text-sm text-slate-400">
-                      #{debt.id}
-                    </div>
+                    <div className="text-sm text-slate-400">#{debt.id}</div>
                   </div>
 
                   {/* Main amounts */}
@@ -194,7 +208,9 @@ const DebtDetailsModal: React.FC<DebtDetailsModalProps> = ({
                     <div className="grid grid-cols-3 gap-4 mb-4">
                       <div className="col-span-3 sm:col-span-1">
                         <div className="rounded-lg bg-slate-700/30 p-3 text-center">
-                          <p className="text-sm text-slate-400 mb-1">المبلغ الإجمالي</p>
+                          <p className="text-sm text-slate-400 mb-1">
+                            المبلغ الإجمالي
+                          </p>
                           <p className="text-lg font-semibold text-emerald-400">
                             {formatCurrency(debt.totalAmount)}
                           </p>
@@ -203,7 +219,9 @@ const DebtDetailsModal: React.FC<DebtDetailsModalProps> = ({
 
                       <div className="col-span-3 sm:col-span-1">
                         <div className="rounded-lg bg-slate-700/30 p-3 text-center">
-                          <p className="text-sm text-slate-400 mb-1">المبلغ المدفوع</p>
+                          <p className="text-sm text-slate-400 mb-1">
+                            المبلغ المدفوع
+                          </p>
                           <p className="text-lg font-semibold text-blue-400">
                             {formatCurrency(totalPaid)}
                           </p>
@@ -212,7 +230,9 @@ const DebtDetailsModal: React.FC<DebtDetailsModalProps> = ({
 
                       <div className="col-span-3 sm:col-span-1">
                         <div className="rounded-lg bg-slate-700/30 p-3 text-center">
-                          <p className="text-sm text-slate-400 mb-1">المبلغ المتبقي</p>
+                          <p className="text-sm text-slate-400 mb-1">
+                            المبلغ المتبقي
+                          </p>
                           <p className="text-lg font-semibold text-red-400">
                             {formatCurrency(debt.remainingAmount)}
                           </p>
@@ -227,7 +247,8 @@ const DebtDetailsModal: React.FC<DebtDetailsModalProps> = ({
                           <Tag className="h-5 w-5 text-purple-400 mt-0.5 flex-shrink-0" />
                           <div>
                             <p className="text-sm font-medium text-purple-400">
-                              تم تطبيق خصم بقيمة {formatCurrency(discountedAmount)}
+                              تم تطبيق خصم بقيمة{" "}
+                              {formatCurrency(discountedAmount)}
                             </p>
                           </div>
                         </div>
@@ -240,17 +261,25 @@ const DebtDetailsModal: React.FC<DebtDetailsModalProps> = ({
                 <div className="bg-slate-800/50 rounded-xl overflow-hidden">
                   <div className="flex items-center p-4 bg-slate-700/30">
                     <User className="h-5 w-5 text-slate-400 mx-2" />
-                    <h3 className="text-base font-medium text-slate-200">معلومات العميل</h3>
+                    <h3 className="text-base font-medium text-slate-200">
+                      معلومات العميل
+                    </h3>
                   </div>
 
                   <div className="p-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <p className="text-sm text-slate-400 mb-1">اسم العميل</p>
-                        <p className="text-slate-200 font-medium">{debt.customer.name}</p>
+                        <p className="text-sm text-slate-400 mb-1">
+                          اسم العميل
+                        </p>
+                        <p className="text-slate-200 font-medium">
+                          {debt.customer.name}
+                        </p>
                       </div>
                       <div>
-                        <p className="text-sm text-slate-400 mb-1">رقم الهاتف</p>
+                        <p className="text-sm text-slate-400 mb-1">
+                          رقم الهاتف
+                        </p>
                         <p className="text-slate-200 font-medium">
                           {debt.customer.phone || "غير متوفر"}
                         </p>
@@ -263,17 +292,25 @@ const DebtDetailsModal: React.FC<DebtDetailsModalProps> = ({
                 <div className="bg-slate-800/50 rounded-xl overflow-hidden">
                   <div className="flex items-center p-4 bg-slate-700/30">
                     <CalendarDays className="h-5 w-5 text-slate-400 mx-2" />
-                    <h3 className="text-base font-medium text-slate-200">التواريخ</h3>
+                    <h3 className="text-base font-medium text-slate-200">
+                      التواريخ
+                    </h3>
                   </div>
 
                   <div className="p-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <p className="text-sm text-slate-400 mb-1">تاريخ الإنشاء</p>
-                        <p className="text-slate-200">{formatDate(debt.createdAt)}</p>
+                        <p className="text-sm text-slate-400 mb-1">
+                          تاريخ الإنشاء
+                        </p>
+                        <p className="text-slate-200">
+                          {formatDate(debt.createdAt)}
+                        </p>
                       </div>
                       <div>
-                        <p className="text-sm text-slate-400 mb-1">تاريخ آخر دفعة</p>
+                        <p className="text-sm text-slate-400 mb-1">
+                          تاريخ آخر دفعة
+                        </p>
                         <p className="text-slate-200">
                           {debt.lastPaymentDate
                             ? formatDate(debt.lastPaymentDate)
@@ -314,11 +351,16 @@ const DebtDetailsModal: React.FC<DebtDetailsModalProps> = ({
                                   <span className="text-slate-200 font-medium">
                                     #{invoice.invoiceNumber}
                                   </span>
-                                  <span className={`mx-2 text-xs px-2 py-0.5 rounded-full ${invoice.invoiceType === "income"
-                                    ? "bg-blue-500/20 text-blue-400"
-                                    : "bg-red-500/20 text-red-400"
-                                    }`}>
-                                    {invoice.invoiceType === "income" ? "دخل" : "صرف"}
+                                  <span
+                                    className={`mx-2 text-xs px-2 py-0.5 rounded-full ${
+                                      invoice.invoiceType === "income"
+                                        ? "bg-blue-500/20 text-blue-400"
+                                        : "bg-red-500/20 text-red-400"
+                                    }`}
+                                  >
+                                    {invoice.invoiceType === "income"
+                                      ? "دخل"
+                                      : "صرف"}
                                   </span>
                                 </div>
                                 <p className="text-sm text-slate-400 mt-1">
@@ -326,10 +368,13 @@ const DebtDetailsModal: React.FC<DebtDetailsModalProps> = ({
                                 </p>
                               </div>
                               <div className="text-left">
-                                <p className={`font-medium ${invoice.invoiceType === "income"
-                                  ? "text-emerald-400"
-                                  : "text-red-400"
-                                  }`}>
+                                <p
+                                  className={`font-medium ${
+                                    invoice.invoiceType === "income"
+                                      ? "text-emerald-400"
+                                      : "text-red-400"
+                                  }`}
+                                >
                                   {formatCurrency(invoice.totalAmount)}
                                 </p>
                                 {invoice.discount > 0 && (
@@ -364,7 +409,9 @@ const DebtDetailsModal: React.FC<DebtDetailsModalProps> = ({
                 <div className="bg-slate-800/50 rounded-xl overflow-hidden">
                   <div className="flex items-center p-4 bg-slate-700/30">
                     <PercentCircle className="h-5 w-5 text-slate-400 mx-2" />
-                    <h3 className="text-base font-medium text-slate-200">إضافة خصم</h3>
+                    <h3 className="text-base font-medium text-slate-200">
+                      إضافة خصم
+                    </h3>
                   </div>
 
                   <div className="p-4">
@@ -372,15 +419,26 @@ const DebtDetailsModal: React.FC<DebtDetailsModalProps> = ({
                       <div className="flex">
                         <AlertCircle className="h-5 w-5 mx-2 flex-shrink-0" />
                         <div>
-                          <p>إضافة خصم على الدين سيقلل المبلغ المتبقي المطلوب سداده.</p>
-                          <p className="mt-1">المبلغ المتبقي الحالي: <span className="font-semibold">{formatCurrency(debt.remainingAmount)}</span></p>
+                          <p>
+                            إضافة خصم على الدين سيقلل المبلغ المتبقي المطلوب
+                            سداده.
+                          </p>
+                          <p className="mt-1">
+                            المبلغ المتبقي الحالي:{" "}
+                            <span className="font-semibold">
+                              {formatCurrency(debt.remainingAmount)}
+                            </span>
+                          </p>
                         </div>
                       </div>
                     </div>
 
                     <div className="space-y-4">
                       <div>
-                        <label htmlFor="discountAmount" className="block text-sm font-medium text-slate-300 mb-1">
+                        <label
+                          htmlFor="discountAmount"
+                          className="block text-sm font-medium text-slate-300 mb-1"
+                        >
                           قيمة الخصم
                         </label>
                         <div className="relative">
@@ -397,15 +455,23 @@ const DebtDetailsModal: React.FC<DebtDetailsModalProps> = ({
                             ل.س
                           </span>
                         </div>
-                        {discountAmount && !isNaN(parseFloat(discountAmount)) && (
-                          <p className="text-sm text-slate-400 mt-1">
-                            المبلغ بعد الخصم: {formatCurrency(debt.remainingAmount - parseFloat(discountAmount))}
-                          </p>
-                        )}
+                        {discountAmount &&
+                          !isNaN(parseFloat(discountAmount)) && (
+                            <p className="text-sm text-slate-400 mt-1">
+                              المبلغ بعد الخصم:{" "}
+                              {formatCurrency(
+                                debt.remainingAmount -
+                                  parseFloat(discountAmount)
+                              )}
+                            </p>
+                          )}
                       </div>
 
                       <div>
-                        <label htmlFor="discountReason" className="block text-sm font-medium text-slate-300 mb-1">
+                        <label
+                          htmlFor="discountReason"
+                          className="block text-sm font-medium text-slate-300 mb-1"
+                        >
                           سبب الخصم
                         </label>
                         <input
@@ -464,7 +530,7 @@ const DebtDetailsModal: React.FC<DebtDetailsModalProps> = ({
 
       {/* Loading backdrop */}
       <Backdrop
-        sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
         open={applyDiscount.isPending}
       >
         <CircularProgress color="inherit" />

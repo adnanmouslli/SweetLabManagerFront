@@ -1,11 +1,11 @@
 import { useActiveAdvances } from "@/hooks/advances/useAdvances";
 import {
   useCreateCustomer,
-  useFetchCustomers,
+  useCustomersList,
 } from "@/hooks/customers/useCustomers";
 import { useFetchCategories } from "@/hooks/customers/useCustomersCategories";
 import { Advance } from "@/types/advances.type";
-import { AllCustomerType, CustomerTypeEnum } from "@/types/customers.type";
+import { CustomerTypeEnum, ListCustomerType } from "@/types/customers.type";
 import { InvoiceCategory } from "@/types/invoice.type";
 import { Loader2, Plus, Tag, User, X } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
@@ -17,7 +17,7 @@ import { useMokkBar } from "../providers/MokkBarContext";
 interface CustomerOption {
   value: number;
   label: string;
-  customer: AllCustomerType;
+  customer: ListCustomerType;
 }
 
 interface AdvanceOption {
@@ -58,14 +58,14 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
   customerId,
 }) => {
   const { setSnackbarConfig } = useMokkBar();
-  const { data: customers } = useFetchCustomers();
+  const { data: customers } = useCustomersList();
   const { data: activeAdvances } = useActiveAdvances();
   const [showAddCustomer, setShowAddCustomer] = useState(false);
   const [showFormTypeDialog, setShowFormTypeDialog] = useState(false);
   const [selectedFormType, setSelectedFormType] =
     useState<CustomerTypeEnum | null>(null);
   const [selectedCustomer, setSelectedCustomer] =
-    useState<AllCustomerType | null>(null);
+    useState<ListCustomerType | null>(null);
   const [selectedAdvance, setSelectedAdvance] = useState<Advance | null>(null);
 
   const isAdvanceRepay = type === InvoiceCategory.ADVANCE && mode === "expense";
@@ -117,30 +117,6 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
   // Inside the component, add categories data
   const { data: categories } = useFetchCategories();
 
-  // Calculate total debt from debts array
-  const calculateTotalDebt = (customer: AllCustomerType): number => {
-    if (!customer.debts || !Array.isArray(customer.debts)) {
-      return 0;
-    }
-    return customer.debts
-      .filter((debt) => debt.status === "active")
-      .reduce((sum, debt) => sum + debt.remainingAmount, 0);
-  };
-
-  // Calculate total breakage amount from invoices array
-  const calculateTotalBreakage = (customer: AllCustomerType): number => {
-    if (!customer.invoices || !Array.isArray(customer.invoices)) {
-      return 0;
-    }
-    return customer.invoices
-      .filter((invoice) => invoice.isBreak && !invoice.paidStatus)
-      .reduce((sum, invoice) => {
-        // For breakage invoices, calculate the remaining amount
-        const netAmount = invoice.totalAmount - invoice.discount;
-        return sum + Math.max(0, netAmount); // Ensure non-negative
-      }, 0);
-  };
-
   // Format customers for react-select
   const customerOptions: CustomerOption[] = useMemo(() => {
     // Filter customers based on mode (income/expense) and other requirements
@@ -163,13 +139,12 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
     // Additional filtering for debt or advance repayment requirements
     if (type === InvoiceCategory.DEBT && mode === "income" && customers) {
       filteredCustomers = filteredCustomers.filter(
-        (customer) => calculateTotalDebt(customer) > 0
+        (customer) => customer.totalDebt > 0
       );
     }
 
     return filteredCustomers.map((customer) => {
       let balanceInfo = "";
-      const totalDebt = calculateTotalDebt(customer);
 
       if (customer.customerType === CustomerTypeEnum.SUPPLIER) {
         // For suppliers, show supplier balance
@@ -180,7 +155,9 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
       } else {
         // For customers, show debt
         balanceInfo =
-          totalDebt > 0 ? ` - دين: ${totalDebt} ل.س` : " - دين: 0 ل.س";
+          customer.totalDebt > 0
+            ? ` - دين: ${customer.totalDebt} ل.س`
+            : " - دين: 0 ل.س";
       }
 
       return {
@@ -231,7 +208,21 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
     if (selectedOption) {
       const advance = selectedOption.advance;
       setSelectedAdvance(advance);
-      setSelectedCustomer(advance.customer as unknown as AllCustomerType);
+
+      // Convert advance customer to ListCustomerType for consistency
+      const listCustomer: ListCustomerType = {
+        id: advance.customer.id,
+        name: advance.customer.name,
+        phone: advance.customer.phone,
+        customerType: CustomerTypeEnum.CUSTOMER, // Advances are typically for customers
+        supplierBalance: 0,
+        category: null,
+        totalDebt: 0,
+        totalBreakAmount: 0,
+        totalOwed: 0,
+      };
+
+      setSelectedCustomer(listCustomer);
       setFormData((prev: any) => ({
         ...prev,
         advanceId: advance.id,
@@ -296,8 +287,21 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
         customerType: data.customerType,
       });
 
+      // Convert CustomerInfo to ListCustomerType for consistency
+      const listCustomer: ListCustomerType = {
+        id: response.id,
+        name: response.name,
+        phone: response.phone,
+        customerType: response.customerType,
+        supplierBalance: 0, // New customer starts with 0 balance
+        category: response.category,
+        totalDebt: 0, // New customer starts with 0 debt
+        totalBreakAmount: 0, // New customer starts with 0 breakage
+        totalOwed: 0, // New customer starts with 0 owed amount
+      };
+
       // Set the newly created customer as selected
-      setSelectedCustomer(response as unknown as AllCustomerType);
+      setSelectedCustomer(listCustomer);
       setFormData((prev: any) => ({
         ...prev,
         customerId: response.id,
@@ -847,19 +851,16 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
               )
             : // For customers, show debt and breakage
               (() => {
-                const totalDebt = calculateTotalDebt(selectedCustomer);
-                const totalBreakage = calculateTotalBreakage(selectedCustomer);
-
                 return (
                   <div className="flex flex-col gap-2">
-                    {totalDebt > 0 && (
+                    {selectedCustomer.totalDebt > 0 && (
                       <div className="flex items-center gap-2 px-4 py-2 bg-yellow-500/10 text-yellow-400 rounded-lg hover:bg-yellow-500/20 transition-colors disabled:opacity-50 w-fit">
-                        الدين الذي عليه: {totalDebt} ل.س
+                        الدين الذي عليه: {selectedCustomer.totalDebt} ل.س
                       </div>
                     )}
-                    {totalBreakage > 0 && (
+                    {selectedCustomer.totalBreakAmount > 0 && (
                       <div className="flex items-center gap-2 px-4 py-2 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20 transition-colors disabled:opacity-50 w-fit">
-                        قيمة الكسر: {totalBreakage} ل.س
+                        قيمة الكسر: {selectedCustomer.totalBreakAmount} ل.س
                       </div>
                     )}
                   </div>

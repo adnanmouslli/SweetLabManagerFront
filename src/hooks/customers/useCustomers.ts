@@ -1,36 +1,34 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useQuery } from "@tanstack/react-query";
-import { apiClient } from "@/utils/axios";
+import { CustomerCategory } from "@/types/customerCategories.types";
 import {
   AllCustomerType,
-  CustomerSummaryData,
-  CustomerType,
-  CreateCustomerRequest,
-  CreateCustomerResponse,
-  UpdateCustomerRequest,
-  UpdateCustomerResponse,
-  DeleteCustomerResponse,
-  GetCustomersListResponse,
-  GetAllCustomersResponse,
-  CustomerAccountStatementResponse,
-  GetCustomerCategoriesResponse,
   CreateCustomerCategoryRequest,
   CreateCustomerCategoryResponse,
+  CreateCustomerRequest,
+  CreateCustomerResponse,
+  CustomerAccountStatementResponse,
+  CustomerSummaryData,
+  DeleteCustomerCategoryResponse,
+  DeleteCustomerResponse,
+  GetAllCustomersResponse,
+  GetCustomerCategoriesResponse,
+  ListCustomerType,
+  SupplierPaymentResponse,
   UpdateCustomerCategoryRequest,
   UpdateCustomerCategoryResponse,
-  DeleteCustomerCategoryResponse,
-  SupplierPaymentResponse,
+  UpdateCustomerRequest,
+  UpdateCustomerResponse,
 } from "@/types/customers.type";
-import { CustomerCategory } from "@/types/customerCategories.types";
+import { apiClient } from "@/utils/axios";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 /**
  * Hook for retrieving a simple list of customers with basic information
  */
 export const useCustomersList = () => {
-  return useQuery<CustomerType[]>({
+  return useQuery<ListCustomerType[]>({
     queryKey: ["customers"],
     queryFn: async () => {
-      const response = await apiClient.get<GetCustomersListResponse>(
+      const response = await apiClient.get<ListCustomerType[]>(
         "/customers/list"
       );
       return response;
@@ -56,11 +54,7 @@ export const useFetchCustomers = () => {
 /**
  * Hook for retrieving a comprehensive account statement for a specific customer
  */
-export const useSummaryCustomer = ({
-  customerId,
-}: {
-  customerId: string;
-}) => {
+export const useSummaryCustomer = ({ customerId }: { customerId: string }) => {
   return useQuery<CustomerSummaryData>({
     queryKey: ["customer-summary", customerId],
     queryFn: async () => {
@@ -87,14 +81,13 @@ export const useCustomerCategories = () => {
         "/customer-categories"
       );
       // Map the response to match the expected CustomerCategory type
-      return response.categories.map(category => ({
+      return response.categories.map((category) => ({
         ...category,
-        description: category.description ?? null // Convert undefined to null
+        description: category.description ?? null, // Convert undefined to null
       }));
     },
   });
 };
-
 
 export const useCustomerCategoriesList = () => {
   return useQuery<CustomerCategory[]>({
@@ -237,7 +230,11 @@ export const useDeleteCustomer = () => {
 export const useCreateCustomerCategory = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<CreateCustomerCategoryResponse, Error, CreateCustomerCategoryRequest>({
+  return useMutation<
+    CreateCustomerCategoryResponse,
+    Error,
+    CreateCustomerCategoryRequest
+  >({
     mutationFn: async (categoryData: CreateCustomerCategoryRequest) => {
       const response = await apiClient.post<CreateCustomerCategoryResponse>(
         "/customers/categories",
@@ -270,7 +267,11 @@ export const useUpdateCustomerCategory = () => {
     id: number;
   }
 
-  return useMutation<UpdateCustomerCategoryResponse, Error, UpdateCustomerCategoryParams>({
+  return useMutation<
+    UpdateCustomerCategoryResponse,
+    Error,
+    UpdateCustomerCategoryParams
+  >({
     mutationFn: async (categoryData: UpdateCustomerCategoryParams) => {
       const { id, ...data } = categoryData;
       const response = await apiClient.patch<UpdateCustomerCategoryResponse>(
@@ -337,7 +338,12 @@ export const usePaySupplierDues = () => {
   return useMutation<
     SupplierPaymentResponse,
     Error,
-    { supplierId: number; paymentAmount: number; notes?: string; fundId: number }
+    {
+      supplierId: number;
+      paymentAmount: number;
+      notes?: string;
+      fundId: number;
+    }
   >({
     mutationFn: async ({ supplierId, paymentAmount, notes, fundId }) => {
       const response = await apiClient.post<SupplierPaymentResponse>(
@@ -376,9 +382,10 @@ export const useSupplierBalance = (supplierId: number | null) => {
       if (!supplierId) {
         throw new Error("Supplier ID is required");
       }
-      const response = await apiClient.get<{ balance: number; currency: string }>(
-        `/customers/${supplierId}/supplier-balance`
-      );
+      const response = await apiClient.get<{
+        balance: number;
+        currency: string;
+      }>(`/customers/${supplierId}/supplier-balance`);
       return response;
     },
     enabled: !!supplierId,

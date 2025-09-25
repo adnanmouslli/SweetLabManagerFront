@@ -8,8 +8,8 @@ interface BaseEntity {
 
 // Customer Type enum
 export enum CustomerTypeEnum {
-  CUSTOMER = 'CUSTOMER',
-  SUPPLIER = 'SUPPLIER'
+  CUSTOMER = "CUSTOMER",
+  SUPPLIER = "SUPPLIER",
 }
 
 // Customer Category interface
@@ -262,6 +262,18 @@ export interface CustomerType {
   isUniversity: boolean;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   activeAdvances: any;
+}
+
+export interface ListCustomerType {
+  id: number;
+  name: string;
+  phone: string;
+  customerType: CustomerTypeEnum;
+  supplierBalance: number;
+  category: CustomerCategory | null;
+  totalDebt: number;
+  totalBreakAmount: number;
+  totalOwed: number;
 }
 
 // Request & Response Types for API Operations
