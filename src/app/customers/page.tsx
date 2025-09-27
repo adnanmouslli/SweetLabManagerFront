@@ -8,7 +8,10 @@ import SupplierPaymentModal from "@/components/common/customers/SupplierPaymentM
 import Navbar from "@/components/common/Navbar";
 import PageSpinner from "@/components/common/PageSpinner";
 import SplineBackground from "@/components/common/SplineBackground";
-import { useCustomerCategories, useFetchCustomers } from "@/hooks/customers/useCustomers";
+import {
+  useCustomerCategories,
+  useFetchCustomers,
+} from "@/hooks/customers/useCustomers";
 import { CustomerCategory } from "@/types/customerCategories.types";
 import { AllCustomerType } from "@/types/customers.type";
 import { AnimatePresence, motion } from "framer-motion";
@@ -28,7 +31,7 @@ import {
   Truck,
   Undo2,
   Users,
-  X
+  X,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
@@ -45,10 +48,16 @@ const Customers = () => {
   // State
   const [searchTerm, setSearchTerm] = useState("");
   const [filterByDebt, setFilterByDebt] = useState(false);
-  const [filterByCategoryId, setFilterByCategoryId] = useState<number | null>(null);
-  const [filterByCustomerType, setFilterByCustomerType] = useState<"all" | "customers" | "suppliers">("all");
+  const [filterByCategoryId, setFilterByCategoryId] = useState<number | null>(
+    null
+  );
+  const [filterByCustomerType, setFilterByCustomerType] = useState<
+    "all" | "customers" | "suppliers"
+  >("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(
+    null
+  );
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
 
@@ -84,10 +93,17 @@ const Customers = () => {
   });
 
   // Fetch customers using the provided hook
-  const { data: customersData = [], isLoading: isLoadingCustomers, error: customersError } = useFetchCustomers();
+  const {
+    data: customersData = [],
+    isLoading: isLoadingCustomers,
+    error: customersError,
+  } = useFetchCustomers();
 
   // Fetch categories using the provided hook
-  const { data: categoriesData = [], isLoading: isLoadingCategories } = useCustomerCategories();
+  const { data: categoriesData = [], isLoading: isLoadingCategories } =
+    useCustomerCategories();
+
+  console.log("customersData >>>>>>>>>>>>>>>", customersData);
 
   const customers = useMemo(() => {
     return customersData.map((customer) => {
@@ -126,9 +142,10 @@ const Customers = () => {
       : true;
 
     // Apply customer type filter
-    const customerTypeMatch = filterByCustomerType === "all"
-      ? true
-      : filterByCustomerType === "customers"
+    const customerTypeMatch =
+      filterByCustomerType === "all"
+        ? true
+        : filterByCustomerType === "customers"
         ? customer.customerType === "CUSTOMER"
         : customer.customerType === "SUPPLIER";
 
@@ -213,14 +230,16 @@ const Customers = () => {
   };
 
   // Handler for supplier payment
-  const handleSupplierPayment = (customer: AllCustomerType, e: React.MouseEvent) => {
+  const handleSupplierPayment = (
+    customer: AllCustomerType,
+    e: React.MouseEvent
+  ) => {
     e.stopPropagation();
     setSupplierPaymentModal({
       isOpen: true,
       supplier: customer,
     });
   };
-
 
   // Handler for adding new category
   const handleAddCategory = () => {
@@ -234,9 +253,9 @@ const Customers = () => {
   // Listen for custom event to open the category modal
   useEffect(() => {
     const handleAddCategoryEvent = () => handleAddCategory();
-    window.addEventListener('add-category', handleAddCategoryEvent);
+    window.addEventListener("add-category", handleAddCategoryEvent);
     return () => {
-      window.removeEventListener('add-category', handleAddCategoryEvent);
+      window.removeEventListener("add-category", handleAddCategoryEvent);
     };
   }, []);
 
@@ -294,19 +313,19 @@ const Customers = () => {
                 {filterByCustomerType === "customers"
                   ? "إدارة العملاء"
                   : filterByCustomerType === "suppliers"
-                    ? "إدارة الموردين"
-                    : "إدارة العملاء والموردين"}
+                  ? "إدارة الموردين"
+                  : "إدارة العملاء والموردين"}
               </h1>
               <p className="text-base text-gray-300 max-w-2xl mx-auto">
                 {filterByCustomerType === "customers"
                   ? "إدارة بيانات العملاء والمبيعات والديون"
                   : filterByCustomerType === "suppliers"
-                    ? `إدارة بيانات الموردين والمشتريات. إجمالي الأرصدة المستحقة: ${formatCurrency(
+                  ? `إدارة بيانات الموردين والمشتريات. إجمالي الأرصدة المستحقة: ${formatCurrency(
                       customers
-                        .filter(c => c.customerType === "SUPPLIER")
+                        .filter((c) => c.customerType === "SUPPLIER")
                         .reduce((sum, c) => sum + (c.supplierBalance || 0), 0)
                     )} ل.س`
-                    : "إدارة بيانات العملاء والموردين والمبيعات والمشتريات"}
+                  : "إدارة بيانات العملاء والموردين والمبيعات والمشتريات"}
               </p>
             </div>
 
@@ -323,8 +342,8 @@ const Customers = () => {
                 {filterByCustomerType === "suppliers"
                   ? "إضافة مورد جديد"
                   : filterByCustomerType === "customers"
-                    ? "إضافة عميل جديد"
-                    : "إضافة عميل أو مورد جديد"}
+                  ? "إضافة عميل جديد"
+                  : "إضافة عميل أو مورد جديد"}
               </button>
 
               <button
@@ -353,8 +372,8 @@ const Customers = () => {
                     filterByCustomerType === "suppliers"
                       ? "بحث عن مورد..."
                       : filterByCustomerType === "customers"
-                        ? "بحث عن عميل..."
-                        : "بحث عن عميل أو مورد..."
+                      ? "بحث عن عميل..."
+                      : "بحث عن عميل أو مورد..."
                   }
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -373,47 +392,51 @@ const Customers = () => {
               {/* Filter by debt */}
               <button
                 onClick={() => setFilterByDebt(!filterByDebt)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors text-sm ${filterByDebt
-                  ? "bg-yellow-500/10 text-yellow-400 border border-yellow-500/30"
-                  : "bg-white/5 text-white hover:bg-white/10 border border-white/10"
-                  }`}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors text-sm ${
+                  filterByDebt
+                    ? "bg-yellow-500/10 text-yellow-400 border border-yellow-500/30"
+                    : "bg-white/5 text-white hover:bg-white/10 border border-white/10"
+                }`}
               >
                 <Filter className="h-4 w-4" />
                 {filterByCustomerType === "suppliers"
                   ? "موردين لديهم ديون"
                   : filterByCustomerType === "customers"
-                    ? "عملاء لديهم ديون"
-                    : "عملاء وموردين لديهم ديون"}
+                  ? "عملاء لديهم ديون"
+                  : "عملاء وموردين لديهم ديون"}
               </button>
 
               {/* Customer Type Filter */}
               <div className="flex rounded-lg overflow-hidden border border-white/10">
                 <button
                   onClick={() => setFilterByCustomerType("all")}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 transition-colors text-sm ${filterByCustomerType === "all"
-                    ? "bg-blue-500/20 text-blue-400"
-                    : "bg-white/5 text-white hover:bg-white/10"
-                    }`}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 transition-colors text-sm ${
+                    filterByCustomerType === "all"
+                      ? "bg-blue-500/20 text-blue-400"
+                      : "bg-white/5 text-white hover:bg-white/10"
+                  }`}
                 >
                   <Users className="h-4 w-4" />
                   الكل
                 </button>
                 <button
                   onClick={() => setFilterByCustomerType("customers")}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 transition-colors text-sm ${filterByCustomerType === "customers"
-                    ? "bg-blue-500/20 text-blue-400"
-                    : "bg-white/5 text-white hover:bg-white/10"
-                    }`}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 transition-colors text-sm ${
+                    filterByCustomerType === "customers"
+                      ? "bg-blue-500/20 text-blue-400"
+                      : "bg-white/5 text-white hover:bg-white/10"
+                  }`}
                 >
                   <Users className="h-4 w-4" />
                   العملاء
                 </button>
                 <button
                   onClick={() => setFilterByCustomerType("suppliers")}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 transition-colors text-sm ${filterByCustomerType === "suppliers"
-                    ? "bg-blue-500/20 text-blue-400"
-                    : "bg-white/5 text-white hover:bg-white/10"
-                    }`}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 transition-colors text-sm ${
+                    filterByCustomerType === "suppliers"
+                      ? "bg-blue-500/20 text-blue-400"
+                      : "bg-white/5 text-white hover:bg-white/10"
+                  }`}
                 >
                   <Truck className="h-4 w-4" />
                   الموردين
@@ -424,19 +447,21 @@ const Customers = () => {
               <div className="flex rounded-lg overflow-hidden border border-white/10">
                 <button
                   onClick={() => setViewMode("grid")}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 transition-colors text-sm ${viewMode === "grid"
-                    ? "bg-blue-500/20 text-blue-400"
-                    : "bg-white/5 text-white hover:bg-white/10"
-                    }`}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 transition-colors text-sm ${
+                    viewMode === "grid"
+                      ? "bg-blue-500/20 text-blue-400"
+                      : "bg-white/5 text-white hover:bg-white/10"
+                  }`}
                 >
                   <LayoutGrid className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => setViewMode("table")}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 transition-colors text-sm ${viewMode === "table"
-                    ? "bg-blue-500/20 text-blue-400"
-                    : "bg-white/5 text-white hover:bg-white/10"
-                    }`}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 transition-colors text-sm ${
+                    viewMode === "table"
+                      ? "bg-blue-500/20 text-blue-400"
+                      : "bg-white/5 text-white hover:bg-white/10"
+                  }`}
                 >
                   <FileText className="h-4 w-4" />
                 </button>
@@ -446,17 +471,17 @@ const Customers = () => {
             {/* Categories Filter */}
             {categoriesData.length > 0 && (
               <div className="mb-4" dir="rtl">
-
                 <div className="overflow-x-auto no-scrollbar">
                   <div className="flex gap-1.5 px-4 pb-1">
                     {categoriesData.map((category) => (
                       <div key={category.id} className="relative group">
                         <button
                           onClick={() => toggleCategoryFilter(category.id)}
-                          className={`whitespace-nowrap px-2.5 py-1 rounded-lg text-xs transition-colors ${filterByCategoryId === category.id
-                            ? "bg-purple-500/20 text-purple-400 border border-purple-500/30"
-                            : "bg-white/5 text-white hover:bg-white/10 border border-white/10"
-                            }`}
+                          className={`whitespace-nowrap px-2.5 py-1 rounded-lg text-xs transition-colors ${
+                            filterByCategoryId === category.id
+                              ? "bg-purple-500/20 text-purple-400 border border-purple-500/30"
+                              : "bg-white/5 text-white hover:bg-white/10 border border-white/10"
+                          }`}
                         >
                           <Tag className="h-3 w-3 inline-block mx-1" />
                           {category.name}
@@ -490,8 +515,6 @@ const Customers = () => {
               </div>
             )}
 
-
-
             {/* Customers Content */}
             <div className="container mx-auto px-4" dir="rtl">
               {isLoading ? (
@@ -517,7 +540,10 @@ const Customers = () => {
                 </div>
               ) : paginatedCustomers.length === 0 ? (
                 <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-6 text-center text-gray-400">
-                  {searchTerm || filterByDebt || filterByCategoryId || filterByCustomerType !== "all"
+                  {searchTerm ||
+                  filterByDebt ||
+                  filterByCategoryId ||
+                  filterByCustomerType !== "all"
                     ? "لا توجد نتائج للبحث"
                     : "لا يوجد عملاء أو موردين"}
                 </div>
@@ -543,11 +569,16 @@ const Customers = () => {
                           <div className="flex gap-1.5 flex-shrink-0">
                             {/* Customer Type Badge */}
                             {customer.customerType && (
-                              <div className={`px-2 py-0.5 rounded-full text-xs font-medium border ${customer.customerType === "SUPPLIER"
-                                ? "bg-orange-500/10 text-orange-400 border-orange-500/20"
-                                : "bg-blue-500/10 text-blue-400 border-blue-500/20"
-                                }`}>
-                                {customer.customerType === "SUPPLIER" ? "مورد" : "عميل"}
+                              <div
+                                className={`px-2 py-0.5 rounded-full text-xs font-medium border ${
+                                  customer.customerType === "SUPPLIER"
+                                    ? "bg-orange-500/10 text-orange-400 border-orange-500/20"
+                                    : "bg-blue-500/10 text-blue-400 border-blue-500/20"
+                                }`}
+                              >
+                                {customer.customerType === "SUPPLIER"
+                                  ? "مورد"
+                                  : "عميل"}
                               </div>
                             )}
                             {/* Balance/Debt Badge */}
@@ -594,15 +625,24 @@ const Customers = () => {
                             {customer.supplierBalance > 0 ? (
                               <div className="px-2.5 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20">
                                 <div className="flex items-center justify-between mb-1.5">
-                                  <span className="text-xs font-medium text-red-400">رصيد المورد:</span>
+                                  <span className="text-xs font-medium text-red-400">
+                                    رصيد المورد:
+                                  </span>
                                   <span className="text-sm font-bold text-red-400 break-words text-right max-w-[90px]">
-                                    {formatCurrency(customer.supplierBalance)} ل.س
+                                    {formatCurrency(customer.supplierBalance)}{" "}
+                                    ل.س
                                   </span>
                                 </div>
                                 <div className="w-full bg-red-200/30 rounded-full h-1.5 mb-1.5">
                                   <div
                                     className="bg-red-500 h-1.5 rounded-full transition-all duration-300"
-                                    style={{ width: `${Math.min((customer.supplierBalance / 1000000) * 100, 100)}%` }}
+                                    style={{
+                                      width: `${Math.min(
+                                        (customer.supplierBalance / 1000000) *
+                                          100,
+                                        100
+                                      )}%`,
+                                    }}
                                   ></div>
                                 </div>
                                 <div className="text-xs text-red-300 text-center font-medium">
@@ -612,7 +652,9 @@ const Customers = () => {
                             ) : (
                               <div className="px-2.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
                                 <div className="flex items-center justify-between">
-                                  <span className="text-xs font-medium text-emerald-400">رصيد المورد:</span>
+                                  <span className="text-xs font-medium text-emerald-400">
+                                    رصيد المورد:
+                                  </span>
                                   <span className="text-sm font-bold text-emerald-400">
                                     لا يوجد رصيد
                                   </span>
@@ -648,18 +690,25 @@ const Customers = () => {
                             <Edit className="w-3 h-3" />
                             تعديل
                           </button>
-                          {customer.customerType === "SUPPLIER" && customer.supplierBalance > 0 && (
-                            <button
-                              onClick={(e) => handleSupplierPayment(customer, e)}
-                              className="flex items-center justify-center gap-1 px-1.5 py-1 rounded-lg 
+                          {customer.customerType === "SUPPLIER" &&
+                            customer.supplierBalance > 0 && (
+                              <button
+                                onClick={(e) =>
+                                  handleSupplierPayment(customer, e)
+                                }
+                                className="flex items-center justify-center gap-1 px-1.5 py-1 rounded-lg 
                                        bg-green-500/10 text-green-400 hover:bg-green-500/20 transition-colors
                                        border border-green-500/20 text-xs font-medium min-w-0"
-                              title={`دفع المستحقات: ${formatCurrency(customer.supplierBalance)} ل.س`}
-                            >
-                              <DollarSign className="w-3 h-3 flex-shrink-0" />
-                              <span className="truncate">{formatCurrency(customer.supplierBalance)}</span>
-                            </button>
-                          )}
+                                title={`دفع المستحقات: ${formatCurrency(
+                                  customer.supplierBalance
+                                )} ل.س`}
+                              >
+                                <DollarSign className="w-3 h-3 flex-shrink-0" />
+                                <span className="truncate">
+                                  {formatCurrency(customer.supplierBalance)}
+                                </span>
+                              </button>
+                            )}
                           <button
                             onClick={(e) => handleDeleteCustomer(customer, e)}
                             className="flex items-center justify-center gap-1 px-1.5 py-1 rounded-lg 
@@ -679,7 +728,9 @@ const Customers = () => {
                   <table className="w-full">
                     <thead className="bg-slate-700/50">
                       <tr>
-                        <th className="text-right text-slate-200 p-3 text-sm">الاسم</th>
+                        <th className="text-right text-slate-200 p-3 text-sm">
+                          الاسم
+                        </th>
                         <th className="text-right text-slate-200 p-3 text-sm">
                           رقم الهاتف
                         </th>
@@ -690,7 +741,9 @@ const Customers = () => {
                           التصنيف
                         </th>
                         <th className="text-right text-slate-200 p-3 text-sm">
-                          {filterByCustomerType === "suppliers" ? "رصيد المورد" : "الديون"}
+                          {filterByCustomerType === "suppliers"
+                            ? "رصيد المورد"
+                            : "الديون"}
                         </th>
                         <th className="text-right text-slate-200 p-3 text-sm">
                           الإجراءات
@@ -712,11 +765,16 @@ const Customers = () => {
                           </td>
                           <td className="p-3">
                             {customer.customerType ? (
-                              <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${customer.customerType === "SUPPLIER"
-                                ? "bg-orange-500/10 text-orange-400 border-orange-500/20"
-                                : "bg-blue-500/10 text-blue-400 border-blue-500/20"
-                                }`}>
-                                {customer.customerType === "SUPPLIER" ? "مورد" : "عميل"}
+                              <span
+                                className={`px-2 py-0.5 rounded-full text-xs font-medium border ${
+                                  customer.customerType === "SUPPLIER"
+                                    ? "bg-orange-500/10 text-orange-400 border-orange-500/20"
+                                    : "bg-blue-500/10 text-blue-400 border-blue-500/20"
+                                }`}
+                              >
+                                {customer.customerType === "SUPPLIER"
+                                  ? "مورد"
+                                  : "عميل"}
                               </span>
                             ) : (
                               <span className="text-slate-400 text-sm">-</span>
@@ -738,15 +796,27 @@ const Customers = () => {
                                 {customer.supplierBalance > 0 ? (
                                   <div className="px-2 py-1 rounded-lg bg-red-500/10 border border-red-500/20">
                                     <div className="flex items-center justify-between mb-1">
-                                      <span className="text-xs text-red-400 font-medium">رصيد المورد:</span>
+                                      <span className="text-xs text-red-400 font-medium">
+                                        رصيد المورد:
+                                      </span>
                                       <span className="text-xs font-bold text-red-400 break-words text-right max-w-[70px]">
-                                        {formatCurrency(customer.supplierBalance)} ل.س
+                                        {formatCurrency(
+                                          customer.supplierBalance
+                                        )}{" "}
+                                        ل.س
                                       </span>
                                     </div>
                                     <div className="w-full bg-red-200/30 rounded-full h-1">
                                       <div
                                         className="bg-red-500 h-1 rounded-full transition-all duration-300"
-                                        style={{ width: `${Math.min((customer.supplierBalance / 1000000) * 100, 100)}%` }}
+                                        style={{
+                                          width: `${Math.min(
+                                            (customer.supplierBalance /
+                                              1000000) *
+                                              100,
+                                            100
+                                          )}%`,
+                                        }}
                                       ></div>
                                     </div>
                                     <div className="text-xs text-red-300 text-center mt-0.5">
@@ -756,29 +826,32 @@ const Customers = () => {
                                 ) : (
                                   <div className="px-2 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
                                     <div className="text-center">
-                                      <span className="text-xs font-medium text-emerald-400">لا يوجد رصيد</span>
-                                      <div className="text-xs text-emerald-300 mt-0.5">متوازن</div>
+                                      <span className="text-xs font-medium text-emerald-400">
+                                        لا يوجد رصيد
+                                      </span>
+                                      <div className="text-xs text-emerald-300 mt-0.5">
+                                        متوازن
+                                      </div>
                                     </div>
                                   </div>
                                 )}
                                 {/* Customer Debts */}
                                 {customer.totalDebt > 0 && (
                                   <div className="px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
-                                    ديون: {formatCurrency(customer.totalDebt)} ل.س
+                                    ديون: {formatCurrency(customer.totalDebt)}{" "}
+                                    ل.س
                                   </div>
                                 )}
                               </div>
+                            ) : // Customer debts display
+                            customer.totalDebt > 0 ? (
+                              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
+                                {formatCurrency(customer.totalDebt)} ل.س
+                              </span>
                             ) : (
-                              // Customer debts display
-                              customer.totalDebt > 0 ? (
-                                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
-                                  {formatCurrency(customer.totalDebt)} ل.س
-                                </span>
-                              ) : (
-                                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                                  لا يوجد
-                                </span>
-                              )
+                              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                لا يوجد
+                              </span>
                             )}
                           </td>
                           <td className="p-3">
@@ -804,18 +877,25 @@ const Customers = () => {
                                 <Edit className="w-2.5 h-2.5" />
                                 تعديل
                               </button>
-                              {customer.customerType === "SUPPLIER" && customer.supplierBalance > 0 && (
-                                <button
-                                  onClick={(e) => handleSupplierPayment(customer, e)}
-                                  className="flex items-center justify-center gap-1 px-1 py-0.5 rounded-lg 
+                              {customer.customerType === "SUPPLIER" &&
+                                customer.supplierBalance > 0 && (
+                                  <button
+                                    onClick={(e) =>
+                                      handleSupplierPayment(customer, e)
+                                    }
+                                    className="flex items-center justify-center gap-1 px-1 py-0.5 rounded-lg 
                                           bg-green-500/10 text-green-400 hover:bg-green-500/20 transition-colors
                                           border border-green-500/20 text-xs min-w-0"
-                                  title={`دفع المستحقات: ${formatCurrency(customer.supplierBalance)} ل.س`}
-                                >
-                                  <DollarSign className="w-2.5 h-2.5 flex-shrink-0" />
-                                  <span className="truncate max-w-10">{formatCurrency(customer.supplierBalance)}</span>
-                                </button>
-                              )}
+                                    title={`دفع المستحقات: ${formatCurrency(
+                                      customer.supplierBalance
+                                    )} ل.س`}
+                                  >
+                                    <DollarSign className="w-2.5 h-2.5 flex-shrink-0" />
+                                    <span className="truncate max-w-10">
+                                      {formatCurrency(customer.supplierBalance)}
+                                    </span>
+                                  </button>
+                                )}
                               <button
                                 onClick={(e) =>
                                   handleDeleteCustomer(customer, e)
