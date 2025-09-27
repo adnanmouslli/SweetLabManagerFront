@@ -14,6 +14,7 @@ import {
   X,
   ChevronDown,
   UserPlus,
+  Search,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useFetchCustomers } from "@/hooks/customers/useCustomers";
@@ -178,6 +179,7 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
     useState<boolean>(false);
   const [selectedItemUnit, setSelectedItemUnit] = useState<string>("");
   const [selectedItemFactor, setSelectedItemFactor] = useState<number>(1);
+  const [customerSearchTerm, setCustomerSearchTerm] = useState<string>("");
 
   // Hook to fetch last order for the selected customer - moved after formData declaration
   const { data: lastOrder, isLoading: isLoadingLastOrder } =
@@ -287,6 +289,7 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
     setSelectedItem(0);
     setSelectedUnitIndex(-1);
     setItemSearchTerm("");
+    setCustomerSearchTerm("");
     setQuantity(1);
     setSelectedItemPrice(0);
     setSelectedItemUnit("");
@@ -710,6 +713,16 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
     return filtered;
   }, [items, selectedGroupId, itemSearchTerm]);
 
+  const filteredCustomers = useMemo(() => {
+    if (!customerSearchTerm.trim()) return customers;
+    const term = customerSearchTerm.toLowerCase();
+    return customers.filter(
+      (c) =>
+        c.name.toLowerCase().includes(term) ||
+        (c.phone && c.phone.includes(customerSearchTerm))
+    );
+  }, [customers, customerSearchTerm]);
+
   const hasDataLoadingErrors = Boolean(
     customersError || categoriesError || itemsError || itemGroupsError
   );
@@ -834,6 +847,18 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
             </label>
             <div className="flex gap-2 rtl:space-x-reverse items-center">
               <div className="flex-1">
+                <div className="relative mb-2">
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    <Search className="h-4 w-4 text-slate-400" />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="بحث عن عميل..."
+                    value={customerSearchTerm}
+                    onChange={(e) => setCustomerSearchTerm(e.target.value)}
+                    className="w-full bg-slate-700/50 border border-slate-600 rounded-lg py-2 pr-10 pl-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                  />
+                </div>
                 <select
                   value={formData.customerId}
                   onChange={handleInputChange}
@@ -843,7 +868,7 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
                   } rounded-lg text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30`}
                 >
                   <option value="">اختر العميل</option>
-                  {customers.map((customer) => (
+                  {filteredCustomers.map((customer) => (
                     <option key={customer.id} value={customer.id}>
                       {customer.name} - {customer.phone}
                     </option>
