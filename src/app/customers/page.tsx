@@ -111,35 +111,34 @@ const Customers = () => {
   }, [searchTerm, filterByDebt, filterByCategoryId, filterByCustomerType]);
 
   // Filter and paginate customers
-  const filteredCustomers = customers;
-  // customers.filter((customer) => {
-  //   // Apply search filter
-  //   const searchMatch =
-  //     (customer.name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-  //     (customer.phone?.toLowerCase() || "").includes(searchTerm.toLowerCase());
+  const filteredCustomers = customers.filter((customer) => {
+    // Apply search filter
+    const searchMatch =
+      (customer.name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (customer.phone?.toLowerCase() || "").includes(searchTerm.toLowerCase());
 
-  //   // Apply debt filter
-  //   const debtMatch = filterByDebt ? customer.totalDebt > 0 : true;
+    // Apply debt filter
+    const debtMatch = filterByDebt ? customer.totalDebt > 0 : true;
 
-  //   // Apply category filter
-  //   const categoryMatch = filterByCategoryId
-  //     ? customer.categoryId === filterByCategoryId
-  //     : true;
+    // Apply category filter
+    const categoryMatch = filterByCategoryId
+      ? customer.categoryId === filterByCategoryId
+      : true;
 
-  //   // Apply customer type filter
-  //   const customerTypeMatch = filterByCustomerType === "all"
-  //     ? true
-  //     : filterByCustomerType === "customers"
-  //       ? customer.customerType === "CUSTOMER"
-  //       : customer.customerType === "SUPPLIER";
+    // Apply customer type filter
+    const customerTypeMatch = filterByCustomerType === "all"
+      ? true
+      : filterByCustomerType === "customers"
+        ? customer.customerType === "CUSTOMER"
+        : customer.customerType === "SUPPLIER";
 
-  //   // Skip customers with missing essential data
-  //   if (!customer.name || !customer.phone || !customer.customerType) {
-  //     return false;
-  //   }
+    // Skip customers with missing essential data
+    if (!customer.name || !customer.customerType) {
+      return false;
+    }
 
-  //   return searchMatch && debtMatch && categoryMatch && customerTypeMatch;
-  // });
+    return searchMatch && debtMatch && categoryMatch && customerTypeMatch;
+  });
 
   const totalPages = Math.ceil(filteredCustomers.length / itemsPerPage);
   const paginatedCustomers = filteredCustomers.slice(
@@ -491,19 +490,7 @@ const Customers = () => {
               </div>
             )}
 
-           
-              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 mb-4" dir="rtl">
-                <h3 className="text-yellow-400 font-bold mb-2">معلومات التشخيص:</h3>
-                <p className="text-sm text-yellow-300">
-                  عدد العملاء الخام: {customersData.length}<br/>
-                  عدد العملاء المعالجة: {customers.length}<br/>
-                  عدد العملاء المفلترة: {filteredCustomers.length}<br/>
-                  حالة التحميل: {isLoadingCustomers ? 'جاري التحميل' : 'مكتمل'}<br/>
-                  خطأ: {customersError ? 'يوجد خطأ' : 'لا يوجد'}
-                </p>
-              </div>
-         
-
+        
             {/* Customers Content */}
             <div className="container mx-auto px-4" dir="rtl">
               {isLoading ? (
