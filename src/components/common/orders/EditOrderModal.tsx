@@ -19,6 +19,7 @@ import {
   AlertTriangle,
   UserPlus,
 } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { OrderResponseDto, UpdateOrder } from "@/types/orders.type";
 import CombinedCustomerModal from "@/components/common/customers/CombinedCustomerModal";
@@ -119,7 +120,9 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({
   const [errors, setErrors] = useState<OrderErrors>({});
   const [activeItemIndex, setActiveItemIndex] = useState<number>(0);
   const [isEditingNotes, setIsEditingNotes] = useState<boolean>(false);
-  const [customerSearchTerm, setCustomerSearchTerm] = useState<string>("");
+  const [isCustomerDropdownOpen, setIsCustomerDropdownOpen] =
+    useState<boolean>(false);
+  const [customerMenuSearch, setCustomerMenuSearch] = useState<string>("");
   const [itemSearchTerm, setItemSearchTerm] = useState<string>("");
   const [isCustomerModalOpen, setIsCustomerModalOpen] =
     useState<boolean>(false);
@@ -149,7 +152,8 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({
       setActiveItemIndex(0);
       setErrors({});
       setIsEditingNotes(false);
-      setCustomerSearchTerm("");
+      setCustomerMenuSearch("");
+      setIsCustomerDropdownOpen(false);
       setItemSearchTerm("");
     }
   }, [order, isOpen]);
@@ -437,18 +441,16 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({
     ]
   );
 
-  // Filter customers based on search term
-  const filteredCustomers = useMemo(() => {
-    if (!customerSearchTerm.trim()) return customers;
-
+  // Customers filtered by in-menu search
+  const dropdownCustomers = useMemo(() => {
+    if (!customerMenuSearch.trim()) return customers;
+    const term = customerMenuSearch.toLowerCase();
     return customers.filter(
-      (customer) =>
-        customer.name
-          .toLowerCase()
-          .includes(customerSearchTerm.toLowerCase()) ||
-        (customer.phone && customer.phone.includes(customerSearchTerm))
+      (c) =>
+        c.name.toLowerCase().includes(term) ||
+        (c.phone && c.phone.includes(customerMenuSearch))
     );
-  }, [customers, customerSearchTerm]);
+  }, [customers, customerMenuSearch]);
 
   // Filter items based on search term for the active item
   const filteredItems = useMemo(() => {
@@ -557,7 +559,7 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({
           <div className="bg-slate-850/60 p-4 border-b border-slate-700/50">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
               {/* Customer Selection */}
-              <div>
+              <div className="relative">
                 <label
                   htmlFor="customerId"
                   className="flex items-center gap-2 text-sm font-medium text-slate-300 mb-2"
@@ -565,50 +567,77 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({
                   <User className="h-4 w-4 text-primary" />
                   العميل *
                 </label>
+                <button
+                  type="button"
+                  onClick={() => setIsCustomerDropdownOpen((v) => !v)}
+                  className={`w-full px-4 py-2 bg-slate-700/40 border ${
+                    errors.customerId ? "border-red-500" : "border-slate-600"
+                  } rounded-lg text-slate-200 text-right flex items-center justify-between`}
+                >
+                  <span className="truncate">
+                    {getCustomerName() || "اختر العميل"}
+                  </span>
+                  <ChevronDown className="h-5 w-5 text-slate-400" />
+                </button>
 
-                {/* Search box for customers */}
-                <div className="relative mb-2">
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                    <Search className="h-4 w-4 text-slate-400" />
+                {isCustomerDropdownOpen && (
+                  <div className="absolute z-20 mt-1 w-full bg-slate-800 border border-slate-700 rounded-lg shadow-lg overflow-hidden">
+                    <div className="p-2 border-b border-slate-700">
+                      <div className="relative">
+                        <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                        <input
+                          type="text"
+                          autoFocus
+                          placeholder="ابحث بالاسم أو الهاتف..."
+                          value={customerMenuSearch}
+                          onChange={(e) =>
+                            setCustomerMenuSearch(e.target.value)
+                          }
+                          className="w-full bg-slate-700/40 border border-slate-600 rounded-lg py-2 pr-10 pl-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        />
+                      </div>
+                    </div>
+                    <div className="max-h-60 overflow-y-auto">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData((prev) => ({ ...prev, customerId: "" }));
+                          setIsCustomerDropdownOpen(false);
+                        }}
+                        className="w-full text-right px-4 py-2 text-slate-400 hover:bg-slate-700/50"
+                      >
+                        اختر العميل
+                      </button>
+                      {dropdownCustomers.map((customer) => (
+                        <button
+                          key={customer.id}
+                          type="button"
+                          onClick={() => {
+                            setFormData((prev) => ({
+                              ...prev,
+                              customerId: customer.id,
+                            }));
+                            setIsCustomerDropdownOpen(false);
+                          }}
+                          className={`w-full text-right px-4 py-2 hover:bg-slate-700/70 text-slate-200 ${
+                            formData.customerId &&
+                            Number(formData.customerId) === customer.id
+                              ? "bg-slate-700/60"
+                              : ""
+                          }`}
+                        >
+                          {customer.name}
+                          {customer.phone ? ` - ${customer.phone}` : ""}
+                        </button>
+                      ))}
+                      {dropdownCustomers.length === 0 && (
+                        <div className="px-4 py-3 text-slate-400 text-right">
+                          لا توجد نتائج
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <input
-                    type="text"
-                    placeholder="بحث عن عميل..."
-                    value={customerSearchTerm}
-                    onChange={(e) => setCustomerSearchTerm(e.target.value)}
-                    className="w-full bg-slate-700/30 border border-slate-600 rounded-lg py-2 pr-10 pl-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-                  />
-                </div>
-
-                <div className="relative">
-                  <select
-                    id="customerId"
-                    name="customerId"
-                    value={formData.customerId}
-                    onChange={handleInputChange}
-                    className={`w-full bg-slate-700/40 border ${
-                      errors.customerId ? "border-red-500" : "border-slate-600"
-                    } rounded-lg p-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all appearance-none`}
-                    disabled={isLoadingCustomers || !!customersError}
-                  >
-                    <option value="">اختر العميل</option>
-                    {filteredCustomers.map((customer) => (
-                      <option key={customer.id} value={customer.id}>
-                        {customer.name}{" "}
-                        {customer.phone ? `- ${customer.phone}` : ""}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center px-3 text-slate-400">
-                    <svg
-                      className="h-4 w-4 fill-current"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                    >
-                      <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                    </svg>
-                  </div>
-                </div>
+                )}
                 {errors.customerId && (
                   <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
                     <AlertCircle className="h-3 w-3" />
