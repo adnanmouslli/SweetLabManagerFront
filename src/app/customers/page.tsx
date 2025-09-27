@@ -490,7 +490,18 @@ const Customers = () => {
               </div>
             )}
 
-
+            {process.env.NODE_ENV === 'development' && (
+              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 mb-4" dir="rtl">
+                <h3 className="text-yellow-400 font-bold mb-2">معلومات التشخيص:</h3>
+                <p className="text-sm text-yellow-300">
+                  عدد العملاء الخام: {customersData.length}<br/>
+                  عدد العملاء المعالجة: {customers.length}<br/>
+                  عدد العملاء المفلترة: {filteredCustomers.length}<br/>
+                  حالة التحميل: {isLoadingCustomers ? 'جاري التحميل' : 'مكتمل'}<br/>
+                  خطأ: {customersError ? 'يوجد خطأ' : 'لا يوجد'}
+                </p>
+              </div>
+            )}
 
             {/* Customers Content */}
             <div className="container mx-auto px-4" dir="rtl">
