@@ -111,34 +111,35 @@ const Customers = () => {
   }, [searchTerm, filterByDebt, filterByCategoryId, filterByCustomerType]);
 
   // Filter and paginate customers
-  const filteredCustomers = customers.filter((customer) => {
-    // Apply search filter
-    const searchMatch =
-      (customer.name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-      (customer.phone?.toLowerCase() || "").includes(searchTerm.toLowerCase());
+  const filteredCustomers = customers;
+  // customers.filter((customer) => {
+  //   // Apply search filter
+  //   const searchMatch =
+  //     (customer.name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+  //     (customer.phone?.toLowerCase() || "").includes(searchTerm.toLowerCase());
 
-    // Apply debt filter
-    const debtMatch = filterByDebt ? customer.totalDebt > 0 : true;
+  //   // Apply debt filter
+  //   const debtMatch = filterByDebt ? customer.totalDebt > 0 : true;
 
-    // Apply category filter
-    const categoryMatch = filterByCategoryId
-      ? customer.categoryId === filterByCategoryId
-      : true;
+  //   // Apply category filter
+  //   const categoryMatch = filterByCategoryId
+  //     ? customer.categoryId === filterByCategoryId
+  //     : true;
 
-    // Apply customer type filter
-    const customerTypeMatch = filterByCustomerType === "all"
-      ? true
-      : filterByCustomerType === "customers"
-        ? customer.customerType === "CUSTOMER"
-        : customer.customerType === "SUPPLIER";
+  //   // Apply customer type filter
+  //   const customerTypeMatch = filterByCustomerType === "all"
+  //     ? true
+  //     : filterByCustomerType === "customers"
+  //       ? customer.customerType === "CUSTOMER"
+  //       : customer.customerType === "SUPPLIER";
 
-    // Skip customers with missing essential data
-    if (!customer.name || !customer.phone || !customer.customerType) {
-      return false;
-    }
+  //   // Skip customers with missing essential data
+  //   if (!customer.name || !customer.phone || !customer.customerType) {
+  //     return false;
+  //   }
 
-    return searchMatch && debtMatch && categoryMatch && customerTypeMatch;
-  });
+  //   return searchMatch && debtMatch && categoryMatch && customerTypeMatch;
+  // });
 
   const totalPages = Math.ceil(filteredCustomers.length / itemsPerPage);
   const paginatedCustomers = filteredCustomers.slice(
