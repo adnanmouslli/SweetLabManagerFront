@@ -103,8 +103,6 @@ const Customers = () => {
   const { data: categoriesData = [], isLoading: isLoadingCategories } =
     useCustomerCategories();
 
-  console.log("customersData >>>>>>>>>>>>>>>", customersData);
-
   const customers = useMemo(() => {
     return customersData.map((customer) => {
       // Calculate total debt from active debts
