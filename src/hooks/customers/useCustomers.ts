@@ -77,11 +77,11 @@ export const useCustomerCategories = () => {
   return useQuery<CustomerCategory[]>({
     queryKey: ["customer-categories"],
     queryFn: async (): Promise<CustomerCategory[]> => {
-      const response = await apiClient.get<GetCustomerCategoriesResponse>(
+      const response = await apiClient.get<CustomerCategory[]>(
         "/customer-categories"
       );
       // Map the response to match the expected CustomerCategory type
-      return response.categories.map((category) => ({
+      return response.map((category) => ({
         ...category,
         description: category.description ?? null, // Convert undefined to null
       }));
