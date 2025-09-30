@@ -30,6 +30,7 @@ import { OrderResponseDto, OrderStatus } from "@/types/orders.type";
 import { AxiosError } from "axios";
 import CombinedCustomerModal from "@/components/common/customers/CombinedCustomerModal";
 import { useFetchCategories } from "@/hooks/customers/useCustomersCategories";
+import { CustomerTypeEnum } from "@/types/customers.type";
 
 // Type Definitions
 interface ItemUnit {
@@ -717,14 +718,22 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
   }, [items, selectedGroupId, itemSearchTerm]);
 
   const dropdownCustomers = useMemo(() => {
-    if (!customerMenuSearch.trim()) return customers;
-    const term = customerMenuSearch.toLowerCase();
-    return customers.filter(
-      (c) =>
-        c.name.toLowerCase().includes(term) ||
-        (c.phone && c.phone.includes(customerMenuSearch))
-    );
-  }, [customers, customerMenuSearch]);
+  // فلترة الموردين فقط
+  let filtered = customers.filter(
+    (c) => c.customerType === CustomerTypeEnum.CUSTOMER
+  );
+  
+  // ثم تطبيق البحث
+  if (!customerMenuSearch.trim()) return filtered;
+  
+  const term = customerMenuSearch.toLowerCase();
+  return filtered.filter(
+    (c) =>
+      c.name.toLowerCase().includes(term) ||
+      (c.phone && c.phone.includes(customerMenuSearch))
+  );
+}, [customers, customerMenuSearch]);
+
 
   const hasDataLoadingErrors = Boolean(
     customersError || categoriesError || itemsError || itemGroupsError

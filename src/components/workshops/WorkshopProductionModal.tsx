@@ -202,7 +202,7 @@ const WorkshopProductionModal: React.FC<WorkshopProductionModalProps> = ({
                     focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all"
                 >
                   <option value="">اختر منتج...</option>
-                  {items?.map((item) => (
+                  {items?.filter(item => item.productionRate && item.productionRate > 0).map((item) => (
                     <option key={item.id} value={item.id}>
                       {item.name} - {formatCurrency(item.productionRate)}
                     </option>

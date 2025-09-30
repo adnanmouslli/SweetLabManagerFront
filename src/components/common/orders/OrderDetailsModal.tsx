@@ -154,8 +154,8 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, isOpen, on
                             </button>
                         </div>
                     </div>
-                    <div className="overflow-y-auto no-scrollbar p-4 max-h-[calc(90vh-120px)]">
-                        {/* Order Info */}
+                    <div className="overflow-y-auto no-scrollbar p-4 pb-6 max-h-[calc(90vh-120px)]">
+                            {/* Order Info */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                             <div className="bg-slate-700/30 p-4 rounded-lg">
                                 <h4 className="text-slate-300 font-medium mb-3">معلومات العميل</h4>
@@ -242,35 +242,36 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, isOpen, on
                             />
                         </div>
                         {/* Actions */}
-                        <div className="flex flex-wrap gap-2 mb-2">
+                        <div className="space-y-3 pb-4">
                             {(order.status === OrderStatus.pending || order.status === OrderStatus.processing) && (
                                 <button
                                     onClick={() => handleUpdateStatus(OrderStatus.delivered)}
                                     disabled={isUpdating}
-                                    className="bg-success hover:bg-success/80 text-white px-3 py-1.5 rounded-lg text-sm flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                                    className="bg-success hover:bg-success/80 text-white px-4 py-3 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors disabled:opacity-50 w-full"
                                 >
                                     <Truck className="h-4 w-4" />
-                                    {isUpdating ? "يتم التحديث" : "تم تسليم الطلبية"}
+                                    <span>{isUpdating ? "يتم التحديث" : "تم تسليم الطلبية"}</span>
                                 </button>
                             )}
                             {!order.paidStatus && !order.invoice && (
                                 <button
                                     onClick={handleConvertToInvoiceClick}
-                                    className="bg-primary hover:bg-primary/80 text-white px-3 py-1.5 rounded-lg text-sm flex items-center gap-1.5 transition-colors"
+                                    className="bg-primary hover:bg-primary/80 text-white px-4 py-3 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors w-full"
                                 >
                                     <CreditCard className="h-4 w-4" />
-                                    تحويل لفاتورة
+                                    <span>تحويل لفاتورة</span>
                                 </button>
                             )}
                             <button
                                 onClick={handleDeleteOrder}
                                 disabled={isDeleting}
-                                className={`bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-sm flex items-center gap-1.5 transition-colors disabled:opacity-50 ${isConfirmingDelete ? 'bg-red-600' : ''}`}
+                                className={`bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors disabled:opacity-50 w-full ${isConfirmingDelete ? 'bg-red-600' : ''}`}
                             >
                                 <Trash2 className="h-4 w-4" />
-                                {isConfirmingDelete ? 'اضغط مرة ثانية للتأكيد' : 'حذف الطلب'}
+                                <span className="text-center">{isConfirmingDelete ? 'اضغط مرة ثانية للتأكيد' : 'حذف الطلب'}</span>
                             </button>
                         </div>
+
                         {/* Error Message */}
                         {(isDeleteError) && (
                             <div className="mx-4 mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 flex items-center gap-2">
