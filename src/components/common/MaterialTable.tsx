@@ -1,20 +1,21 @@
+import { Item, ItemType } from "@/types/items.type";
+import { Edit2, Trash2, Package, TrendingUp, Truck, DollarSign } from "lucide-react";
+import { motion } from "framer-motion";
+import { Role, useRoles } from "@/hooks/users/useRoles";
 import { useState, useEffect, useMemo } from "react";
 import { useMediaQuery } from "@mui/material";
-import { motion, AnimatePresence } from "framer-motion";
-import { Item, ItemType } from "@/types/items.type";
-import { Pencil, Trash2, ChevronLeft, ChevronRight, Eye, ArrowUpDown } from "lucide-react";
-import { Role, useRoles } from "@/hooks/users/useRoles";
+import { ChevronLeft, ChevronRight, Eye, ArrowUpDown, Pencil } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
 
 interface MaterialTableProps {
   items: Item[];
-  getDefaultUnitPrice?: (item: Item) => number;
+  getDefaultUnitPrice: (item: Item) => number;
+  activeTab: ItemType | "all";
   onEdit: (item: Item) => void;
   onDelete: (itemId: number) => void;
-  activeTab: ItemType | "all"
-
 }
 
-// Pagination Controls Component
+// Pagination Controls
 const PaginationControls = ({
   currentPage,
   totalPages,
@@ -28,16 +29,15 @@ const PaginationControls = ({
     if (totalPages <= 5) {
       return Array.from({ length: totalPages }, (_, i) => i + 1);
     } else {
-      // Show first, last, current, and adjacent pages
       const result = [1];
       const leftBound = Math.max(2, currentPage - 1);
       const rightBound = Math.min(totalPages - 1, currentPage + 1);
 
-      if (leftBound > 2) result.push(-1); // Add ellipsis
+      if (leftBound > 2) result.push(-1);
       for (let i = leftBound; i <= rightBound; i++) {
         result.push(i);
       }
-      if (rightBound < totalPages - 1) result.push(-2); // Add ellipsis
+      if (rightBound < totalPages - 1) result.push(-2);
       result.push(totalPages);
 
       return result;
@@ -69,10 +69,11 @@ const PaginationControls = ({
               onClick={() => onPageChange(number)}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className={`px-3 py-1 rounded-lg text-sm transition-colors ${currentPage === number
-                ? "bg-emerald-500/20 text-emerald-400"
-                : "text-slate-400 hover:text-slate-200 hover:bg-slate-700/25"
-                }`}
+              className={`px-3 py-1 rounded-lg text-sm transition-colors ${
+                currentPage === number
+                  ? "bg-emerald-500/20 text-emerald-400"
+                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-700/25"
+              }`}
             >
               {number}
             </motion.button>
@@ -91,44 +92,15 @@ const PaginationControls = ({
   );
 };
 
-// Helper function to get default unit price if not provided
-const getItemPrice = (
-  item: Item,
-  getDefaultUnitPrice?: (item: Item) => number
-): number => {
-  if (getDefaultUnitPrice) {
-    return getDefaultUnitPrice(item);
-  }
-
-  // Default implementation if no function is provided
-  if (item.units && item.units.length > 0) {
-    const defaultUnit = item.units.find((u) => u.unit === item.defaultUnit);
-    return defaultUnit ? defaultUnit.price : item.units[0].price;
-  }
-  return 0;
-};
-
-// Helper function to get default unit
-const getDefaultUnit = (item: Item): string => {
-  return (
-    item.defaultUnit ||
-    (item.units && item.units.length > 0 ? item.units[0].unit : "")
-  );
-};
-
-// Mobile Card Component with detail expansion
+// Mobile Card
 const MobileCard: React.FC<{
   item: Item;
-  getDefaultUnitPrice?: (item: Item) => number;
   onEdit: (item: Item) => void;
   onDelete: (itemId: number) => void;
-}> = ({ item, getDefaultUnitPrice, onEdit, onDelete }) => {
-  const price = getItemPrice(item, getDefaultUnitPrice);
-  const defaultUnit = getDefaultUnit(item);
+}> = ({ item, onEdit, onDelete }) => {
   const [expanded, setExpanded] = useState(false);
   const { hasAnyRole } = useRoles();
 
-  // Create color scheme based on item type
   const typeColor = item.type === "production"
     ? "text-blue-400 bg-blue-400/10"
     : "text-amber-400 bg-amber-400/10";
@@ -181,13 +153,44 @@ const MobileCard: React.FC<{
 
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div>
-            <span className="text-slate-400 block mb-1">السعر</span>
-            <span className="text-emerald-400 font-medium">{price} ل.س</span>
+            <span className="text-slate-400 block mb-1">السعر النهائي</span>
+            <span className="text-emerald-400 font-medium">{item.price?.toFixed(2) || "0.00"} ل.س</span>
           </div>
           <div>
             <span className="text-slate-400 block mb-1">الوحدة الافتراضية</span>
-            <span className="text-slate-200">{defaultUnit}</span>
+            <span className="text-slate-200">{item.defaultUnit}</span>
           </div>
+        </div>
+
+        {/* Price Details */}
+        <div className="space-y-1 pt-2 border-t border-slate-600/30">
+          <div className="flex items-center gap-2 text-xs">
+            <DollarSign className="h-3 w-3 text-slate-400" />
+            <span className="text-slate-400">أساسي:</span>
+            <span className="text-slate-200 font-medium">
+              {item.basePrice?.toFixed(2) || "0.00"}
+            </span>
+          </div>
+          
+          {(item.packagingPrice ?? 0) > 0 && (
+            <div className="flex items-center gap-2 text-xs">
+              <Package className="h-3 w-3 text-purple-400" />
+              <span className="text-slate-400">تكييس:</span>
+              <span className="text-purple-300 font-medium">
+                +{item.packagingPrice?.toFixed(2)}
+              </span>
+            </div>
+          )}
+          
+          {(item.deliveryPrice ?? 0) > 0 && (
+            <div className="flex items-center gap-2 text-xs">
+              <Truck className="h-3 w-3 text-blue-400" />
+              <span className="text-slate-400">توصيل:</span>
+              <span className="text-blue-300 font-medium">
+                +{item.deliveryPrice?.toFixed(2)}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -207,10 +210,16 @@ const MobileCard: React.FC<{
                     {item.units?.map((u) => u.unit).join(", ") || "-"}
                   </span>
                 </div>
-                {item.cost !== undefined && (
+                {item.cost !== undefined && item.type === "raw" && (
                   <div>
                     <span className="text-slate-400 block mb-1">التكلفة</span>
                     <span className="text-slate-200">{item.cost} ل.س</span>
+                  </div>
+                )}
+                {item.productionRate !== undefined && item.type === "production" && (
+                  <div>
+                    <span className="text-slate-400 block mb-1">سعر الإنتاج</span>
+                    <span className="text-slate-200">{item.productionRate} ل.س</span>
                   </div>
                 )}
               </div>
@@ -229,48 +238,39 @@ const MobileCard: React.FC<{
   );
 };
 
-export const MaterialTable: React.FC<MaterialTableProps> = ({
+const MaterialTable: React.FC<MaterialTableProps> = ({
   items,
   getDefaultUnitPrice,
+  activeTab,
   onEdit,
   onDelete,
-  activeTab
 }) => {
+  const { hasAnyRole } = useRoles();
   const isMobile = useMediaQuery("(max-width:768px)");
   const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState<{
-    key: keyof Item | "price" | "defaultUnit";
+    key: keyof Item | "price";
     direction: "asc" | "desc";
   } | null>(null);
 
   const PAGE_SIZE = 10;
-  const { hasAnyRole } = useRoles();
 
-  // Reset to first page when items change
   useEffect(() => {
     setCurrentPage(1);
   }, [items.length]);
 
-  // Apply sorting
   const sortedItems = useMemo(() => {
+    if (!items) return [];
+    
     let itemsToSort = [...items];
 
     if (sortConfig) {
       itemsToSort.sort((a, b) => {
         if (sortConfig.key === "price") {
-          const aPrice = getItemPrice(a, getDefaultUnitPrice);
-          const bPrice = getItemPrice(b, getDefaultUnitPrice);
-          return sortConfig.direction === "asc"
-            ? aPrice - bPrice
-            : bPrice - aPrice;
-        } else if (sortConfig.key === "defaultUnit") {
-          const aUnit = getDefaultUnit(a).toLowerCase();
-          const bUnit = getDefaultUnit(b).toLowerCase();
-          return sortConfig.direction === "asc"
-            ? aUnit.localeCompare(bUnit)
-            : bUnit.localeCompare(aUnit);
+          const aPrice = a.price || 0;
+          const bPrice = b.price || 0;
+          return sortConfig.direction === "asc" ? aPrice - bPrice : bPrice - aPrice;
         } else {
-          // Handle case where the key might be null/undefined
           const aValue = a[sortConfig.key] || "";
           const bValue = b[sortConfig.key] || "";
 
@@ -279,9 +279,7 @@ export const MaterialTable: React.FC<MaterialTableProps> = ({
               ? aValue.localeCompare(bValue)
               : bValue.localeCompare(aValue);
           } else if (typeof aValue === "number" && typeof bValue === "number") {
-            return sortConfig.direction === "asc"
-              ? aValue - bValue
-              : bValue - aValue;
+            return sortConfig.direction === "asc" ? aValue - bValue : bValue - aValue;
           }
           return 0;
         }
@@ -289,11 +287,10 @@ export const MaterialTable: React.FC<MaterialTableProps> = ({
     }
 
     return itemsToSort;
-  }, [items, sortConfig, getDefaultUnitPrice]);
+  }, [items, sortConfig]);
 
-  // Calculate pagination
   const totalPages = Math.max(1, Math.ceil(sortedItems.length / PAGE_SIZE));
-  // Adjust currentPage if it's now beyond the total
+  
   useEffect(() => {
     if (currentPage > totalPages) {
       setCurrentPage(totalPages);
@@ -304,26 +301,30 @@ export const MaterialTable: React.FC<MaterialTableProps> = ({
   const endIndex = startIndex + PAGE_SIZE;
   const paginatedItems = sortedItems.slice(startIndex, endIndex);
 
-  // Sort handler
-  const requestSort = (key: keyof Item | "price" | "defaultUnit") => {
+  const requestSort = (key: keyof Item | "price") => {
     let direction: "asc" | "desc" = "asc";
-
     if (sortConfig && sortConfig.key === key) {
       direction = sortConfig.direction === "asc" ? "desc" : "asc";
     }
-
     setSortConfig({ key, direction });
   };
 
-  const getSortIcon = (key: keyof Item | "price" | "defaultUnit") => {
+  const getSortIcon = (key: keyof Item | "price") => {
     if (!sortConfig || sortConfig.key !== key) {
       return <ArrowUpDown className="h-4 w-4 opacity-50" />;
     }
-
     return sortConfig.direction === "asc"
       ? <ChevronRight className="h-4 w-4" />
       : <ChevronLeft className="h-4 w-4" />;
   };
+
+  if (!items || items.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-slate-400">لا توجد مواد في هذا التصنيف</p>
+      </div>
+    );
+  }
 
   if (isMobile) {
     return (
@@ -333,20 +334,10 @@ export const MaterialTable: React.FC<MaterialTableProps> = ({
             <MobileCard
               key={item.id}
               item={item}
-              getDefaultUnitPrice={getDefaultUnitPrice}
               onEdit={onEdit}
               onDelete={onDelete}
             />
           ))}
-          {sortedItems.length === 0 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-8 text-slate-400 bg-slate-800/20 rounded-lg"
-            >
-              لا توجد عناصر متطابقة مع معايير البحث
-            </motion.div>
-          )}
         </motion.div>
         {sortedItems.length > PAGE_SIZE && (
           <PaginationControls
@@ -364,9 +355,9 @@ export const MaterialTable: React.FC<MaterialTableProps> = ({
       <div className="overflow-x-auto">
         <table className="w-full" dir="rtl">
           <thead>
-            <tr className="border-b border-slate-700/50 bg-slate-800/30">
+            <tr className="border-b border-slate-700/50">
               <th
-                className="text-right text-slate-300 p-4 cursor-pointer hover:bg-slate-700/30"
+                className="px-4 py-3 text-right text-sm font-medium text-slate-300 cursor-pointer hover:bg-slate-700/30"
                 onClick={() => requestSort("name")}
               >
                 <div className="flex items-center justify-between">
@@ -375,7 +366,7 @@ export const MaterialTable: React.FC<MaterialTableProps> = ({
                 </div>
               </th>
               <th
-                className="text-right text-slate-300 p-4 cursor-pointer hover:bg-slate-700/30"
+                className="px-4 py-3 text-right text-sm font-medium text-slate-300 cursor-pointer hover:bg-slate-700/30"
                 onClick={() => requestSort("type")}
               >
                 <div className="flex items-center justify-between">
@@ -383,107 +374,154 @@ export const MaterialTable: React.FC<MaterialTableProps> = ({
                   {getSortIcon("type")}
                 </div>
               </th>
-              <th className="text-right text-slate-300 p-4">التصنيف</th>
-              <th
-                className="text-right text-slate-300 p-4 cursor-pointer hover:bg-slate-700/30"
-                onClick={() => requestSort("defaultUnit")}
-              >
-                <div className="flex items-center justify-between">
-                  <span>الوحدة الافتراضية</span>
-                  {getSortIcon("defaultUnit")}
-                </div>
+              <th className="px-4 py-3 text-right text-sm font-medium text-slate-300">
+                التصنيف
+              </th>
+              <th className="px-4 py-3 text-right text-sm font-medium text-slate-300">
+                الوحدة الافتراضية
+              </th>
+              <th className="px-4 py-3 text-right text-sm font-medium text-slate-300">
+                تفاصيل الأسعار
               </th>
               <th
-                className="text-right text-slate-300 p-4 cursor-pointer hover:bg-slate-700/30"
+                className="px-4 py-3 text-right text-sm font-medium text-slate-300 cursor-pointer hover:bg-slate-700/30"
                 onClick={() => requestSort("price")}
               >
                 <div className="flex items-center justify-between">
-                  <span>السعر</span>
+                  <span>السعر النهائي</span>
                   {getSortIcon("price")}
                 </div>
               </th>
-              {activeTab == "raw" && <th className="text-right text-slate-300 p-4">التكلفة</th>}
-              <th className="text-right text-slate-300 p-4">الوحدات المتاحة</th>
-              <th className="text-right text-slate-300 p-4">الوصف</th>
-              <th className="text-right text-slate-300 p-4">الإجراءات</th>
+              {hasAnyRole([Role.ADMIN]) && (
+                <th className="px-4 py-3 text-center text-sm font-medium text-slate-300">
+                  الإجراءات
+                </th>
+              )}
             </tr>
           </thead>
           <tbody>
-            {paginatedItems.map((item) => {
-              const price = getItemPrice(item, getDefaultUnitPrice);
-              const defaultUnit = getDefaultUnit(item);
-              const availableUnits =
-                item.units?.map((u) => u.unit).join(", ") || "-";
-
-              return (
-                <motion.tr
-                  key={item.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  layout
-                  className="border-b border-slate-700/50 hover:bg-slate-700/25 transition-colors"
-                >
-                  <td className="p-4 text-slate-200 font-medium">{item.name}</td>
-                  <td className="p-4">
-                    <span className={`px-2 py-1 rounded-md text-sm ${item.type === "production"
-                      ? "bg-blue-400/10 text-blue-400"
-                      : "bg-amber-400/10 text-amber-400"
-                      }`}>
-                      {item.type === "production" ? "منتج" : "مادة خام"}
-                    </span>
-                  </td>
-                  <td className="p-4 text-slate-200">
-                    {item.group?.name || "-"}
-                  </td>
-                  <td className="p-4 text-slate-200">{defaultUnit}</td>
-                  <td className="p-4 text-emerald-400 font-medium">{price} ل.س</td>
-                  {activeTab == "raw" && <td className="p-4 text-emerald-400 font-medium">{item.cost} ل.س</td>
-                  }                  <td className="p-4 text-slate-200">{availableUnits}</td>
-                  <td className="p-4 text-slate-400 max-w-xs truncate">
-                    {item.description}
-                  </td>
-                  <td className="p-4">
-                    {hasAnyRole([Role.ADMIN]) ? (
-                      <div className="flex items-center gap-3">
-                        <button
-                          className="p-1.5 text-blue-400 hover:bg-blue-400/10 rounded transition-colors"
-                          onClick={() => onEdit(item)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </button>
-                        <button
-                          className="p-1.5 text-red-400 hover:bg-red-400/10 rounded transition-colors"
-                          onClick={() => onDelete(item.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+            {paginatedItems.map((item, index) => (
+              <motion.tr
+                key={item.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="border-b border-slate-700/30 hover:bg-slate-700/20 transition-colors"
+              >
+                <td className="px-4 py-3 text-slate-200">
+                  <div>
+                    <div className="font-medium">{item.name}</div>
+                    {item.description && (
+                      <div className="text-xs text-slate-400 mt-1">
+                        {item.description}
                       </div>
-                    ) : (
-                      <div className="text-slate-500 text-sm">لا يوجد اجراءات متاحة</div>
                     )}
-                  </td>
-                </motion.tr>
-              );
-            })}
-            {sortedItems.length === 0 && (
-              <tr>
-                <td colSpan={8} className="text-center p-8 text-slate-400">
-                  لا توجد عناصر متطابقة مع معايير البحث
+                  </div>
                 </td>
-              </tr>
-            )}
+                <td className="px-4 py-3">
+                  <span
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      item.type === "production"
+                        ? "bg-blue-500/10 text-blue-400"
+                        : "bg-amber-500/10 text-amber-400"
+                    }`}
+                  >
+                    {item.type === "production" ? "منتج" : "مادة خام"}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-slate-300">
+                  {item.group?.name || "-"}
+                </td>
+                <td className="px-4 py-3 text-slate-300">
+                  {item.defaultUnit}
+                </td>
+                <td className="px-4 py-3">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-xs">
+                      <DollarSign className="h-3 w-3 text-slate-400" />
+                      <span className="text-slate-400">أساسي:</span>
+                      <span className="text-slate-200 font-medium">
+                        {item.basePrice?.toFixed(2) || "0.00"}
+                      </span>
+                    </div>
+                    
+                    {(item.packagingPrice ?? 0) > 0 && (
+                      <div className="flex items-center gap-2 text-xs">
+                        <Package className="h-3 w-3 text-purple-400" />
+                        <span className="text-slate-400">تكييس:</span>
+                        <span className="text-purple-300 font-medium">
+                          +{item.packagingPrice?.toFixed(2)}
+                        </span>
+                      </div>
+                    )}
+                    
+                    {(item.deliveryPrice ?? 0) > 0 && (
+                      <div className="flex items-center gap-2 text-xs">
+                        <Truck className="h-3 w-3 text-blue-400" />
+                        <span className="text-slate-400">توصيل:</span>
+                        <span className="text-blue-300 font-medium">
+                          +{item.deliveryPrice?.toFixed(2)}
+                        </span>
+                      </div>
+                    )}
+
+                    {item.type === "production" && item.productionRate && (
+                      <div className="flex items-center gap-2 text-xs">
+                        <TrendingUp className="h-3 w-3 text-emerald-400" />
+                        <span className="text-slate-400">إنتاج:</span>
+                        <span className="text-emerald-300 font-medium">
+                          {item.productionRate.toFixed(2)}
+                        </span>
+                      </div>
+                    )}
+
+                    {(item.packagingPrice ?? 0) === 0 && (item.deliveryPrice ?? 0) === 0 && (
+                      <div className="text-xs text-slate-500 italic">
+                        لا توجد تكاليف إضافية
+                      </div>
+                    )}
+                  </div>
+                </td>
+                <td className="px-4 py-3">
+                  <div className="flex flex-col">
+                    <span className="text-lg font-bold text-emerald-400">
+                      {item.price?.toFixed(2) || "0.00"}
+                    </span>
+                    <span className="text-xs text-slate-400">ل.س</span>
+                  </div>
+                </td>
+                {hasAnyRole([Role.ADMIN]) && (
+                  <td className="px-4 py-3">
+                    <div className="flex items-center justify-center gap-2">
+                      <button
+                        onClick={() => onEdit(item)}
+                        className="p-2 text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
+                        title="تعديل"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => onDelete(item.id)}
+                        className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                        title="حذف"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </td>
+                )}
+              </motion.tr>
+            ))}
           </tbody>
         </table>
-      </div >
-      {
-        sortedItems.length > PAGE_SIZE && (
-          <PaginationControls
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
-        )
-      }
+      </div>
+      {sortedItems.length > PAGE_SIZE && (
+        <PaginationControls
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
+      )}
     </>
   );
 };

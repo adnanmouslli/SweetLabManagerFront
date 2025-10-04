@@ -2,8 +2,8 @@ import { useCreateItemGroup } from "@/hooks/items/useItemGroups";
 import { useCreateItem, useUpdateItem } from "@/hooks/items/useItems";
 import { Item, ItemGroup, ItemType, ItemUnit } from "@/types/items.type";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, Plus, Trash2, X } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Loader2, Plus, Trash2, X, Calculator } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
 import { useMokkBar } from "../providers/MokkBarContext";
 import { sweetShopUnits } from "@/utils/constants";
 
@@ -23,19 +23,31 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
   const isEditing = !!item;
   const { setSnackbarConfig } = useMokkBar();
 
-  // Form state for the updated item structure
+  // Form state
   const [formData, setFormData] = useState<Partial<Item>>({
     name: "",
     type: defaultType || "production" as ItemType,
     description: "",
     groupId: 0,
     defaultUnit: "",
+    basePrice: 0,
+    packagingPrice: 0,
+    deliveryPrice: 0,
+    price: 0,
     cost: 0,
     productionRate: 0,
     units: [{ unit: "", price: 0, factor: 1 }],
   });
 
-  // Initialize form data when item changes
+  // Calculate final price
+  const finalPrice = useMemo(() => {
+    const base = formData.basePrice || 0;
+    const packaging = formData.packagingPrice || 0;
+    const delivery = formData.deliveryPrice || 0;
+    return base + packaging + delivery;
+  }, [formData.basePrice, formData.packagingPrice, formData.deliveryPrice]);
+
+  // Initialize form data
   useEffect(() => {
     if (item) {
       setFormData({
@@ -44,20 +56,40 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
         description: item.description || "",
         groupId: item.groupId || itemGroups[0]?.id || 0,
         defaultUnit: item.defaultUnit || "",
+        basePrice: item.basePrice || 0,
+        packagingPrice: item.packagingPrice || 0,
+        deliveryPrice: item.deliveryPrice || 0,
+        price: item.price || 0,
         cost: item.cost || 0,
         productionRate: item.productionRate || 0,
-        units:
-          item.units && item.units.length > 0
-            ? [...item.units]
-            : [{ unit: "", price: 0, factor: 1 }],
+        units: item.units && item.units.length > 0 ? [...item.units] : [{ unit: "", price: 0, factor: 1 }],
       });
     } else if (defaultType) {
-      // Set default type when creating a new item
       setFormData(prev => ({ ...prev, type: defaultType }));
     }
   }, [item, itemGroups, defaultType]);
 
-  // Mutations
+  // Update price and default unit price when final price changes
+  useEffect(() => {
+    setFormData(prev => {
+      const newUnits = [...(prev.units || [])];
+      const defaultUnitIndex = newUnits.findIndex(u => u.unit === prev.defaultUnit);
+      
+      if (defaultUnitIndex !== -1) {
+        newUnits[defaultUnitIndex] = {
+          ...newUnits[defaultUnitIndex],
+          price: finalPrice
+        };
+      }
+
+      return {
+        ...prev,
+        price: finalPrice,
+        units: newUnits
+      };
+    });
+  }, [finalPrice]);
+
   const createItem = useCreateItem();
   const updateItem = useUpdateItem();
 
@@ -70,22 +102,21 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
   });
 
   useEffect(() => {
-    // Update new group type when form data type changes
     setNewGroupData(prev => ({ ...prev, type: formData.type || "production" }));
   }, [formData.type]);
 
   const createItemGroup = useCreateItemGroup();
 
-  // Form handlers
   const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === "groupId" || name === "cost" || name === "productionRate" ? Number(value) : value,
+      [name]: name === "groupId" || name === "cost" || name === "productionRate" || 
+              name === "basePrice" || name === "packagingPrice" || name === "deliveryPrice" 
+        ? Number(value) 
+        : value,
     }));
   };
 
@@ -105,17 +136,12 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
       units: newUnits,
     }));
 
-    // If this is the only unit or the default unit is not set yet,
-    // also update the default unit
-    if (
-      (formData.units?.length === 1 || !formData.defaultUnit) &&
-      field === "unit" &&
-      typeof value === "string"
-    ) {
-      setFormData((prev) => ({
-        ...prev,
-        defaultUnit: value,
-      }));
+    if ((formData.units?.length === 1 || !formData.defaultUnit) && field === "price" && typeof value === "number") {
+      setFormData((prev) => ({ ...prev, basePrice: Number(value) }));
+    }
+
+    if ((formData.units?.length === 1 || !formData.defaultUnit) && field === "unit" && typeof value === "string") {
+      setFormData((prev) => ({ ...prev, defaultUnit: value }));
     }
   };
 
@@ -127,13 +153,11 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
   };
 
   const removeUnit = (index: number) => {
-    // Don't remove if it's the last unit
     if (!formData.units || formData.units.length <= 1) return;
 
     const newUnits = formData.units.filter((_, i) => i !== index);
-
-    // If we're removing the default unit, set the first unit as default
     let newDefaultUnit = formData.defaultUnit;
+    
     if (formData.defaultUnit === formData.units[index].unit) {
       newDefaultUnit = newUnits[0].unit;
     }
@@ -182,7 +206,6 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate name
     if (!formData.name?.trim()) {
       setSnackbarConfig({
         open: true,
@@ -192,7 +215,6 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
       return;
     }
 
-    // Validate units
     if (!formData.units || formData.units.some((unit) => !unit.unit)) {
       setSnackbarConfig({
         open: true,
@@ -202,11 +224,7 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
       return;
     }
 
-    // Validate default unit is in units
-    if (
-      !formData.defaultUnit ||
-      !formData.units.some((unit) => unit.unit === formData.defaultUnit)
-    ) {
+    if (!formData.defaultUnit || !formData.units.some((unit) => unit.unit === formData.defaultUnit)) {
       setSnackbarConfig({
         open: true,
         severity: "error",
@@ -259,15 +277,11 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
-        className="bg-slate-800 p-6 rounded-xl shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto no-scrollbar border border-slate-700"
+        className="bg-slate-800 p-6 rounded-xl shadow-xl w-full max-w-3xl mx-4 max-h-[90vh] overflow-y-auto no-scrollbar border border-slate-700"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="flex justify-between items-center mb-6 border-b border-slate-700 pb-4">
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-300 transition-colors"
-          >
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-300 transition-colors">
             <X className="h-6 w-6" />
           </button>
           <h2 className="text-xl font-bold text-slate-100">
@@ -276,9 +290,8 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
           </h2>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-6" dir="rtl">
-          {/* Basic Info Section */}
+          {/* Basic Info */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium text-slate-200 border-b border-slate-700/50 pb-2">
               معلومات أساسية
@@ -300,7 +313,7 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
 
               <div className="space-y-2">
                 <label className="block text-slate-200">النوع*</label>
-                <div className="flex gap-4 gap-reverse">
+                <div className="flex gap-4">
                   <label className="flex items-center cursor-pointer">
                     <input
                       type="radio"
@@ -327,7 +340,7 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
               </div>
             </div>
 
-            {/* Group Selection with Add Option */}
+            {/* Group Selection */}
             <div className="space-y-4">
               <div className="flex items-center justify-between mb-2">
                 <label className="block text-slate-200">التصنيف</label>
@@ -336,14 +349,10 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
                   onClick={() => setShowGroupForm(!showGroupForm)}
                   className="p-1 hover:bg-slate-700/50 rounded-full transition-colors"
                 >
-                  <Plus
-                    className={`h-5 w-5 text-emerald-400 transform transition-transform ${showGroupForm ? "rotate-45" : ""
-                      }`}
-                  />
+                  <Plus className={`h-5 w-5 text-emerald-400 transform transition-transform ${showGroupForm ? "rotate-45" : ""}`} />
                 </button>
               </div>
 
-              {/* Group Creation Form */}
               <AnimatePresence>
                 {showGroupForm && (
                   <motion.div
@@ -356,35 +365,20 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
                     <div className="bg-slate-700/30 p-3 rounded-lg space-y-3 mb-3 border border-slate-600/30">
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-slate-200 text-sm mb-1">
-                            اسم المجموعة*
-                          </label>
+                          <label className="block text-slate-200 text-sm mb-1">اسم المجموعة*</label>
                           <input
                             type="text"
                             value={newGroupData.name}
-                            onChange={(e) =>
-                              setNewGroupData((prev) => ({
-                                ...prev,
-                                name: e.target.value,
-                              }))
-                            }
+                            onChange={(e) => setNewGroupData((prev) => ({ ...prev, name: e.target.value }))}
                             className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-3 py-1.5 text-slate-200 text-sm focus:outline-none focus:border-emerald-500/50"
                             placeholder="أدخل اسم المجموعة"
                           />
                         </div>
-
                         <div>
-                          <label className="block text-slate-200 text-sm mb-1">
-                            النوع
-                          </label>
+                          <label className="block text-slate-200 text-sm mb-1">النوع</label>
                           <select
                             value={newGroupData.type}
-                            onChange={(e) =>
-                              setNewGroupData((prev) => ({
-                                ...prev,
-                                type: e.target.value as ItemType,
-                              }))
-                            }
+                            onChange={(e) => setNewGroupData((prev) => ({ ...prev, type: e.target.value as ItemType }))}
                             className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-3 py-1.5 text-slate-200 text-sm focus:outline-none focus:border-emerald-500/50"
                           >
                             <option value="production">منتج</option>
@@ -392,25 +386,16 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
                           </select>
                         </div>
                       </div>
-
                       <div>
-                        <label className="block text-slate-200 text-sm mb-1">
-                          الوصف
-                        </label>
+                        <label className="block text-slate-200 text-sm mb-1">الوصف</label>
                         <textarea
                           value={newGroupData.description}
-                          onChange={(e) =>
-                            setNewGroupData((prev) => ({
-                              ...prev,
-                              description: e.target.value,
-                            }))
-                          }
+                          onChange={(e) => setNewGroupData((prev) => ({ ...prev, description: e.target.value }))}
                           rows={2}
                           className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-3 py-1.5 text-slate-200 text-sm focus:outline-none focus:border-emerald-500/50 resize-none"
                           placeholder="وصف المجموعة..."
                         />
                       </div>
-
                       <div className="flex justify-end">
                         <button
                           type="button"
@@ -418,9 +403,7 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
                           disabled={createItemGroup.isPending}
                           className="bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 px-4 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                         >
-                          {createItemGroup.isPending ? (
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                          ) : null}
+                          {createItemGroup.isPending && <Loader2 className="h-3 w-3 animate-spin" />}
                           إضافة مجموعة
                         </button>
                       </div>
@@ -429,7 +412,6 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
                 )}
               </AnimatePresence>
 
-              {/* Group Select */}
               <select
                 name="groupId"
                 value={formData.groupId || ""}
@@ -437,17 +419,88 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
                 className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-200 focus:outline-none focus:border-emerald-500/50"
               >
                 <option value="">اختر التصنيف</option>
-                {itemGroups
-                  .filter((group) => group.type === formData.type)
-                  .map((group) => (
-                    <option key={group.id} value={group.id}>
-                      {group.name}
-                    </option>
-                  ))}
+                {itemGroups.filter((group) => group.type === formData.type).map((group) => (
+                  <option key={group.id} value={group.id}>{group.name}</option>
+                ))}
               </select>
             </div>
 
-            {/* Cost field for raw materials */}
+            <div className="space-y-2">
+              <label className="block text-slate-200">الوصف</label>
+              <textarea
+                name="description"
+                value={formData.description || ""}
+                onChange={handleChange}
+                rows={3}
+                className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-200 focus:outline-none focus:border-emerald-500/50 resize-none"
+                placeholder="أدخل وصف العنصر..."
+              />
+            </div>
+          </div>
+
+          {/* Pricing Section */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium text-slate-200 border-b border-slate-700/50 pb-2 flex items-center gap-2">
+              <Calculator className="h-5 w-5 text-emerald-400" />
+              تفاصيل الأسعار
+            </h3>
+
+            <div className="bg-slate-700/20 rounded-lg p-4 border border-slate-600/30">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <label className="block text-slate-200 text-sm">السعر الأساسي*</label>
+                  <input
+                    type="number"
+                    name="basePrice"
+                    value={formData.basePrice || 0}
+                    onChange={handleChange}
+                    min="0"
+                    step="0.01"
+                    className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-200 focus:outline-none focus:border-emerald-500/50"
+                    placeholder="0.00"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-slate-200 text-sm">سعر التكييس</label>
+                  <input
+                    type="number"
+                    name="packagingPrice"
+                    value={formData.packagingPrice || 0}
+                    onChange={handleChange}
+                    min="0"
+                    step="0.01"
+                    className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-200 focus:outline-none focus:border-emerald-500/50"
+                    placeholder="0.00"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-slate-200 text-sm">سعر التوصيل</label>
+                  <input
+                    type="number"
+                    name="deliveryPrice"
+                    value={formData.deliveryPrice || 0}
+                    onChange={handleChange}
+                    min="0"
+                    step="0.01"
+                    className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-200 focus:outline-none focus:border-emerald-500/50"
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-4 pt-4 border-t border-slate-600/50">
+                <div className="flex items-center justify-between bg-emerald-500/10 rounded-lg p-3 border border-emerald-500/30">
+                  <span className="text-slate-200 font-medium">السعر النهائي:</span>
+                  <span className="text-2xl font-bold text-emerald-400">{finalPrice.toFixed(2)} ل.س</span>
+                </div>
+                <p className="text-xs text-slate-400 mt-2 text-center">
+                  السعر النهائي = السعر الأساسي + سعر التكييس + سعر التوصيل
+                </p>
+              </div>
+            </div>
+
             {formData.type === "raw" && (
               <div className="space-y-2">
                 <label className="block text-slate-200">التكلفة</label>
@@ -464,7 +517,6 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
               </div>
             )}
 
-            {/* Production Rate field for production items */}
             {formData.type === "production" && (
               <div className="space-y-2">
                 <label className="block text-slate-200">سعر الانتاج</label>
@@ -480,19 +532,6 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
                 />
               </div>
             )}
-
-            {/* Description */}
-            <div className="space-y-2">
-              <label className="block text-slate-200">الوصف</label>
-              <textarea
-                name="description"
-                value={formData.description || ""}
-                onChange={handleChange}
-                rows={3}
-                className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-200 focus:outline-none focus:border-emerald-500/50 resize-none"
-                placeholder="أدخل وصف العنصر..."
-              />
-            </div>
           </div>
 
           {/* Units Section */}
@@ -511,38 +550,35 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
 
             <div className="space-y-3">
               {formData.units?.map((unit, index) => (
-                <div
-                  key={index}
-                  className="grid grid-cols-1 md:grid-cols-4 gap-3 p-3 bg-slate-700/30 rounded-lg border border-slate-600/30"
-                >
+                <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-3 p-3 bg-slate-700/30 rounded-lg border border-slate-600/30">
                   <div className="space-y-1">
                     <label className="block text-slate-300 text-sm">الوحدة*</label>
                     <select
                       value={unit.unit}
-                      onChange={(e) =>
-                        handleUnitChange(index, "unit", e.target.value)
-                      }
+                      onChange={(e) => handleUnitChange(index, "unit", e.target.value)}
                       className="w-full px-3 py-1.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-200 focus:outline-none focus:border-emerald-500/50"
                     >
                       <option value="">اختر الوحدة</option>
                       {sweetShopUnits.map((unitName) => (
-                        <option key={unitName} value={unitName}>
-                          {unitName}
-                        </option>
+                        <option key={unitName} value={unitName}>{unitName}</option>
                       ))}
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <label className="block text-slate-300 text-sm">السعر*</label>
+                    <label className="block text-slate-300 text-sm">
+                      السعر* 
+                      {unit.unit === formData.defaultUnit && (
+                        <span className="text-emerald-400 text-xs mr-1">(نهائي: {finalPrice.toFixed(2)})</span>
+                      )}
+                    </label>
                     <input
                       type="number"
                       value={unit.price}
-                      onChange={(e) =>
-                        handleUnitChange(index, "price", e.target.value)
-                      }
+                      onChange={(e) => handleUnitChange(index, "price", e.target.value)}
                       min="0"
                       step="0.01"
-                      className="w-full px-3 py-1.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-200 focus:outline-none focus:border-emerald-500/50"
+                      disabled={unit.unit === formData.defaultUnit}
+                      className="w-full px-3 py-1.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-200 focus:outline-none focus:border-emerald-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
                   <div className="space-y-1">
@@ -550,9 +586,7 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
                     <input
                       type="number"
                       value={unit.factor}
-                      onChange={(e) =>
-                        handleUnitChange(index, "factor", e.target.value)
-                      }
+                      onChange={(e) => handleUnitChange(index, "factor", e.target.value)}
                       min="0.01"
                       step="0.01"
                       className="w-full px-3 py-1.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-200 focus:outline-none focus:border-emerald-500/50"
@@ -570,16 +604,13 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
                     </button>
                   </div>
 
-                  {/* Default unit radio on mobile */}
                   <div className="md:hidden flex items-center mt-2">
                     <input
                       type="radio"
                       id={`default-unit-${index}`}
                       name="defaultUnitMobile"
                       checked={formData.defaultUnit === unit.unit}
-                      onChange={() =>
-                        setFormData(prev => ({ ...prev, defaultUnit: unit.unit }))
-                      }
+                      onChange={() => setFormData(prev => ({ ...prev, defaultUnit: unit.unit }))}
                       className="form-radio h-4 w-4 text-emerald-500 focus:ring-emerald-500 cursor-pointer accent-emerald-500"
                       disabled={!unit.unit}
                     />
@@ -591,7 +622,6 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
               ))}
             </div>
 
-            {/* Default Unit Selection */}
             <div className="mt-4 space-y-2 hidden md:block">
               <label className="block text-slate-200">الوحدة الافتراضية*</label>
               <select
@@ -602,18 +632,17 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
                 className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-200 focus:outline-none focus:border-emerald-500/50"
               >
                 <option value="">اختر الوحدة الافتراضية</option>
-                {formData.units
-                  ?.filter((unit) => unit.unit) // Only show units that have names
-                  .map((unit, index) => (
-                    <option key={index} value={unit.unit}>
-                      {unit.unit}
-                    </option>
-                  ))}
+                {formData.units?.filter((unit) => unit.unit).map((unit, index) => (
+                  <option key={index} value={unit.unit}>{unit.unit}</option>
+                ))}
               </select>
+              <p className="text-xs text-slate-400 mt-1">
+                سعر الوحدة الافتراضية سيكون تلقائياً: {finalPrice.toFixed(2)} ل.س
+              </p>
             </div>
           </div>
 
-          {/* Submit Button */}
+          {/* Submit */}
           <div className="flex gap-4 pt-4 border-t border-slate-700 mt-6">
             <button
               type="button"
@@ -627,9 +656,7 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
               disabled={createItem.isPending || updateItem.isPending}
               className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {createItem.isPending || updateItem.isPending ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : null}
+              {(createItem.isPending || updateItem.isPending) && <Loader2 className="h-5 w-5 animate-spin" />}
               {isEditing ? "حفظ التغييرات" : "إضافة العنصر"}
             </button>
           </div>
