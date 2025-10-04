@@ -122,19 +122,19 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
     // Filter customers based on mode (income/expense) and other requirements
     let filteredCustomers = customers || [];
 
-    // Filter by customer type based on invoice mode
-    if (
-      mode === "income" ||
-      (mode == "expense" && type != InvoiceCategory.PRODUCTS)
-    ) {
-      // For income invoices, only show customers (not suppliers)
-      filteredCustomers = filteredCustomers;
-    } else if (mode === "expense" && type == InvoiceCategory.PRODUCTS) {
-      // For expense invoices, only show suppliers
+    // Filter by customer type based on invoice mode and type
+    if (mode === "income" && type === InvoiceCategory.PRODUCTS) {
+      // For income with PRODUCTS (بيع منتجات), only show customers (not suppliers)
+      filteredCustomers = filteredCustomers.filter(
+        (customer) => customer.customerType === CustomerTypeEnum.CUSTOMER
+      );
+    } else if (mode === "expense" && type === InvoiceCategory.PRODUCTS) {
+      // For expense invoices with PRODUCTS (شراء منتجات), only show suppliers
       filteredCustomers = filteredCustomers.filter(
         (customer) => customer.customerType === CustomerTypeEnum.SUPPLIER
       );
     }
+    // For other cases, show all customers (existing behavior)
 
     // Additional filtering for debt or advance repayment requirements
     if (type === InvoiceCategory.DEBT && mode === "income" && customers) {

@@ -61,7 +61,7 @@ const DebtDetailsModal: React.FC<DebtDetailsModalProps> = ({
       return;
     }
 
-    if (amount >= debt.remainingAmount) {
+    if (amount > debt.remainingAmount) {
       setDiscountError("قيمة الخصم يجب أن تكون أقل من المبلغ المتبقي");
       return;
     }
@@ -234,7 +234,7 @@ const DebtDetailsModal: React.FC<DebtDetailsModalProps> = ({
                             المبلغ المتبقي
                           </p>
                           <p className="text-lg font-semibold text-red-400">
-                            {formatCurrency(debt.remainingAmount)}
+                            {debt.remainingAmount}
                           </p>
                         </div>
                       </div>
@@ -426,7 +426,7 @@ const DebtDetailsModal: React.FC<DebtDetailsModalProps> = ({
                           <p className="mt-1">
                             المبلغ المتبقي الحالي:{" "}
                             <span className="font-semibold">
-                              {formatCurrency(debt.remainingAmount)}
+                              {debt.remainingAmount}
                             </span>
                           </p>
                         </div>
