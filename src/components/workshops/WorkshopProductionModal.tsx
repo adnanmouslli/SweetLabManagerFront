@@ -204,7 +204,7 @@ const WorkshopProductionModal: React.FC<WorkshopProductionModalProps> = ({
                   <option value="">اختر منتج...</option>
                   {items?.filter(item => item.productionRate && item.productionRate > 0).map((item) => (
                     <option key={item.id} value={item.id}>
-                      {item.name} - {formatCurrency(item.productionRate)}
+                      {item.name} - {formatCurrency(item.productionRate!)}
                     </option>
                   ))}
                 </select>
