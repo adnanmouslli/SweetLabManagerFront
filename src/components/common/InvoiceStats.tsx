@@ -9,11 +9,11 @@ interface InvoiceStatsProps {
 export const InvoiceStats: React.FC<InvoiceStatsProps> = ({ data }) => {
   const totalIncome = data
     .filter((inv) => inv.invoiceType == "income" && inv.paidStatus == true)
-    .reduce((sum, inv) => sum + (inv.totalAmount - inv.discount), 0);
+    .reduce((sum, inv) => sum + (inv.totalAmount), 0);
 
   const totalExpense = data
     .filter((inv) => inv.invoiceType == "expense")
-    .reduce((sum, inv) => sum + (inv.totalAmount - inv.discount), 0);
+    .reduce((sum, inv) => sum + (inv.totalAmount), 0);
 
   const totalDifference = totalIncome - totalExpense;
 

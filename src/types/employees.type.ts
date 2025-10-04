@@ -211,7 +211,7 @@ export function getEmployeeOperationFromCategoryAndMode(
       case 'EMPLOYEE_DEBT':
         return 'debt';
       case 'EMPLOYEE_WITHDRAWAL':
-        return 'debt';
+        return 'salary_advance';
       case 'DAILY_EMPLOYEE_RENT':
         return 'daily_salary';
       default:

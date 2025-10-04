@@ -777,7 +777,7 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
       categoryId: lastOrder.categoryId.toString(),
       notes: lastOrder.notes || "",
       paidStatus: lastOrder.paidStatus,
-      isForToday: true, // Default to today for a new order
+      isForToday: false, // Default to today for a new order
       items: orderItems,
       discount: lastOrder.invoice?.discount || 0,
       additionalAmount: lastOrder.invoice?.additionalAmount || 0,

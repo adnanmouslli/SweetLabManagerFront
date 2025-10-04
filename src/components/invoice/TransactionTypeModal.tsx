@@ -99,7 +99,7 @@ const TransactionTypeModal: React.FC<TransactionTypeModalProps> = ({
       color: "text-red-400",
       bgColor: "bg-red-500/10 hover:bg-red-500/20",
       description: "سحب موظف",
-      subType: "debt"
+      subType: "salary_advance"
     },
     {
       id: InvoiceCategory.EMPLOYEE,

@@ -184,6 +184,14 @@ export const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                   <p className="text-red-400">{formatSYP(invoice.discount)}</p>
                 </div>
               )}
+              {
+              invoice.additionalAmount > 0 && (
+                <div className="space-y-2">
+                  <p className="text-slate-400">الإضافي</p>
+                  <p className="text-red-400">{
+                  formatSYP(invoice.additionalAmount)}</p>
+                </div>
+              )}
               <div className="space-y-2">
                 <p className="text-slate-400">طريقة الدفع</p>
                 <p className="text-slate-200">

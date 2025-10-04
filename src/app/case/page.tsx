@@ -39,6 +39,8 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
+
+
 // Simple date formatter function
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
@@ -78,6 +80,8 @@ const RejectionModal = ({
 }) => {
   const [rejectionReason, setRejectionReason] = useState("");
 
+
+  
   if (!isOpen) return null;
 
   return (
@@ -165,6 +169,10 @@ const Case = () => {
     InvoiceCategory | null
   >(null);
 
+
+      const [selectedSubType, setSelectedSubType] = useState<string | undefined>(undefined);
+
+      
   const itemsPerPage = 10;
 
   const { hasAnyRole } = useRoles();
@@ -969,8 +977,9 @@ const Case = () => {
         {showTransactionModal && (
           <TransactionTypeModal
             onClose={() => setShowTransactionModal(false)}
-            onSelect={(category) => {
+            onSelect={(category, subType) => {
               setSelectedInvoiceCategory(category);
+              setSelectedSubType(subType);
               setShowTransactionModal(false);
               setShowInvoiceForm(true);
             }}
@@ -985,8 +994,10 @@ const Case = () => {
             onClose={() => {
               setShowInvoiceForm(false);
               setSelectedInvoiceCategory(null);
+              setSelectedSubType(undefined);
             }}
             fundId={1}
+            subType={selectedSubType}
           />
         )}
 

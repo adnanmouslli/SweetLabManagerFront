@@ -180,6 +180,9 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, isOpen, on
                                     <p className="text-slate-300 mb-1"><span className="text-slate-400">موعد التسليم:</span> {new Date(order.scheduledFor).toLocaleString('ar-EG')}</p>
                                 )}
                                 <p className="text-slate-300 mb-1"><span className="text-slate-400">إجمالي المبلغ:</span> {formatCurrency(order.totalAmount)}</p>
+                                <p className="text-slate-300 mb-1"><span className="text-slate-400">الخصم:</span> {formatCurrency(order.invoice?.discount ?? 0)}</p>
+                                <p className="text-slate-300 mb-1"><span className="text-slate-400">الإضافي:</span> {formatCurrency(order.invoice?.additionalAmount ?? 0)}</p>
+
                                 <p className="text-slate-300 mb-1">
                                     <span className="text-slate-400">حالة الدفع:</span>
                                     <span className={`mx-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order.paidStatus ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
@@ -216,7 +219,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, isOpen, on
                                     <tfoot>
                                         <tr className="bg-slate-700/40">
                                             <td colSpan={4} className="py-2 px-3 text-sm font-medium text-slate-300 text-left">الإجمالي</td>
-                                            <td className="py-2 px-3 text-sm font-bold text-slate-200">{formatCurrency(order.totalAmount)}</td>
+                                            <td className="py-2 px-3 text-sm font-bold text-slate-200">{formatCurrency(order.items.reduce((sum, item) => {return sum + (item.quantity * item.unitPrice);}, 0))}</td>
                                         </tr>
                                     </tfoot>
                                 </table>

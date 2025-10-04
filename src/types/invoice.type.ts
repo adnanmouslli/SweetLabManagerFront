@@ -8,8 +8,8 @@ export enum InvoiceCategory {
   ADVANCE = 'advance',
   // Add specific employee operations as separate categories
   EMPLOYEE_DEBT = 'employee_debt',
-  EMPLOYEE_WITHDRAWAL = 'employee_withdrawal',
-  EMPLOYEE_WITHDRAWAL_RETURN = 'employee_withdrawal_return',
+  EMPLOYEE_WITHDRAWAL = 'salary_advance',
+  EMPLOYEE_WITHDRAWAL_RETURN = 'returnWithdrawal',
   DAILY_EMPLOYEE_RENT = 'daily_employee_rent'
 }
 
@@ -248,6 +248,7 @@ export interface ProductInvoice {
   totalAmount: number;
   discount: number;
   paidStatus: boolean;
+  additionalAmount: number;
   paymentDate: string | null;
   createdAt: string;
   notes: string;

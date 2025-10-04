@@ -12,9 +12,11 @@ import {
   Clipboard,
   CreditCard,
   FileText,
+  Search,
   User,
+  X,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import InvoicesActionsMenu from "./InvoicesActionsMenu";
 
 // Helper function to get Arabic invoice type names
@@ -204,6 +206,7 @@ export const HomeInvoiceTable: React.FC<HomeInvoiceTableProps> = ({
   onDeleteInvoice,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
   const PAGE_SIZE = 10;
 
   // Sorting state
@@ -213,7 +216,7 @@ export const HomeInvoiceTable: React.FC<HomeInvoiceTableProps> = ({
   // Reset to first page when data changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [data.length]);
+  }, [data.length, searchTerm]);
 
   // Handle sorting
   const handleSort = (field: SortField) => {
@@ -227,8 +230,56 @@ export const HomeInvoiceTable: React.FC<HomeInvoiceTableProps> = ({
     }
   };
 
-  // Apply sorting to data
-  const sortedData = [...data].sort((a, b) => {
+  // البحث الذكي على جميع الحقول
+  const filteredData = useMemo(() => {
+    if (!searchTerm.trim()) return data;
+
+    const searchLower = searchTerm.toLowerCase().trim();
+
+    return data.filter((invoice) => {
+      // البحث في رقم الفاتورة
+      const invoiceNumber = invoice.invoiceNumber?.toString().toLowerCase() || "";
+
+      // البحث في اسم العميل
+      const customerName = getCustomerDisplayName(
+        invoice.customer,
+        invoice.notes,
+        invoice.relatedEmployee ? `موظف: ${invoice.relatedEmployee.name}` : ""
+      ).toLowerCase();
+
+      // البحث في المبلغ
+      const amount = invoice.totalAmount?.toString() || "";
+
+      // البحث في الملاحظات
+      const notes = invoice.notes?.toLowerCase() || "";
+
+      // البحث في نوع الفاتورة
+      const invoiceType = getInvoiceTypeName(invoice).toLowerCase();
+
+      // البحث في حالة الدفع
+      const paidStatus = (invoice.paidStatus ? "نقدي مدفوع" : "آجل غير مدفوع").toLowerCase();
+
+      // البحث في نوع الدخل/المصروف
+      const type = (invoice.invoiceType === "income" ? "دخل" : "مصروف").toLowerCase();
+
+      // البحث في التاريخ
+      const date = formatDate(invoice.createdAt).toLowerCase();
+
+      return (
+        invoiceNumber.includes(searchLower) ||
+        customerName.includes(searchLower) ||
+        amount.includes(searchLower) ||
+        notes.includes(searchLower) ||
+        invoiceType.includes(searchLower) ||
+        paidStatus.includes(searchLower) ||
+        type.includes(searchLower) ||
+        date.includes(searchLower)
+      );
+    });
+  }, [data, searchTerm]);
+
+  // Apply sorting to filtered data
+  const sortedData = [...filteredData].sort((a, b) => {
     if (!sortField) return 0;
 
     let valueA, valueB;
@@ -260,8 +311,8 @@ export const HomeInvoiceTable: React.FC<HomeInvoiceTableProps> = ({
         );
         break;
       case "amount":
-        valueA = a.totalAmount - a.discount;
-        valueB = b.totalAmount - b.discount;
+        valueA = a.totalAmount;
+        valueB = b.totalAmount;
         break;
       case "paidStatus":
         valueA = a.paidStatus ? 1 : 0;
@@ -290,9 +341,9 @@ export const HomeInvoiceTable: React.FC<HomeInvoiceTableProps> = ({
   const endIndex = startIndex + PAGE_SIZE;
   const paginatedData = sortedData.slice(startIndex, endIndex);
 
-  // Calculate total for all data (not just paginated)
-  const totalAmount = data.reduce(
-    (sum, inv) => sum + (inv.totalAmount - inv.discount),
+  // Calculate total for filtered data
+  const totalAmount = filteredData.reduce(
+    (sum, inv) => sum + inv.totalAmount,
     0
   );
 
@@ -303,6 +354,43 @@ export const HomeInvoiceTable: React.FC<HomeInvoiceTableProps> = ({
 
   return (
     <>
+      {/* Search Bar */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-4"
+      >
+        <div className="relative" dir="rtl">
+          <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="ابحث في الفواتير (رقم الفاتورة، العميل، المبلغ، الملاحظات...)"
+            className="w-full pr-10 pl-10 py-3 bg-slate-800/50 border border-slate-700/50 rounded-lg text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
+          />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm("")}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors"
+              aria-label="مسح البحث"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          )}
+        </div>
+        {searchTerm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mt-2 text-sm text-slate-400"
+            dir="rtl"
+          >
+            عرض {filteredData.length} من {data.length} فاتورة
+          </motion.div>
+        )}
+      </motion.div>
+
       {/* Desktop view - Full table */}
       <div className="hidden md:block overflow-x-auto overflow-y-auto no-scrollbar">
         <motion.div
@@ -408,7 +496,7 @@ export const HomeInvoiceTable: React.FC<HomeInvoiceTableProps> = ({
                     </span>
                   </td>
                   <td className="p-3 text-center text-slate-300 text-sm">
-                    {formatSYP(invoice.totalAmount - invoice.discount)}
+                    {formatSYP(invoice.totalAmount)}
                   </td>
                   <td className="p-3 text-center">
                     <span
@@ -435,15 +523,27 @@ export const HomeInvoiceTable: React.FC<HomeInvoiceTableProps> = ({
                   </td>
                 </motion.tr>
               ))}
-              {data.length === 0 && (
+              {filteredData.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="p-4 text-center text-slate-400">
-                    لا توجد فواتير متطابقة مع معايير البحث
+                  <td colSpan={8} className="p-8 text-center">
+                    <div className="text-slate-400 text-lg">
+                      {searchTerm
+                        ? "لا توجد فواتير تطابق معايير البحث"
+                        : "لا توجد فواتير"}
+                    </div>
+                    {searchTerm && (
+                      <button
+                        onClick={() => setSearchTerm("")}
+                        className="mt-3 text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                      >
+                        مسح البحث
+                      </button>
+                    )}
                   </td>
                 </tr>
               )}
             </tbody>
-            {data.length > 0 && (
+            {filteredData.length > 0 && (
               <motion.tfoot
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -470,9 +570,21 @@ export const HomeInvoiceTable: React.FC<HomeInvoiceTableProps> = ({
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="bg-slate-800/50 rounded-lg border border-slate-700/50 p-4 text-center text-slate-400"
+            className="bg-slate-800/50 rounded-lg border border-slate-700/50 p-8 text-center"
           >
-            لا توجد فواتير متطابقة مع معايير البحث
+            <div className="text-slate-400 text-lg">
+              {searchTerm
+                ? "لا توجد فواتير تطابق معايير البحث"
+                : "لا توجد فواتير"}
+            </div>
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm("")}
+                className="mt-3 text-sm text-blue-400 hover:text-blue-300 transition-colors"
+              >
+                مسح البحث
+              </button>
+            )}
           </motion.div>
         ) : (
           <>
@@ -601,7 +713,7 @@ export const HomeInvoiceTable: React.FC<HomeInvoiceTableProps> = ({
 
                     <div className="flex items-end flex-col">
                       <span className="text-emerald-400 font-medium text-sm">
-                        {formatSYP(invoice.totalAmount - invoice.discount)}
+                        {formatSYP(invoice.totalAmount)}
                       </span>
                       <span
                         className={`mt-1 inline-flex items-center px-2 py-1 rounded-full text-xs ${
@@ -636,7 +748,7 @@ export const HomeInvoiceTable: React.FC<HomeInvoiceTableProps> = ({
         )}
       </div>
 
-      {data.length > PAGE_SIZE && (
+      {sortedData.length > PAGE_SIZE && (
         <PaginationControls
           currentPage={currentPage}
           totalPages={totalPages}
