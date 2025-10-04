@@ -15,6 +15,7 @@ import {
   ChevronDown,
   UserPlus,
   Search,
+  Truck,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useFetchCustomers } from "@/hooks/customers/useCustomers";
@@ -56,6 +57,11 @@ interface OrderItem {
   unitPrice: number | string;
   unit: string;
   notes: string;
+  withPackaging?: boolean;
+  withDelivery?: boolean;
+  basePrice?: number;
+  packagingPrice?: number;
+  deliveryPrice?: number;
 }
 
 interface InvoiceData {
@@ -180,6 +186,11 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
     useState<boolean>(false);
   const [selectedItemUnit, setSelectedItemUnit] = useState<string>("");
   const [selectedItemFactor, setSelectedItemFactor] = useState<number>(1);
+
+  const [withPackaging, setWithPackaging] = useState<boolean>(true);
+const [withDelivery, setWithDelivery] = useState<boolean>(true);
+
+
   const [isCustomerDropdownOpen, setIsCustomerDropdownOpen] =
     useState<boolean>(false);
   const [customerMenuSearch, setCustomerMenuSearch] = useState<string>("");
@@ -277,6 +288,27 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
       setTotalAmount(0);
     }
   }, [formData.items, formData.discount, formData.additionalAmount]);
+
+  useEffect(() => {
+  if (selectedItem === 0) return;
+  
+  const selectedProduct = items?.find((item) => item.id === selectedItem);
+  if (!selectedProduct || selectedProduct.type !== "production") return;
+
+  const basePrice = selectedProduct.basePrice || 0;
+  const packagingPrice = withPackaging ? (selectedProduct.packagingPrice || 0) : 0;
+  const deliveryPrice = withDelivery ? (selectedProduct.deliveryPrice || 0) : 0;
+  const finalPrice = basePrice + packagingPrice + deliveryPrice;
+  
+  const unitInfo = selectedProduct.units?.[selectedUnitIndex];
+  if (unitInfo) {
+    const calculatedPrice = unitInfo.unit === selectedProduct.defaultUnit 
+      ? finalPrice 
+      : finalPrice * (unitInfo.factor || 1);
+      
+    setSelectedItemPrice(calculatedPrice);
+  }
+}, [withPackaging, withDelivery, selectedItem, selectedUnitIndex, items]);
 
   // Form Handlers
   const resetForm = useCallback(() => {
@@ -426,102 +458,132 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
   );
 
   const addItem = useCallback(() => {
-    try {
-      if (selectedItem > 0) {
-        const selectedItemObj = items?.find((item) => item.id === selectedItem);
-        // التحقق من أن المادة من نوع الإنتاج
-        if (!selectedItemObj || selectedItemObj.type !== "production") {
-          console.error("يمكن إضافة مواد الإنتاج فقط");
-          return;
-        }
-
-        if (quantity <= 0 || selectedUnitIndex < 0) return;
-
-        const newItem: OrderItem = {
-          itemId: selectedItem,
-          quantity: quantity,
-          unitPrice: selectedItemPrice,
-          unit: selectedItemUnit,
-          notes: "",
-        };
-
-        setFormData((prev) => ({
-          ...prev,
-          items: [...prev.items, newItem],
-        }));
-
-        setSelectedItem(0);
-        setQuantity(1);
-        setSelectedUnitIndex(-1);
-        setSelectedItemPrice(0);
-        setSelectedItemUnit("");
-        setSelectedItemFactor(1);
-
+  try {
+    if (selectedItem > 0) {
+      const selectedItemObj = items?.find((item) => item.id === selectedItem);
+      if (!selectedItemObj || selectedItemObj.type !== "production") {
+        console.error("يمكن إضافة مواد الإنتاج فقط");
         return;
       }
 
+      if (quantity <= 0 || selectedUnitIndex < 0) return;
+
+      const newItem: OrderItem = {
+        itemId: selectedItem,
+        quantity: quantity,
+        unitPrice: selectedItemPrice,
+        unit: selectedItemUnit,
+        notes: "",
+        withPackaging: withPackaging,
+        withDelivery: withDelivery,
+        basePrice: selectedItemObj.basePrice || 0,
+        packagingPrice: selectedItemObj.packagingPrice || 0,
+        deliveryPrice: selectedItemObj.deliveryPrice || 0,
+      };
+
       setFormData((prev) => ({
         ...prev,
-        items: [
-          ...prev.items,
-          { itemId: "", quantity: "1", unitPrice: "0", unit: "", notes: "" },
-        ],
+        items: [...prev.items, newItem],
       }));
-    } catch (error) {
-      console.error("Error adding item:", error);
+
+      setSelectedItem(0);
+      setQuantity(1);
+      setSelectedUnitIndex(-1);
+      setSelectedItemPrice(0);
+      setSelectedItemUnit("");
+      setSelectedItemFactor(1);
+      setWithPackaging(true);
+      setWithDelivery(true);
+
+      return;
     }
-  }, [
-    selectedItem,
-    items,
-    quantity,
-    selectedItemPrice,
-    selectedItemUnit,
-    selectedUnitIndex,
-  ]);
+
+    setFormData((prev) => ({
+      ...prev,
+      items: [
+        ...prev.items,
+        { itemId: "", quantity: "1", unitPrice: "0", unit: "", notes: "" },
+      ],
+    }));
+  } catch (error) {
+    console.error("Error adding item:", error);
+  }
+}, [
+  selectedItem,
+  items,
+  quantity,
+  selectedItemPrice,
+  selectedItemUnit,
+  selectedUnitIndex,
+  withPackaging,
+  withDelivery,
+]);
 
   const handleItemSelect = (itemId: number) => {
-    setSelectedItem(itemId);
-    const selectedProduct = items?.find((item) => item.id === itemId);
+  setSelectedItem(itemId);
+  const selectedProduct = items?.find((item) => item.id === itemId);
 
-    if (selectedProduct) {
-      if (selectedProduct.units && selectedProduct.units.length > 0) {
-        const defaultUnitIndex = selectedProduct.units.findIndex(
-          (u) => u.unit === selectedProduct.defaultUnit
-        );
+  if (selectedProduct) {
+    if (selectedProduct.units && selectedProduct.units.length > 0) {
+      const defaultUnitIndex = selectedProduct.units.findIndex(
+        (u) => u.unit === selectedProduct.defaultUnit
+      );
 
-        const unitIndex = defaultUnitIndex >= 0 ? defaultUnitIndex : 0;
-        const unitInfo = selectedProduct.units[unitIndex];
+      const unitIndex = defaultUnitIndex >= 0 ? defaultUnitIndex : 0;
+      const unitInfo = selectedProduct.units[unitIndex];
 
-        setSelectedUnitIndex(unitIndex);
-        setSelectedItemUnit(unitInfo.unit);
-        setSelectedItemPrice(unitInfo.price);
-        setSelectedItemFactor(unitInfo.factor);
-      } else {
-        setSelectedUnitIndex(-1);
-        setSelectedItemUnit("");
-        setSelectedItemPrice(0);
-        setSelectedItemFactor(1);
-      }
+      setSelectedUnitIndex(unitIndex);
+      setSelectedItemUnit(unitInfo.unit);
+      
+      // حساب السعر مع التكييس والتوصيل
+      const basePrice = selectedProduct.basePrice || 0;
+      const packagingPrice = withPackaging ? (selectedProduct.packagingPrice || 0) : 0;
+      const deliveryPrice = withDelivery ? (selectedProduct.deliveryPrice || 0) : 0;
+      const finalPrice = basePrice + packagingPrice + deliveryPrice;
+      
+      const calculatedPrice = unitInfo.unit === selectedProduct.defaultUnit 
+        ? finalPrice 
+        : finalPrice * (unitInfo.factor || 1);
+        
+      setSelectedItemPrice(calculatedPrice);
+      setSelectedItemFactor(unitInfo.factor);
+    } else {
+      setSelectedUnitIndex(-1);
+      setSelectedItemUnit("");
+      setSelectedItemPrice(0);
+      setSelectedItemFactor(1);
     }
-  };
+  }
+};
 
   const handleUnitChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const unitIndex = parseInt(e.target.value);
-    setSelectedUnitIndex(unitIndex);
+  const unitIndex = parseInt(e.target.value);
+  setSelectedUnitIndex(unitIndex);
 
-    const selectedProduct = items?.find((item) => item.id === selectedItem);
-    if (
-      selectedProduct &&
-      selectedProduct.units &&
-      unitIndex >= 0 &&
-      unitIndex < selectedProduct.units.length
-    ) {
-      const unitInfo = selectedProduct.units[unitIndex];
-      setSelectedItemUnit(unitInfo.unit);
-      setSelectedItemPrice(unitInfo.price);
-      setSelectedItemFactor(unitInfo.factor);
-    }
-  };
+  const selectedProduct = items?.find((item) => item.id === selectedItem);
+  if (
+    selectedProduct &&
+    selectedProduct.units &&
+    unitIndex >= 0 &&
+    unitIndex < selectedProduct.units.length
+  ) {
+    const unitInfo = selectedProduct.units[unitIndex];
+    setSelectedItemUnit(unitInfo.unit);
+    setSelectedItemFactor(unitInfo.factor);
+    
+    // حساب السعر مع التكييس والتوصيل
+    const basePrice = selectedProduct.basePrice || 0;
+    const packagingPrice = withPackaging ? (selectedProduct.packagingPrice || 0) : 0;
+    const deliveryPrice = withDelivery ? (selectedProduct.deliveryPrice || 0) : 0;
+    const finalPrice = basePrice + packagingPrice + deliveryPrice;
+    
+    const calculatedPrice = unitInfo.unit === selectedProduct.defaultUnit 
+      ? finalPrice 
+      : finalPrice * (unitInfo.factor || 1);
+      
+    setSelectedItemPrice(calculatedPrice);
+  }
+};
 
   const validateForm = useCallback((): boolean => {
     try {
@@ -1210,7 +1272,60 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
                 </div>
 
                 {selectedItem > 0 && (
-                  <div className="bg-slate-700/30 rounded-lg p-4 mt-4">
+                  <div className="bg-slate-700/30 rounded-lg p-4 mt-4 space-y-4">
+
+
+                    {(() => {
+                      const selectedProduct = items?.find((item) => item.id === selectedItem);
+                      return selectedProduct && 
+                        ((selectedProduct.packagingPrice || 0) > 0 || 
+                        (selectedProduct.deliveryPrice || 0) > 0) && (
+                        <div className="bg-slate-700/30 rounded-lg p-4 border border-slate-600/30">
+                          <div className="flex items-center gap-6">
+                            {(selectedProduct.packagingPrice || 0) > 0 && (
+                              <label className="flex items-center gap-3 cursor-pointer group">
+                                <input
+                                  type="checkbox"
+                                  checked={withPackaging}
+                                  onChange={(e) => setWithPackaging(e.target.checked)}
+                                  className="w-5 h-5 rounded border-slate-600 bg-slate-700/50 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-slate-800 cursor-pointer"
+                                />
+                                <div className="flex items-center gap-2">
+                                  <Package className="h-4 w-4 text-purple-400" />
+                                  <span className="text-slate-200 group-hover:text-slate-100">
+                                    مع تكييس
+                                  </span>
+                                  <span className="text-purple-300 text-sm">
+                                    (+{selectedProduct.packagingPrice?.toFixed(2)} ل.س)
+                                  </span>
+                                </div>
+                              </label>
+                            )}
+
+                            {(selectedProduct.deliveryPrice || 0) > 0 && (
+                              <label className="flex items-center gap-3 cursor-pointer group">
+                                <input
+                                  type="checkbox"
+                                  checked={withDelivery}
+                                  onChange={(e) => setWithDelivery(e.target.checked)}
+                                  className="w-5 h-5 rounded border-slate-600 bg-slate-700/50 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-slate-800 cursor-pointer"
+                                />
+                                <div className="flex items-center gap-2">
+                                  <Truck className="h-4 w-4 text-blue-400" />
+                                  <span className="text-slate-200 group-hover:text-slate-100">
+                                    مع توصيل
+                                  </span>
+                                  <span className="text-blue-300 text-sm">
+                                    (+{selectedProduct.deliveryPrice?.toFixed(2)} ل.س)
+                                  </span>
+                                </div>
+                              </label>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()}
+
                     <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                       <div className="space-y-2 md:col-span-2">
                         <label className="block text-slate-200">الوحدة</label>
@@ -1298,9 +1413,32 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
                 <tbody>
                   {formData.items.map((item, index) => (
                     <tr key={index} className="border-t border-slate-600/30">
+                      
+
                       <td className="p-3 text-slate-300">
-                        {getItemName(item.itemId)}
+                        <div>
+                          <div className="font-medium">{getItemName(item.itemId)}</div>
+                          {/* Price Breakdown */}
+                          {(item.withPackaging || item.withDelivery) && (
+                            <div className="text-xs text-slate-400 mt-1 space-y-0.5">
+                              <div>أساسي: {item.basePrice?.toFixed(2)} ل.س</div>
+                              {item.withPackaging && item.packagingPrice && item.packagingPrice > 0 && (
+                                <div className="text-purple-300 flex items-center gap-1">
+                                  <Package className="h-3 w-3" />
+                                  + تكييس: {item.packagingPrice?.toFixed(2)} ل.س
+                                </div>
+                              )}
+                              {item.withDelivery && item.deliveryPrice && item.deliveryPrice > 0 && (
+                                <div className="text-blue-300 flex items-center gap-1">
+                                  <Truck className="h-3 w-3" />
+                                  + توصيل: {item.deliveryPrice?.toFixed(2)} ل.س
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </td>
+
                       <td className="p-3">
                         <input
                           type="number"

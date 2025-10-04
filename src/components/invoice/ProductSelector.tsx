@@ -1,9 +1,8 @@
 import { useItemGroups } from "@/hooks/items/useItemGroups";
 import { useItems } from "@/hooks/items/useItems";
-import { InvoiceCategory } from "@/types/invoice.type";
-import { Item } from "@/types/invoice.type";
-import { Plus } from "lucide-react";
-import React, { useState } from "react";
+import { Item } from "@/types/items.type";
+import { Plus, Package, Truck } from "lucide-react";
+import React, { useState, useEffect } from "react";
 
 // Define the form item interface
 export interface FormItem {
@@ -15,8 +14,13 @@ export interface FormItem {
   trayCount?: number;
   subTotal: number;
   itemId: number;
-  productionRate?: number; // Added production rate
-  item: Item & { productionRate?: number }; // Ensure item includes productionRate
+  itemName: string;
+  productionRate?: number;
+  withPackaging: boolean;
+  withDelivery: boolean;
+  basePrice: number;
+  packagingPrice: number;
+  deliveryPrice: number;
 }
 
 interface ProductSelectorProps {
@@ -44,34 +48,70 @@ const ProductSelector: React.FC<ProductSelectorProps> = ({
   const [selectedItemFactor, setSelectedItemFactor] = useState<number>(1);
   const [selectedItemProductionRate, setSelectedItemProductionRate] = useState<number>(0);
   const [selectedUnitIndex, setSelectedUnitIndex] = useState<number>(-1);
+  const [withPackaging, setWithPackaging] = useState<boolean>(true);
+  const [withDelivery, setWithDelivery] = useState<boolean>(true);
 
   const isPurchaseInvoice = mode === "expense";
+
+  // Update price when packaging or delivery changes
+  useEffect(() => {
+    if (mode !== "income" || selectedItem === 0) return;
+    
+    const selectedProduct = items?.find((item) => item.id === selectedItem);
+    if (!selectedProduct) return;
+
+    const basePrice = selectedProduct.basePrice || 0;
+    const packagingPrice = withPackaging ? (selectedProduct.packagingPrice || 0) : 0;
+    const deliveryPrice = withDelivery ? (selectedProduct.deliveryPrice || 0) : 0;
+    const finalPrice = basePrice + packagingPrice + deliveryPrice;
+    
+    const unitInfo = selectedProduct.units?.[selectedUnitIndex];
+    if (unitInfo) {
+      const calculatedPrice = unitInfo.unit === selectedProduct.defaultUnit 
+        ? finalPrice 
+        : finalPrice * (unitInfo.factor || 1);
+        
+      setSelectedItemPrice(calculatedPrice);
+    }
+  }, [withPackaging, withDelivery, selectedItem, selectedUnitIndex, mode, items]);
 
   const handleItemSelect = (itemId: number) => {
     setSelectedItem(itemId);
     const selectedProduct = items?.find((item) => item.id === itemId);
 
     if (selectedProduct) {
-      // Set the production rate - ensure it's not null
       setSelectedItemProductionRate(selectedProduct.productionRate || 0);
       
-      // Initialize with default unit if available
       if (selectedProduct.units && selectedProduct.units.length > 0) {
-        // Find default unit in units array
         const defaultUnitIndex = selectedProduct.units.findIndex(
           (u) => u.unit === selectedProduct.defaultUnit
         );
 
-        // Use default unit or first unit if default not found
         const unitIndex = defaultUnitIndex >= 0 ? defaultUnitIndex : 0;
         const unitInfo = selectedProduct.units[unitIndex];
 
         setSelectedUnitIndex(unitIndex);
         setSelectedItemUnit(unitInfo.unit);
-        setSelectedItemPrice(unitInfo.price);
+        
+        // Calculate price based on packaging and delivery for income mode
+        if (mode === "income") {
+          const basePrice = selectedProduct.basePrice || 0;
+          const packagingPrice = withPackaging ? (selectedProduct.packagingPrice || 0) : 0;
+          const deliveryPrice = withDelivery ? (selectedProduct.deliveryPrice || 0) : 0;
+          const finalPrice = basePrice + packagingPrice + deliveryPrice;
+          
+          // Apply factor for non-default units
+          const calculatedPrice = unitInfo.unit === selectedProduct.defaultUnit 
+            ? finalPrice 
+            : finalPrice * (unitInfo.factor || 1);
+            
+          setSelectedItemPrice(calculatedPrice);
+        } else {
+          setSelectedItemPrice(unitInfo.price);
+        }
+        
         setSelectedItemFactor(unitInfo.factor);
       } else {
-        // Fallback to empty values if no units are defined
         setSelectedUnitIndex(-1);
         setSelectedItemUnit("");
         setSelectedItemPrice(0);
@@ -93,8 +133,23 @@ const ProductSelector: React.FC<ProductSelectorProps> = ({
     ) {
       const unitInfo = selectedProduct.units[unitIndex];
       setSelectedItemUnit(unitInfo.unit);
-      setSelectedItemPrice(unitInfo.price);
       setSelectedItemFactor(unitInfo.factor);
+      
+      // Calculate price for income mode
+      if (mode === "income") {
+        const basePrice = selectedProduct.basePrice || 0;
+        const packagingPrice = withPackaging ? (selectedProduct.packagingPrice || 0) : 0;
+        const deliveryPrice = withDelivery ? (selectedProduct.deliveryPrice || 0) : 0;
+        const finalPrice = basePrice + packagingPrice + deliveryPrice;
+        
+        const calculatedPrice = unitInfo.unit === selectedProduct.defaultUnit 
+          ? finalPrice 
+          : finalPrice * (unitInfo.factor || 1);
+          
+        setSelectedItemPrice(calculatedPrice);
+      } else {
+        setSelectedItemPrice(unitInfo.price);
+      }
     }
   };
 
@@ -111,16 +166,12 @@ const ProductSelector: React.FC<ProductSelectorProps> = ({
       productionRate: selectedItemProductionRate,
       subTotal: quantity * selectedItemPrice,
       itemId: selectedProduct.id,
-      item: {
-        groupId: selectedProduct.groupId!,
-        id: selectedProduct.id,
-        name: selectedProduct.name,
-        type: selectedProduct.type,
-        price: selectedItemPrice,
-        unit: selectedItemUnit,
-        productionRate: selectedItemProductionRate, // Ensure production rate is included
-        description: selectedProduct.description || '',
-      },
+      itemName: selectedProduct.name,
+      withPackaging: mode === "income" ? withPackaging : false,
+      withDelivery: mode === "income" ? withDelivery : false,
+      basePrice: selectedProduct.basePrice || 0,
+      packagingPrice: selectedProduct.packagingPrice || 0,
+      deliveryPrice: selectedProduct.deliveryPrice || 0,
     };
 
     addFormItem(newItem);
@@ -135,6 +186,8 @@ const ProductSelector: React.FC<ProductSelectorProps> = ({
     setSelectedItemProductionRate(0);
     setSelectedUnitIndex(-1);
     setQuantity(1);
+    setWithPackaging(true);
+    setWithDelivery(true);
   };
 
   return (
@@ -153,7 +206,7 @@ const ProductSelector: React.FC<ProductSelectorProps> = ({
                   key={group.id}
                   onClick={() => {
                     setSelectedGroupId(group.id);
-                    setSelectedItem(0); // Reset selected item when group changes
+                    setSelectedItem(0);
                   }}
                   className={`
                 rounded-lg shadow-md p-4 text-center cursor-pointer transition-all duration-200
@@ -174,7 +227,7 @@ const ProductSelector: React.FC<ProductSelectorProps> = ({
                   key={group.id}
                   onClick={() => {
                     setSelectedGroupId(group.id);
-                    setSelectedItem(0); // Reset selected item when group changes
+                    setSelectedItem(0);
                   }}
                   className={`
                 rounded-lg shadow-md p-4 text-center cursor-pointer transition-all duration-200
@@ -231,7 +284,57 @@ const ProductSelector: React.FC<ProductSelectorProps> = ({
           </div>
 
           {selectedItem > 0 && (
-            <div className="bg-slate-700/30 rounded-lg p-4 mt-4">
+            <div className="bg-slate-700/30 rounded-lg p-4 mt-4 space-y-4">
+              {/* Packaging and Delivery Options - Only for income */}
+              {mode === "income" && (() => {
+                const selectedProduct = items?.find((item) => item.id === selectedItem);
+                return selectedProduct && ((selectedProduct.packagingPrice || 0) > 0 || (selectedProduct.deliveryPrice || 0) > 0) && (
+                  <div className="bg-slate-700/30 rounded-lg p-4 border border-slate-600/30">
+                    <div className="flex items-center gap-6">
+                      {(selectedProduct.packagingPrice || 0) > 0 && (
+                        <label className="flex items-center gap-3 cursor-pointer group">
+                          <input
+                            type="checkbox"
+                            checked={withPackaging}
+                            onChange={(e) => setWithPackaging(e.target.checked)}
+                            className="w-5 h-5 rounded border-slate-600 bg-slate-700/50 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-slate-800 cursor-pointer"
+                          />
+                          <div className="flex items-center gap-2">
+                            <Package className="h-4 w-4 text-purple-400" />
+                            <span className="text-slate-200 group-hover:text-slate-100">
+                              مع تكييس
+                            </span>
+                            <span className="text-purple-300 text-sm">
+                              (+{selectedProduct.packagingPrice?.toFixed(2)} ل.س)
+                            </span>
+                          </div>
+                        </label>
+                      )}
+
+                      {(selectedProduct.deliveryPrice || 0) > 0 && (
+                        <label className="flex items-center gap-3 cursor-pointer group">
+                          <input
+                            type="checkbox"
+                            checked={withDelivery}
+                            onChange={(e) => setWithDelivery(e.target.checked)}
+                            className="w-5 h-5 rounded border-slate-600 bg-slate-700/50 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-slate-800 cursor-pointer"
+                          />
+                          <div className="flex items-center gap-2">
+                            <Truck className="h-4 w-4 text-blue-400" />
+                            <span className="text-slate-200 group-hover:text-slate-100">
+                              مع توصيل
+                            </span>
+                            <span className="text-blue-300 text-sm">
+                              (+{selectedProduct.deliveryPrice?.toFixed(2)} ل.س)
+                            </span>
+                          </div>
+                        </label>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
+
               <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 {/* Unit Selection */}
                 <div className="space-y-2 md:col-span-2 lg:col-span-1">
@@ -285,17 +388,6 @@ const ProductSelector: React.FC<ProductSelectorProps> = ({
                     className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-200"
                   />
                 </div>
-                {/* <div className="space-y-2">
-                  <label className="block text-slate-200">سعر الانتاج</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={selectedItemProductionRate === null ? 0 : selectedItemProductionRate}
-                    onChange={(e) => setSelectedItemProductionRate(Number(e.target.value))}
-                    className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-200"
-                  />
-                </div> */}
               </div>
 
               {/* Add Item Button */}
