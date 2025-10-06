@@ -62,8 +62,15 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
         price: item.price || 0,
         cost: item.cost || 0,
         productionRate: item.productionRate || 0,
-        units: item.units && item.units.length > 0 ? [...item.units] : [{ unit: "", price: 0, conversionFactor: 1 }],
-      });
+        units: item.units && item.units.length > 0 
+          ? item.units.map(u => ({
+              ...u,
+              price: Number(u.price),
+              factor: Number(u.conversionFactor)   // هون
+            })) 
+          : [{ unit: "", price: 0, conversionFactor: 1 }],
+
+});
     } else if (defaultType) {
       setFormData(prev => ({ ...prev, type: defaultType }));
     }
