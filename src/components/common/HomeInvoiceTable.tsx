@@ -46,6 +46,8 @@ const getInvoiceTypeName = (invoice: any): string => {
       return 'فاتورة مباشرة';
     case 'advance':
       return 'سلفة من زبون';
+    case 'debt':
+      return 'دين';
 
     default:
       return invoice.invoiceCategory;
