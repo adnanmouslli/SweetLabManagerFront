@@ -69,7 +69,7 @@ const ProductSelector: React.FC<ProductSelectorProps> = ({
     if (unitInfo) {
       const calculatedPrice = unitInfo.unit === selectedProduct.defaultUnit 
         ? finalPrice 
-        : finalPrice * (unitInfo.factor || 1);
+        : finalPrice * (unitInfo.conversionFactor || 1);
         
       setSelectedItemPrice(calculatedPrice);
     }
@@ -103,14 +103,14 @@ const ProductSelector: React.FC<ProductSelectorProps> = ({
           // Apply factor for non-default units
           const calculatedPrice = unitInfo.unit === selectedProduct.defaultUnit 
             ? finalPrice 
-            : finalPrice * (unitInfo.factor || 1);
+            : finalPrice * (unitInfo.conversionFactor || 1);
             
           setSelectedItemPrice(calculatedPrice);
         } else {
           setSelectedItemPrice(unitInfo.price);
         }
         
-        setSelectedItemFactor(unitInfo.factor);
+        setSelectedItemFactor(unitInfo.conversionFactor);
       } else {
         setSelectedUnitIndex(-1);
         setSelectedItemUnit("");
@@ -133,7 +133,7 @@ const ProductSelector: React.FC<ProductSelectorProps> = ({
     ) {
       const unitInfo = selectedProduct.units[unitIndex];
       setSelectedItemUnit(unitInfo.unit);
-      setSelectedItemFactor(unitInfo.factor);
+      setSelectedItemFactor(unitInfo.conversionFactor);
       
       // Calculate price for income mode
       if (mode === "income") {
@@ -144,7 +144,7 @@ const ProductSelector: React.FC<ProductSelectorProps> = ({
         
         const calculatedPrice = unitInfo.unit === selectedProduct.defaultUnit 
           ? finalPrice 
-          : finalPrice * (unitInfo.factor || 1);
+          : finalPrice * (unitInfo.conversionFactor || 1);
           
         setSelectedItemPrice(calculatedPrice);
       } else {
