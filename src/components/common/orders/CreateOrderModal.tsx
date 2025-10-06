@@ -304,7 +304,7 @@ const [withDelivery, setWithDelivery] = useState<boolean>(true);
   if (unitInfo) {
     const calculatedPrice = unitInfo.unit === selectedProduct.defaultUnit 
       ? finalPrice 
-      : finalPrice * (unitInfo.factor || 1);
+      : finalPrice * (unitInfo.conversionFactor || 1);
       
     setSelectedItemPrice(calculatedPrice);
   }
@@ -543,10 +543,10 @@ const [withDelivery, setWithDelivery] = useState<boolean>(true);
       
       const calculatedPrice = unitInfo.unit === selectedProduct.defaultUnit 
         ? finalPrice 
-        : finalPrice * (unitInfo.factor || 1);
+        : finalPrice * (unitInfo.conversionFactor || 1);
         
       setSelectedItemPrice(calculatedPrice);
-      setSelectedItemFactor(unitInfo.factor);
+      setSelectedItemFactor(unitInfo.conversionFactor);
     } else {
       setSelectedUnitIndex(-1);
       setSelectedItemUnit("");
@@ -569,7 +569,7 @@ const [withDelivery, setWithDelivery] = useState<boolean>(true);
   ) {
     const unitInfo = selectedProduct.units[unitIndex];
     setSelectedItemUnit(unitInfo.unit);
-    setSelectedItemFactor(unitInfo.factor);
+    setSelectedItemFactor(unitInfo.conversionFactor);
     
     // حساب السعر مع التكييس والتوصيل
     const basePrice = selectedProduct.basePrice || 0;
@@ -579,7 +579,7 @@ const [withDelivery, setWithDelivery] = useState<boolean>(true);
     
     const calculatedPrice = unitInfo.unit === selectedProduct.defaultUnit 
       ? finalPrice 
-      : finalPrice * (unitInfo.factor || 1);
+      : finalPrice * (unitInfo.conversionFactor || 1);
       
     setSelectedItemPrice(calculatedPrice);
   }
@@ -872,7 +872,7 @@ const [withDelivery, setWithDelivery] = useState<boolean>(true);
           setSelectedUnitIndex(unitIndex >= 0 ? unitIndex : 0);
           setSelectedItemUnit(selectedUnit.unit || "");
           setSelectedItemPrice(selectedUnit.price || 0);
-          setSelectedItemFactor(selectedUnit.factor || 1);
+          setSelectedItemFactor(selectedUnit.conversionFactor || 1);
         }
 
         // Set quantity for the new item form
@@ -1498,7 +1498,7 @@ const [withDelivery, setWithDelivery] = useState<boolean>(true);
                           const unitData = itemData?.units.find(
                             (u) => u.unit === item.unit
                           );
-                          return unitData?.factor || 1;
+                          return unitData?.conversionFactor || 1;
                         })()}
                       </td>
                       <td className="p-3 text-slate-300">
