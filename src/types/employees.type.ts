@@ -39,6 +39,7 @@ export interface Employee {
   createdAt: string;
   updatedAt: string;
   withdrawals?: EmployeeWithdrawal[];
+  
   financialSummary?: WorkshopEmployeeFinancialSummary;
   // debts are now handled separately through the EmployeeDebt interface in debts.type.ts
 }

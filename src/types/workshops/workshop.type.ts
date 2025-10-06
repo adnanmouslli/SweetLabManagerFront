@@ -59,6 +59,8 @@ export interface WorkshopSettlement {
   amount: number;
   paidAmount: number;
   date: string;
+  totalEarnings : number;
+  totalWithdrawals : number;
   fundId: number;
   invoiceId: number;
   notes?: string;

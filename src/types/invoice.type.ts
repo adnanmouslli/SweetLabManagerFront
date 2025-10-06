@@ -7,7 +7,7 @@ export enum InvoiceCategory {
   EMPLOYEE = 'employee',
   ADVANCE = 'advance',
   // Add specific employee operations as separate categories
-  EMPLOYEE_DEBT = 'employee_debt',
+  EMPLOYEE_DEBT = 'debt',
   EMPLOYEE_WITHDRAWAL = 'salary_advance',
   EMPLOYEE_WITHDRAWAL_RETURN = 'returnWithdrawal',
   DAILY_EMPLOYEE_RENT = 'daily_employee_rent'

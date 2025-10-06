@@ -19,29 +19,36 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import InvoicesActionsMenu from "./InvoicesActionsMenu";
 
-// Helper function to get Arabic invoice type names
-const getInvoiceTypeName = (invoice: Invoice): string => {
+
+const getInvoiceTypeName = (invoice: any): string => {
+  // إذا كانت الفاتورة من نوع employee
+  if (invoice.invoiceCategory === 'employee') {
+    console.log(invoice.employeeInvoiceType)
+    switch (invoice.employeeInvoiceType) {
+      case 'salary_advance':
+        return 'سلفة راتب';
+      case 'debt':
+        return 'دين موظف';
+      case 'returnWithdrawal':
+        return 'إرجاع سحب';
+      case 'debtPayment':
+        return 'تسديد دين';
+      default:
+        return invoice.employeeInvoiceType || 'فاتورة موظف';
+    }
+  }
+  
+  // أنواع الفواتير الأخرى
   switch (invoice.invoiceCategory) {
-    case InvoiceCategory.PRODUCTS:
-      return "منتجات";
-    case InvoiceCategory.DIRECT:
-      return "مباشر";
-    case InvoiceCategory.DEBT:
-      return "تحصيل دين";
-    case InvoiceCategory.ADVANCE:
-      return invoice.invoiceType === "income" ? "سلفة" : "إرجاع سلفة";
-    case InvoiceCategory.EMPLOYEE:
-      return "موظف";
-    case InvoiceCategory.EMPLOYEE_DEBT:
-      return "دين موظف";
-    case InvoiceCategory.EMPLOYEE_WITHDRAWAL:
-      return "سحب موظف";
-    case InvoiceCategory.EMPLOYEE_WITHDRAWAL_RETURN:
-      return "إرجاع سحب موظف";
-    case InvoiceCategory.DAILY_EMPLOYEE_RENT:
-      return "إيجار يومي";
+    case 'products':
+      return 'منتجات';
+    case 'direct':
+      return 'فاتورة مباشرة';
+    case 'advance':
+      return 'سلفة من زبون';
+
     default:
-      return "غير محدد";
+      return invoice.invoiceCategory;
   }
 };
 

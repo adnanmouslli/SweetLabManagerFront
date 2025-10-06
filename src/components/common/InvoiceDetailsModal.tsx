@@ -4,7 +4,7 @@ import { ProductInvoice } from "@/types/invoice.type";
 import { formatDate, getCustomerDisplayName } from "@/utils/formatters";
 import { motion } from "framer-motion";
 import { Phone, User, X } from "lucide-react";
-import React from "react";
+import React, { useEffect } from "react";
 
 interface InvoiceDetailsModalProps {
   invoice: ProductInvoice;
@@ -28,6 +28,10 @@ export const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
     return foundUnit ? foundUnit.unit : unitName;
   };
 
+  useEffect(()=> {
+    console.log(invoice)
+  } , []);
+  
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -78,6 +82,12 @@ export const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                       ? "مباشر"
                       : invoice.invoiceCategory === "advance"
                         ? "سلفة" : "دين"}
+                </p>
+              </div>
+               <div className="space-y-2">
+                <p className="text-slate-400">منشأ الفاتورة</p>
+                <p className="text-slate-200">
+                  {invoice.employee?.username}
                 </p>
               </div>
             </div>

@@ -328,7 +328,7 @@ const WorkshopDetailsModal: React.FC<WorkshopDetailsModalProps> = ({ workshop, p
       case "activities":
         return (
           <div className="space-y-4">
-            <h3 className="text-lg font-medium text-white mb-4">الأنشطة الأخيرة</h3>
+            <h3 className="text-lg font-medium text-white mb-4">تفاصيل الأنشطة المالية</h3>
 
             {workshop.workType === WorkType.PRODUCTION && (
               <>
@@ -628,90 +628,10 @@ const WorkshopDetailsModal: React.FC<WorkshopDetailsModalProps> = ({ workshop, p
               </div>
             )}
 
-            {/* Enhanced Settlements */}
-            {workshop.settlements && workshop.settlements.length > 0 && (
-              <div className="space-y-3">
-                <h4 className="text-sm text-slate-400 font-medium">المحاسبات الأخيرة</h4>
-                {workshop.settlements.slice(0, 5).map((settlement, index) => {
-                  if (!settlement || !settlement.id) return null;
-                  return (
-                    <CollapsibleActivityRow
-                      key={`settlement-${settlement.id}-${index}`}
-                      id={`settlement-${settlement.id}-${index}`}
-                      title={`محاسبة ${formatDate(settlement.date)}`}
-                      icon={<FileText className="h-4 w-4 text-blue-400" />}
-                      summary={`فاتورة #${settlement.invoiceId} • ${formatDate(settlement.date)}`}
-                      amount={settlement.paidAmount}
-                      amountColor="text-blue-400"
-                      date={settlement.date}
-                      badge={settlement.amount === settlement.paidAmount ? "مكتملة" : "جزئية"}
-                      badgeColor={settlement.amount === settlement.paidAmount ? "bg-green-500/10 text-green-400" : "bg-yellow-500/10 text-yellow-400"}
-                    >
-                      {/* Settlement Summary */}
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                        <div className="p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
-                          <div className="text-blue-400 text-sm">إجمالي المحاسبة</div>
-                          <div className="text-white text-xl font-bold">{formatCurrency(settlement.amount)}</div>
-                        </div>
-                        <div className="p-3 bg-green-500/10 rounded-lg border border-green-500/20">
-                          <div className="text-green-400 text-sm">المبلغ المدفوع</div>
-                          <div className="text-white text-xl font-bold">{formatCurrency(settlement.paidAmount)}</div>
-                        </div>
-                        <div className="p-3 bg-orange-500/10 rounded-lg border border-orange-500/20">
-                          <div className="text-orange-400 text-sm">المتبقي</div>
-                          <div className="text-white text-xl font-bold">{formatCurrency(settlement.amount - settlement.paidAmount)}</div>
-                        </div>
-                      </div>
-
-                      {/* Settlement Details */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-purple-400" />
-                            <span className="text-slate-400">تاريخ المحاسبة:</span>
-                            <span className="text-white">{formatDate(settlement.date)}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <FileText className="h-4 w-4 text-cyan-400" />
-                            <span className="text-slate-400">رقم الفاتورة:</span>
-                            <span className="text-white">#{settlement.invoiceId}</span>
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <DollarSign className="h-4 w-4 text-green-400" />
-                            <span className="text-slate-400">رقم الصندوق:</span>
-                            <span className="text-white">#{settlement.fundId}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <PersonStanding className="h-4 w-4 text-green-400" />
-                            <span className="text-slate-400">اسم الموظف:</span>
-                            <span className="text-white">{settlement.invoice.employee.username}</span>
-                          </div>
-                        </div>
-
-                      </div>
-                      {settlement.notes && (
-                        <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                          <div className="flex items-start gap-2">
-                            <FileText className="h-4 w-4 text-blue-400 mt-0.5" />
-                            <div>
-                              <span className="text-blue-400 text-sm font-medium">ملاحظات:</span>
-                              <p className="text-white text-sm mt-1">{settlement.notes}</p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </CollapsibleActivityRow>
-                  );
-                })}
-              </div>
-            )}
 
             {/* Activity Details Summary */}
             {workshop.settlements && workshop.settlements.length > 0 && (
               <div className="space-y-3">
-                <h4 className="text-sm text-slate-400 font-medium">تفاصيل الأنشطة المالية</h4>
                 <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full">
@@ -728,22 +648,9 @@ const WorkshopDetailsModal: React.FC<WorkshopDetailsModalProps> = ({ workshop, p
                         {workshop.settlements.map((settlement, index) => {
                           if (!settlement || !settlement.id) return null;
 
-                          // Calculate total withdrawals for this settlement period
-                          const settlementDate = new Date(settlement.date);
-                          const totalWithdrawals = workshop.employees?.reduce((total, employee) => {
-                            const employeeWithdrawals = employee.withdrawals?.filter(withdrawal => {
-                              const withdrawalDate = new Date(withdrawal.createdAt);
-                              return withdrawalDate <= settlementDate;
-                            }).reduce((sum, withdrawal) => sum + withdrawal.amount, 0) || 0;
-                            return total + employeeWithdrawals;
-                          }, 0) || 0;
-
-                          // Calculate total earnings (production or hours)
-                          const totalEarnings = workshop.workType === WorkType.PRODUCTION
-                            ? workshop.productionRecords?.filter(record => new Date(record.date) <= settlementDate)
-                              .reduce((sum, record) => sum + record.totalProduction, 0) || 0
-                            : workshop.hourRecords?.filter(record => new Date(record.date) <= settlementDate)
-                              .reduce((sum, record) => sum + record.totalAmount, 0) || 0;
+                          // استخدام القيم المحفوظة في settlement بدلاً من الحساب
+                          const totalEarnings = settlement.totalEarnings || 0;
+                          const totalWithdrawals = settlement.totalWithdrawals || 0;
 
                           return (
                             <motion.tr
@@ -779,6 +686,7 @@ const WorkshopDetailsModal: React.FC<WorkshopDetailsModalProps> = ({ workshop, p
                             </motion.tr>
                           );
                         })}
+
                       </tbody>
                     </table>
                   </div>

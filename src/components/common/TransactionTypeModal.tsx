@@ -116,7 +116,7 @@ const TransactionTypeModal: React.FC<TransactionTypeModalProps> = ({
       color: "text-indigo-400",
       bgColor: "bg-indigo-500/10 hover:bg-indigo-500/20",
       description: "تسجيل دين على موظف",
-      subType: "employee_new_debt"
+      subType: "debt"
     },
     {
       id: InvoiceCategory.DAILY_EMPLOYEE_RENT,

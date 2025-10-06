@@ -297,7 +297,10 @@ const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({
         };
       } else {
         // For non-products invoices, don't include items and trayCount
-        updateData = baseUpdateData;
+        updateData = {
+          ...baseUpdateData,
+          totalAmount: Number(data.totalAmount),
+        };
       }
 
       console.log("Submitting update data:", updateData);
@@ -575,6 +578,43 @@ const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({
             </>
           )}
 
+          {/* Total Amount - Only for non-products invoices */}
+{!showProductsSection && (
+  <div className="space-y-2">
+    <label className="block text-slate-200">المبلغ الإجمالي</label>
+    <div className="relative">
+      <DollarSign className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+      <Controller
+        name="totalAmount"
+        control={control}
+        rules={{
+          required: !showProductsSection,
+          min: 0,
+        }}
+        render={({ field }) => (
+          <input
+            type="number"
+            min="0"
+            step="any"
+            value={field.value}
+            onChange={(e) => {
+              const numValue = e.target.value === "" ? 0 : Number(e.target.value);
+              field.onChange(numValue);
+            }}
+            className="w-full pl-4 pr-12 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-200"
+            placeholder="المبلغ الإجمالي"
+          />
+        )}
+      />
+      {errors.totalAmount && (
+        <div className="text-red-400 text-sm mt-1">
+          يجب إدخال المبلغ الإجمالي
+        </div>
+      )}
+    </div>
+  </div>
+)}
+
           {/* Discount */}
           <div className="space-y-2">
             <label className="block text-slate-200">الخصم</label>
@@ -623,17 +663,19 @@ const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({
               />
             </div>
           </div>
-
+          
+          
           {/* Action Buttons */}
           <div className="flex gap-4 pt-4">
             <button
               type="submit"
               disabled={
-                updateInvoice.isPending ||
-                (showProductsSection && watch("totalAmount") <= 0) ||
-                (isTrayValidationRequired &&
-                  (watch("trayCount") === null || watch("trayCount")! < 0))
-              }
+              updateInvoice.isPending ||
+              (showProductsSection && watch("totalAmount") <= 0) ||
+              (!showProductsSection && watch("totalAmount") <= 0) || // Add this condition
+              (isTrayValidationRequired &&
+                (watch("trayCount") === null || watch("trayCount")! < 0))
+            }
               className="flex-1 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {updateInvoice.isPending ? (

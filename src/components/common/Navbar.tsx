@@ -357,53 +357,52 @@ const Navbar = () => {
   // ========== Render Components ==========
   // Desktop dropdown item
   function renderDesktopDropdownItem(item: NavItem) {
-    return (
-      <div
-        className="relative group"
-        onMouseEnter={() => setActiveMenu(item.name)}
-        onMouseLeave={() => setActiveMenu(null)}
-        ref={menuRef}
-      >
-        <div className="flex items-center px-3 py-2 text-gray-300 hover:text-white transition-colors gap-2 group cursor-pointer">
-          <item.icon className="h-4 w-4 opacity-80 group-hover:opacity-100 transition-opacity text-blue-400" />
-          <span className="group-hover:text-blue-400 transition-colors">
-            {item.name}
-          </span>
-        </div>
-
-        <AnimatePresence>
-          {activeMenu === item.name && item.items && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              className="absolute top-full right-0 mt-2 w-[240px] bg-gray-900/70 rounded-xl border border-gray-800 shadow-xl backdrop-blur-lg"
-              style={{ zIndex: 1000 }}
-            >
-              <div className="p-4 space-y-2">
-                {item.items.map((subItem) => (
-                  <RouteWrapper
-                    key={subItem.name}
-                    href={subItem.href}
-                    onClick={subItem.onClick || handleNavigation}
-                  >
-                    <motion.div
-                      whileHover={{ x: 4 }}
-                      className="flex items-center px-3 py-3 rounded-lg text-gray-300 hover:bg-gray-800/50 hover:text-blue-400 transition-all gap-3"
-                    >
-                      <subItem.icon className="h-5 w-5 text-blue-400" />
-                      <span className="font-medium">{subItem.name}</span>
-                    </motion.div>
-                  </RouteWrapper>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-400/50 scale-x-0 group-hover:scale-x-100 transition-transform origin-right" />
+  return (
+    <div
+      className="relative group"
+      onMouseEnter={() => setActiveMenu(item.name)}
+      onMouseLeave={() => setActiveMenu(null)}
+    >
+      <div className="flex items-center px-3 py-2 text-gray-300 hover:text-white transition-colors gap-2 group cursor-pointer">
+        <item.icon className="h-4 w-4 opacity-80 group-hover:opacity-100 transition-opacity text-blue-400" />
+        <span className="group-hover:text-blue-400 transition-colors">
+          {item.name}
+        </span>
       </div>
-    );
-  }
+
+      <AnimatePresence>
+        {activeMenu === item.name && item.items && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            className="absolute top-full right-0 mt-2 w-[240px] bg-gray-900/95 rounded-xl border border-gray-800 shadow-xl backdrop-blur-lg z-[9999]"
+          >
+            <div className="p-4 space-y-2">
+              {item.items.map((subItem) => (
+                <RouteWrapper
+                  key={subItem.name}
+                  href={subItem.href}
+                  onClick={subItem.onClick || handleNavigation}
+                >
+                  <motion.div
+                    whileHover={{ x: 4 }}
+                    className="flex items-center px-3 py-3 rounded-lg text-gray-300 hover:bg-gray-800/50 hover:text-blue-400 transition-all gap-3"
+                  >
+                    <subItem.icon className="h-5 w-5 text-blue-400" />
+                    <span className="font-medium">{subItem.name}</span>
+                  </motion.div>
+                </RouteWrapper>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-400/50 scale-x-0 group-hover:scale-x-100 transition-transform origin-right" />
+    </div>
+  );
+}
+
 
   // Desktop single link item
   function renderDesktopLinkItem(item: NavItem) {

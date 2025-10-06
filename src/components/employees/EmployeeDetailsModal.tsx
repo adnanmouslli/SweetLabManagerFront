@@ -54,20 +54,59 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
   };
 
   // Get invoice category display text
-  const getInvoiceCategoryText = (category: string): string => {
-    switch (category) {
-      case 'EMPLOYEE_DEBT':
+ const getInvoiceCategoryText = (invoice: any): string => {
+  // إذا كانت الفاتورة من نوع employee
+  if (invoice.invoiceCategory === 'employee') {
+    switch (invoice.employeeInvoiceType) {
+      case 'salary_advance':
+        return 'سلفة راتب';
+      case 'debt':
         return 'دين موظف';
-      case 'EMPLOYEE_WITHDRAWAL':
-        return 'سحب موظف';
-      case 'DAILY_EMPLOYEE_RENT':
-        return 'راتب يومي';
-      case 'EMPLOYEE_WITHDRAWAL_RETURN':
-        return 'إرجاع سحب موظف';
+      case 'returnWithdrawal':
+        return 'إرجاع سحب';
+      case 'debtPayment':
+        return 'تسديد دين';
       default:
-        return category;
+        return invoice.employeeInvoiceType || 'فاتورة موظف';
     }
-  };
+  }
+  
+  // أنواع الفواتير الأخرى
+  switch (invoice.invoiceCategory) {
+    case 'products':
+      return 'منتجات';
+    case 'direct':
+      return 'فاتورة مباشرة';
+    default:
+      return invoice.invoiceCategory;
+  }
+};
+
+// دالة للحصول على لون الفاتورة حسب النوع
+const getInvoiceTypeColor = (invoice: any): string => {
+  if (invoice.invoiceCategory === 'employee') {
+    switch (invoice.employeeInvoiceType) {
+      case 'salary_advance':
+        return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+      case 'debt':
+        return 'bg-red-500/10 text-red-400 border-red-500/20';
+      case 'returnWithdrawal':
+        return 'bg-green-500/10 text-green-400 border-green-500/20';
+      case 'debtPayment':
+        return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+      default:
+        return 'bg-purple-500/10 text-purple-400 border-purple-500/20';
+    }
+  }
+  
+  // ألوان للفواتير الأخرى
+  if (invoice.invoiceCategory === 'products') {
+    return 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20';
+  }
+  
+  return 'bg-slate-500/10 text-slate-400 border-slate-500/20';
+};
+
 
   return (
     <motion.div
@@ -231,20 +270,36 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
                     الفواتير ({employeeDetails.invoices.length})
                   </h4>
                   <div className="space-y-2 max-h-40 overflow-y-auto">
-                    {employeeDetails.invoices.slice(0, 5).map((invoice) => (
-                      <div key={invoice.id} className="flex justify-between items-center bg-white/5 p-2 rounded">
-                        <div className="text-sm">
-                          <div className="text-slate-300">{getInvoiceCategoryText(invoice.invoiceCategory)}</div>
-                          <div className="text-xs text-slate-400">{formatDate(invoice.paymentDate || invoice.createdAt)}</div>
+                    {employeeDetails.invoices.map((invoice) => (
+                      <div key={invoice.id} className="flex justify-between items-center bg-white/5 p-3 rounded-lg">
+                        <div className="text-sm flex-1">
+                          <div className="flex items-center gap-2 flex-wrap mb-1">
+                            <span className="text-slate-300 font-medium">
+                              {getInvoiceCategoryText(invoice)}
+                            </span>
+                            <span className={`px-2 py-0.5 rounded text-xs border ${getInvoiceTypeColor(invoice)}`}>
+                              {invoice.invoiceType === 'income' ? 'دخل' : 'صرف'}
+                            </span>
+                            
+                          </div>
+                          <div className="text-xs text-slate-400">
+                            {formatDate(invoice.paymentDate || invoice.createdAt)}
+                          </div>
+                          {invoice.notes && (
+                            <div className="text-xs text-slate-500 mt-1 truncate">
+                              {invoice.notes}
+                            </div>
+                          )}
                         </div>
-                        <div className="text-white font-medium">{formatCurrency(invoice.totalAmount)} ل.س</div>
+                        <div className={`font-medium text-lg mr-3 ${
+                          invoice.invoiceType === 'income' ? 'text-green-400' : 'text-red-400'
+                        }`}>
+                          {invoice.invoiceType === 'expense' ? '-' : '+'}{formatCurrency(invoice.totalAmount)} ل.س
+                        </div>
                       </div>
                     ))}
-                    {employeeDetails.invoices.length > 5 && (
-                      <div className="text-center text-sm text-slate-400 pt-2">
-                        و {employeeDetails.invoices.length - 5} فواتير أخرى...
-                      </div>
-                    )}
+
+
                   </div>
                 </div>
               )}

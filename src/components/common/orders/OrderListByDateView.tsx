@@ -2,7 +2,7 @@
 import { OrderResponseDto } from "@/types/orders.type";
 import { formatCurrency } from "@/utils/formatters";
 import { getStatusClass, getStatusText } from "@/utils/orderHelpers";
-import { ArrowUpDown, Eye, ShoppingBag, X } from "lucide-react";
+import { ArrowUpDown, ChevronDown, Eye, ShoppingBag, X } from "lucide-react";
 import React, { useState } from "react";
 import CustomerOrderCard from "./CustomerOrderCard";
 import SearchBar from "./SearchBar";
@@ -81,6 +81,21 @@ const OrderListByDateView: React.FC<OrderListByDateViewProps> = ({
             [section]: !prev[section],
         }));
     };
+
+    const [collapsedCategories, setCollapsedCategories] = useState<Set<number>>(new Set());
+
+const toggleCategory = (categoryId: number) => {
+    setCollapsedCategories(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(categoryId)) {
+            newSet.delete(categoryId);
+        } else {
+            newSet.add(categoryId);
+        }
+        return newSet;
+    });
+};
+
 
     const handleSort = (
         key: keyof OrderResponseDto | "customerName" | "paidStatusText" | "statusText"
@@ -212,162 +227,178 @@ const OrderListByDateView: React.FC<OrderListByDateViewProps> = ({
                             <div className="space-y-6">
                                 {groupOrdersByCategory(todayOrders).map((category, index) => (
                                     <div key={index}>
-                                        <h4 className="text-slate-300 font-medium mb-3 flex items-center gap-2">
+                                        <button
+                                            onClick={() => toggleCategory(category.categoryName.charCodeAt(0) + index)}
+                                            className="w-full text-slate-300 font-medium mb-3 flex items-center gap-2 hover:text-slate-200 transition-colors"
+                                        >
                                             <ShoppingBag className="h-4 w-4 text-slate-400" />
                                             {category.categoryName}
                                             <span className="text-xs bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full">
                                                 {category.orders.length} طلب
                                             </span>
-                                        </h4>
-                                        <div className="hidden md:block overflow-x-auto">
-                                            <table className="w-full text-sm text-right text-slate-200">
-                                                <thead>
-                                                    <tr className="border-b border-slate-700/50 bg-slate-700/30">
-                                                        <th className="px-4 py-3">
-                                                            <button
-                                                                className="flex items-center gap-1 hover:text-blue-300"
-                                                                onClick={() => handleSort("orderNumber")}
-                                                            >
-                                                                رقم الفاتورة
-                                                                <ArrowUpDown className="h-4 w-4" />
-                                                            </button>
-                                                        </th>
-                                                        <th className="px-4 py-3">
-                                                            <button
-                                                                className="flex items-center gap-1 hover:text-blue-300"
-                                                                onClick={() => handleSort("createdAt")}
-                                                            >
-                                                                التاريخ
-                                                                <ArrowUpDown className="h-4 w-4" />
-                                                            </button>
-                                                        </th>
-                                                        <th className="px-4 py-3">
-                                                            <button
-                                                                className="flex items-center gap-1 hover:text-blue-300"
-                                                                onClick={() => handleSort("customerName")}
-                                                            >
-                                                                اسم العميل
-                                                                <ArrowUpDown className="h-4 w-4" />
-                                                            </button>
-                                                        </th>
-                                                        <th className="px-4 py-3">
-                                                            <button
-                                                                className="flex items-center gap-1 hover:text-blue-300"
-                                                                onClick={() => handleSort("totalAmount")}
-                                                            >
-                                                                المبلغ
-                                                                <ArrowUpDown className="h-4 w-4" />
-                                                            </button>
-                                                        </th>
-                                                        <th className="px-4 py-3">
-                                                            <button
-                                                                className="flex items-center gap-1 hover:text-blue-300"
-                                                                onClick={() => handleSort("paidStatusText")}
-                                                            >
-                                                                حالة الدفع
-                                                                <ArrowUpDown className="h-4 w-4" />
-                                                            </button>
-                                                        </th>
-                                                        <th className="px-4 py-3">
-                                                            <button
-                                                                className="flex items-center gap-1 hover:text-blue-300"
-                                                                onClick={() => handleSort("statusText")}
-                                                            >
-                                                                حالة الطلب
-                                                                <ArrowUpDown className="h-4 w-4" />
-                                                            </button>
-                                                        </th>
-                                                        <th className="px-4 py-3">الإجراءات</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {category.orders.map((order) => (
-                                                        <tr
-                                                            key={order.id}
-                                                            className="border-b border-slate-700/50 hover:bg-slate-700/50 transition-colors"
-                                                        >
-                                                            <td className="px-4 py-3">
-                                                                {order.orderNumber
-                                                                    ? `#${order.orderNumber}`
-                                                                    : "غير متوفر"}
-                                                            </td>
-                                                            <td className="px-4 py-3">
-                                                                {order.createdAt
-                                                                    ? new Date(order.createdAt).toLocaleDateString(
-                                                                        "ar-EG"
-                                                                    )
-                                                                    : "غير محدد"}
-                                                            </td>
-                                                            <td className="px-4 py-3">
-                                                                {order.customer?.name || "غير معروف"}
-                                                            </td>
-                                                            <td className="px-4 py-3 text-primary font-semibold">
-                                                                {formatCurrency(order.totalAmount)}
-                                                            </td>
-                                                            <td className="px-4 py-3">
-                                                                <span
-                                                                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order.paidStatus
-                                                                        ? "bg-green-500/20 text-green-400"
-                                                                        : order.invoice && order.invoice.isBreak
-                                                                            ? "bg-amber-500/20 text-amber-400"
-                                                                            : "bg-red-500/20 text-red-400"
-                                                                        }`}
+                                            <ChevronDown 
+                                                className={`h-4 w-4 mr-auto transition-transform ${
+                                                    collapsedCategories.has(category.categoryName.charCodeAt(0) + index) 
+                                                        ? '-rotate-90' 
+                                                        : ''
+                                                }`}
+                                            />
+                                        </button>
+                                       
+                                       {!collapsedCategories.has(category.categoryName.charCodeAt(0) + index) && (
+                                        <>
+                                            <div className="hidden md:block overflow-x-auto">
+                                                <table className="w-full text-sm text-right text-slate-200">
+                                                    <thead>
+                                                        <tr className="border-b border-slate-700/50 bg-slate-700/30">
+                                                            <th className="px-4 py-3">
+                                                                <button
+                                                                    className="flex items-center gap-1 hover:text-blue-300"
+                                                                    onClick={() => handleSort("orderNumber")}
                                                                 >
-                                                                    {order.paidStatus
-                                                                        ? "مدفوع"
-                                                                        : order.invoice && order.invoice.isBreak
-                                                                            ? "كسر"
-                                                                            : "غير مدفوع"}
-                                                                </span>
-                                                            </td>
-                                                            <td className="px-4 py-3">
-                                                                <span
-                                                                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusClass(
-                                                                        order.status!
-                                                                    )}`}
+                                                                    رقم الفاتورة
+                                                                    <ArrowUpDown className="h-4 w-4" />
+                                                                </button>
+                                                            </th>
+                                                            <th className="px-4 py-3">
+                                                                <button
+                                                                    className="flex items-center gap-1 hover:text-blue-300"
+                                                                    onClick={() => handleSort("createdAt")}
                                                                 >
-                                                                    {getStatusText(order.status!)}
-                                                                </span>
-                                                            </td>
-                                                            <td className="px-4 py-3">
-                                                                <div className="flex items-center gap-2">
-                                                                    <button
-                                                                        onClick={() => onViewOrderDetails(order)}
-                                                                        className="text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1"
-                                                                    >
-                                                                        <Eye className="h-4 w-4" />
-                                                                        عرض
-                                                                    </button>
-                                                                    {order.status !== 'delivered' && order.status !== 'cancelled' && (
-                                                                        <button
-                                                                            onClick={() => handleCancelOrder(order)}
-                                                                            className="text-red-400 hover:text-red-300 transition-colors flex items-center gap-1"
-                                                                            title="إلغاء الطلب"
-                                                                        >
-                                                                            <X className="h-4 w-4" />
-                                                                            إلغاء
-                                                                        </button>
-                                                                    )}
-                                                                </div>
-                                                            </td>
+                                                                    التاريخ
+                                                                    <ArrowUpDown className="h-4 w-4" />
+                                                                </button>
+                                                            </th>
+                                                            <th className="px-4 py-3">
+                                                                <button
+                                                                    className="flex items-center gap-1 hover:text-blue-300"
+                                                                    onClick={() => handleSort("customerName")}
+                                                                >
+                                                                    اسم العميل
+                                                                    <ArrowUpDown className="h-4 w-4" />
+                                                                </button>
+                                                            </th>
+                                                            <th className="px-4 py-3">
+                                                                <button
+                                                                    className="flex items-center gap-1 hover:text-blue-300"
+                                                                    onClick={() => handleSort("totalAmount")}
+                                                                >
+                                                                    المبلغ
+                                                                    <ArrowUpDown className="h-4 w-4" />
+                                                                </button>
+                                                            </th>
+                                                            <th className="px-4 py-3">
+                                                                <button
+                                                                    className="flex items-center gap-1 hover:text-blue-300"
+                                                                    onClick={() => handleSort("paidStatusText")}
+                                                                >
+                                                                    حالة الدفع
+                                                                    <ArrowUpDown className="h-4 w-4" />
+                                                                </button>
+                                                            </th>
+                                                            <th className="px-4 py-3">
+                                                                <button
+                                                                    className="flex items-center gap-1 hover:text-blue-300"
+                                                                    onClick={() => handleSort("statusText")}
+                                                                >
+                                                                    حالة الطلب
+                                                                    <ArrowUpDown className="h-4 w-4" />
+                                                                </button>
+                                                            </th>
+                                                            <th className="px-4 py-3">الإجراءات</th>
                                                         </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                        <div className="block md:hidden">
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                {category.orders.map((order) => (
-                                                    <CustomerOrderCard
-                                                        key={order.id}
-                                                        order={order}
-                                                        onViewDetails={onViewOrderDetails}
-                                                        onCancelOrder={order.status !== 'delivered' && order.status !== 'cancelled' ? handleCancelOrder : undefined}
-                                                    />
-                                                ))}
+                                                    </thead>
+                                                    <tbody>
+                                                        {category.orders.map((order) => (
+                                                            <tr
+                                                                key={order.id}
+                                                                className="border-b border-slate-700/50 hover:bg-slate-700/50 transition-colors"
+                                                            >
+                                                                <td className="px-4 py-3">
+                                                                    {order.orderNumber
+                                                                        ? `#${order.orderNumber}`
+                                                                        : "غير متوفر"}
+                                                                </td>
+                                                                <td className="px-4 py-3">
+                                                                    {order.createdAt
+                                                                        ? new Date(order.createdAt).toLocaleDateString(
+                                                                            "ar-EG"
+                                                                        )
+                                                                        : "غير محدد"}
+                                                                </td>
+                                                                <td className="px-4 py-3">
+                                                                    {order.customer?.name || "غير معروف"}
+                                                                </td>
+                                                                <td className="px-4 py-3 text-primary font-semibold">
+                                                                    {formatCurrency(order.totalAmount)}
+                                                                </td>
+                                                                <td className="px-4 py-3">
+                                                                    <span
+                                                                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order.paidStatus
+                                                                            ? "bg-green-500/20 text-green-400"
+                                                                            : order.invoice && order.invoice.isBreak
+                                                                                ? "bg-amber-500/20 text-amber-400"
+                                                                                : "bg-red-500/20 text-red-400"
+                                                                            }`}
+                                                                    >
+                                                                        {order.paidStatus
+                                                                            ? "مدفوع"
+                                                                            : order.invoice && order.invoice.isBreak
+                                                                                ? "كسر"
+                                                                                : "غير مدفوع"}
+                                                                    </span>
+                                                                </td>
+                                                                <td className="px-4 py-3">
+                                                                    <span
+                                                                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusClass(
+                                                                            order.status!
+                                                                        )}`}
+                                                                    >
+                                                                        {getStatusText(order.status!)}
+                                                                    </span>
+                                                                </td>
+                                                                <td className="px-4 py-3">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <button
+                                                                            onClick={() => onViewOrderDetails(order)}
+                                                                            className="text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1"
+                                                                        >
+                                                                            <Eye className="h-4 w-4" />
+                                                                            عرض
+                                                                        </button>
+                                                                        {order.status !== 'delivered' && order.status !== 'cancelled' && (
+                                                                            <button
+                                                                                onClick={() => handleCancelOrder(order)}
+                                                                                className="text-red-400 hover:text-red-300 transition-colors flex items-center gap-1"
+                                                                                title="إلغاء الطلب"
+                                                                            >
+                                                                                <X className="h-4 w-4" />
+                                                                                إلغاء
+                                                                            </button>
+                                                                        )}
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
                                             </div>
-                                        </div>
+                                            <div className="block md:hidden">
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                    {category.orders.map((order) => (
+                                                        <CustomerOrderCard
+                                                            key={order.id}
+                                                            order={order}
+                                                            onViewDetails={onViewOrderDetails}
+                                                            onCancelOrder={order.status !== 'delivered' && order.status !== 'cancelled' ? handleCancelOrder : undefined}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </>
+                                        )}
                                     </div>
+
                                 ))}
                             </div>
                         )}
@@ -389,161 +420,176 @@ const OrderListByDateView: React.FC<OrderListByDateViewProps> = ({
                             <div className="space-y-6">
                                 {groupOrdersByCategory(tomorrowOrders).map((category, index) => (
                                     <div key={index}>
-                                        <h4 className="text-slate-300 font-medium mb-3 flex items-center gap-2">
+                                         <button
+                                            onClick={() => toggleCategory(category.categoryName.charCodeAt(0) + index)}
+                                            className="w-full text-slate-300 font-medium mb-3 flex items-center gap-2 hover:text-slate-200 transition-colors"
+                                        >
                                             <ShoppingBag className="h-4 w-4 text-slate-400" />
                                             {category.categoryName}
-                                            <span className="text-xs bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full">
+                                            <span className="text-xs bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full">
                                                 {category.orders.length} طلب
                                             </span>
-                                        </h4>
-                                        <div className="hidden md:block overflow-x-auto">
-                                            <table className="w-full text-sm text-right text-slate-200">
-                                                <thead>
-                                                    <tr className="border-b border-slate-700/50 bg-slate-700/30">
-                                                        <th className="px-4 py-3">
-                                                            <button
-                                                                className="flex items-center gap-1 hover:text-blue-300"
-                                                                onClick={() => handleSort("orderNumber")}
-                                                            >
-                                                                رقم الفاتورة
-                                                                <ArrowUpDown className="h-4 w-4" />
-                                                            </button>
-                                                        </th>
-                                                        <th className="px-4 py-3">
-                                                            <button
-                                                                className="flex items-center gap-1 hover:text-blue-300"
-                                                                onClick={() => handleSort("scheduledFor")}
-                                                            >
-                                                                التاريخ
-                                                                <ArrowUpDown className="h-4 w-4" />
-                                                            </button>
-                                                        </th>
-                                                        <th className="px-4 py-3">
-                                                            <button
-                                                                className="flex items-center gap-1 hover:text-blue-300"
-                                                                onClick={() => handleSort("customerName")}
-                                                            >
-                                                                اسم العميل
-                                                                <ArrowUpDown className="h-4 w-4" />
-                                                            </button>
-                                                        </th>
-                                                        <th className="px-4 py-3">
-                                                            <button
-                                                                className="flex items-center gap-1 hover:text-blue-300"
-                                                                onClick={() => handleSort("totalAmount")}
-                                                            >
-                                                                المبلغ
-                                                                <ArrowUpDown className="h-4 w-4" />
-                                                            </button>
-                                                        </th>
-                                                        <th className="px-4 py-3">
-                                                            <button
-                                                                className="flex items-center gap-1 hover:text-blue-300"
-                                                                onClick={() => handleSort("paidStatusText")}
-                                                            >
-                                                                حالة الدفع
-                                                                <ArrowUpDown className="h-4 w-4" />
-                                                            </button>
-                                                        </th>
-                                                        <th className="px-4 py-3">
-                                                            <button
-                                                                className="flex items-center gap-1 hover:text-blue-300"
-                                                                onClick={() => handleSort("statusText")}
-                                                            >
-                                                                حالة الطلب
-                                                                <ArrowUpDown className="h-4 w-4" />
-                                                            </button>
-                                                        </th>
-                                                        <th className="px-4 py-3">الإجراءات</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {category.orders.map((order) => (
-                                                        <tr
-                                                            key={order.id}
-                                                            className="border-b border-slate-700/50 hover:bg-slate-700/50 transition-colors"
-                                                        >
-                                                            <td className="px-4 py-3">
-                                                                {order.orderNumber
-                                                                    ? `#${order.orderNumber}`
-                                                                    : "غير متوفر"}
-                                                            </td>
-                                                            <td className="px-4 py-3">
-                                                                {order.scheduledFor
-                                                                    ? new Date(order.scheduledFor).toLocaleDateString(
-                                                                        "ar-EG"
-                                                                    )
-                                                                    : "غير محدد"}
-                                                            </td>
-                                                            <td className="px-4 py-3">
-                                                                {order.customer?.name || "غير معروف"}
-                                                            </td>
-                                                            <td className="px-4 py-3 text-primary font-semibold">
-                                                                {formatCurrency(order.totalAmount)}
-                                                            </td>
-                                                            <td className="px-4 py-3">
-                                                                <span
-                                                                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order.paidStatus
-                                                                        ? "bg-green-500/20 text-green-400"
-                                                                        : order.invoice && order.invoice.isBreak
-                                                                            ? "bg-amber-500/20 text-amber-400"
-                                                                            : "bg-red-500/20 text-red-400"
-                                                                        }`}
-                                                                >
-                                                                    {order.paidStatus
-                                                                        ? "مدفوع"
-                                                                        : order.invoice && order.invoice.isBreak
-                                                                            ? "كسر"
-                                                                            : "غير مدفوع"}
-                                                                </span>
-                                                            </td>
-                                                            <td className="px-4 py-3">
-                                                                <span
-                                                                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusClass(
-                                                                        order.status!
-                                                                    )}`}
-                                                                >
-                                                                    {getStatusText(order.status!)}
-                                                                </span>
-                                                            </td>
-                                                            <td className="px-4 py-3">
-                                                                <div className="flex items-center gap-2">
+                                            <ChevronDown 
+                                                className={`h-4 w-4 mr-auto transition-transform ${
+                                                    collapsedCategories.has(category.categoryName.charCodeAt(0) + index) 
+                                                        ? '-rotate-90' 
+                                                        : ''
+                                                }`}
+                                            />
+                                        </button>
+                                         {!collapsedCategories.has(category.categoryName.charCodeAt(0) + index) && (
+                                            <>
+                                                <div className="hidden md:block overflow-x-auto">
+                                                    <table className="w-full text-sm text-right text-slate-200">
+                                                        <thead>
+                                                            <tr className="border-b border-slate-700/50 bg-slate-700/30">
+                                                                <th className="px-4 py-3">
                                                                     <button
-                                                                        onClick={() => onViewOrderDetails(order)}
-                                                                        className="text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1"
+                                                                        className="flex items-center gap-1 hover:text-blue-300"
+                                                                        onClick={() => handleSort("orderNumber")}
                                                                     >
-                                                                        <Eye className="h-4 w-4" />
-                                                                        عرض
+                                                                        رقم الفاتورة
+                                                                        <ArrowUpDown className="h-4 w-4" />
                                                                     </button>
-                                                                    {order.status !== 'delivered' && order.status !== 'cancelled' && (
-                                                                        <button
-                                                                            onClick={() => handleCancelOrder(order)}
-                                                                            className="text-red-400 hover:text-red-300 transition-colors flex items-center gap-1"
-                                                                            title="إلغاء الطلب"
+                                                                </th>
+                                                                <th className="px-4 py-3">
+                                                                    <button
+                                                                        className="flex items-center gap-1 hover:text-blue-300"
+                                                                        onClick={() => handleSort("scheduledFor")}
+                                                                    >
+                                                                        التاريخ
+                                                                        <ArrowUpDown className="h-4 w-4" />
+                                                                    </button>
+                                                                </th>
+                                                                <th className="px-4 py-3">
+                                                                    <button
+                                                                        className="flex items-center gap-1 hover:text-blue-300"
+                                                                        onClick={() => handleSort("customerName")}
+                                                                    >
+                                                                        اسم العميل
+                                                                        <ArrowUpDown className="h-4 w-4" />
+                                                                    </button>
+                                                                </th>
+                                                                <th className="px-4 py-3">
+                                                                    <button
+                                                                        className="flex items-center gap-1 hover:text-blue-300"
+                                                                        onClick={() => handleSort("totalAmount")}
+                                                                    >
+                                                                        المبلغ
+                                                                        <ArrowUpDown className="h-4 w-4" />
+                                                                    </button>
+                                                                </th>
+                                                                <th className="px-4 py-3">
+                                                                    <button
+                                                                        className="flex items-center gap-1 hover:text-blue-300"
+                                                                        onClick={() => handleSort("paidStatusText")}
+                                                                    >
+                                                                        حالة الدفع
+                                                                        <ArrowUpDown className="h-4 w-4" />
+                                                                    </button>
+                                                                </th>
+                                                                <th className="px-4 py-3">
+                                                                    <button
+                                                                        className="flex items-center gap-1 hover:text-blue-300"
+                                                                        onClick={() => handleSort("statusText")}
+                                                                    >
+                                                                        حالة الطلب
+                                                                        <ArrowUpDown className="h-4 w-4" />
+                                                                    </button>
+                                                                </th>
+                                                                <th className="px-4 py-3">الإجراءات</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {category.orders.map((order) => (
+                                                                <tr
+                                                                    key={order.id}
+                                                                    className="border-b border-slate-700/50 hover:bg-slate-700/50 transition-colors"
+                                                                >
+                                                                    <td className="px-4 py-3">
+                                                                        {order.orderNumber
+                                                                            ? `#${order.orderNumber}`
+                                                                            : "غير متوفر"}
+                                                                    </td>
+                                                                    <td className="px-4 py-3">
+                                                                        {order.scheduledFor
+                                                                            ? new Date(order.scheduledFor).toLocaleDateString(
+                                                                                "ar-EG"
+                                                                            )
+                                                                            : "غير محدد"}
+                                                                    </td>
+                                                                    <td className="px-4 py-3">
+                                                                        {order.customer?.name || "غير معروف"}
+                                                                    </td>
+                                                                    <td className="px-4 py-3 text-primary font-semibold">
+                                                                        {formatCurrency(order.totalAmount)}
+                                                                    </td>
+                                                                    <td className="px-4 py-3">
+                                                                        <span
+                                                                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order.paidStatus
+                                                                                ? "bg-green-500/20 text-green-400"
+                                                                                : order.invoice && order.invoice.isBreak
+                                                                                    ? "bg-amber-500/20 text-amber-400"
+                                                                                    : "bg-red-500/20 text-red-400"
+                                                                                }`}
                                                                         >
-                                                                            <X className="h-4 w-4" />
-                                                                            إلغاء
-                                                                        </button>
-                                                                    )}
-                                                                </div>
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                        <div className="block md:hidden">
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                {category.orders.map((order) => (
-                                                    <CustomerOrderCard
-                                                        key={order.id}
-                                                        order={order}
-                                                        onViewDetails={onViewOrderDetails}
-                                                        onCancelOrder={order.status !== 'delivered' && order.status !== 'cancelled' ? handleCancelOrder : undefined}
-                                                    />
-                                                ))}
-                                            </div>
-                                        </div>
+                                                                            {order.paidStatus
+                                                                                ? "مدفوع"
+                                                                                : order.invoice && order.invoice.isBreak
+                                                                                    ? "كسر"
+                                                                                    : "غير مدفوع"}
+                                                                        </span>
+                                                                    </td>
+                                                                    <td className="px-4 py-3">
+                                                                        <span
+                                                                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusClass(
+                                                                                order.status!
+                                                                            )}`}
+                                                                        >
+                                                                            {getStatusText(order.status!)}
+                                                                        </span>
+                                                                    </td>
+                                                                    <td className="px-4 py-3">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <button
+                                                                                onClick={() => onViewOrderDetails(order)}
+                                                                                className="text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1"
+                                                                            >
+                                                                                <Eye className="h-4 w-4" />
+                                                                                عرض
+                                                                            </button>
+                                                                            {order.status !== 'delivered' && order.status !== 'cancelled' && (
+                                                                                <button
+                                                                                    onClick={() => handleCancelOrder(order)}
+                                                                                    className="text-red-400 hover:text-red-300 transition-colors flex items-center gap-1"
+                                                                                    title="إلغاء الطلب"
+                                                                                >
+                                                                                    <X className="h-4 w-4" />
+                                                                                    إلغاء
+                                                                                </button>
+                                                                            )}
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                                <div className="block md:hidden">
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                        {category.orders.map((order) => (
+                                                            <CustomerOrderCard
+                                                                key={order.id}
+                                                                order={order}
+                                                                onViewDetails={onViewOrderDetails}
+                                                                onCancelOrder={order.status !== 'delivered' && order.status !== 'cancelled' ? handleCancelOrder : undefined}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                </div>
+
+                                             </>
+                                          )}
                                     </div>
                                 ))}
                             </div>
@@ -566,161 +612,176 @@ const OrderListByDateView: React.FC<OrderListByDateViewProps> = ({
                             <div className="space-y-6">
                                 {groupOrdersByCategory(allOrders).map((category, index) => (
                                     <div key={index}>
-                                        <h4 className="text-slate-300 font-medium mb-3 flex items-center gap-2">
+                                         <button
+                                            onClick={() => toggleCategory(category.categoryName.charCodeAt(0) + index)}
+                                            className="w-full text-slate-300 font-medium mb-3 flex items-center gap-2 hover:text-slate-200 transition-colors"
+                                        >
                                             <ShoppingBag className="h-4 w-4 text-slate-400" />
                                             {category.categoryName}
-                                            <span className="text-xs bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded-full">
+                                            <span className="text-xs bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full">
                                                 {category.orders.length} طلب
                                             </span>
-                                        </h4>
-                                        <div className="hidden md:block overflow-x-auto">
-                                            <table className="w-full text-sm text-right text-slate-200">
-                                                <thead>
-                                                    <tr className="border-b border-slate-700/50 bg-slate-700/30">
-                                                        <th className="px-4 py-3">
-                                                            <button
-                                                                className="flex items-center gap-1 hover:text-blue-300"
-                                                                onClick={() => handleSort("orderNumber")}
-                                                            >
-                                                                رقم الفاتورة
-                                                                <ArrowUpDown className="h-4 w-4" />
-                                                            </button>
-                                                        </th>
-                                                        <th className="px-4 py-3">
-                                                            <button
-                                                                className="flex items-center gap-1 hover:text-blue-300"
-                                                                onClick={() => handleSort("scheduledFor")}
-                                                            >
-                                                                التاريخ
-                                                                <ArrowUpDown className="h-4 w-4" />
-                                                            </button>
-                                                        </th>
-                                                        <th className="px-4 py-3">
-                                                            <button
-                                                                className="flex items-center gap-1 hover:text-blue-300"
-                                                                onClick={() => handleSort("customerName")}
-                                                            >
-                                                                اسم العميل
-                                                                <ArrowUpDown className="h-4 w-4" />
-                                                            </button>
-                                                        </th>
-                                                        <th className="px-4 py-3">
-                                                            <button
-                                                                className="flex items-center gap-1 hover:text-blue-300"
-                                                                onClick={() => handleSort("totalAmount")}
-                                                            >
-                                                                المبلغ
-                                                                <ArrowUpDown className="h-4 w-4" />
-                                                            </button>
-                                                        </th>
-                                                        <th className="px-4 py-3">
-                                                            <button
-                                                                className="flex items-center gap-1 hover:text-blue-300"
-                                                                onClick={() => handleSort("paidStatusText")}
-                                                            >
-                                                                حالة الدفع
-                                                                <ArrowUpDown className="h-4 w-4" />
-                                                            </button>
-                                                        </th>
-                                                        <th className="px-4 py-3">
-                                                            <button
-                                                                className="flex items-center gap-1 hover:text-blue-300"
-                                                                onClick={() => handleSort("statusText")}
-                                                            >
-                                                                حالة الطلب
-                                                                <ArrowUpDown className="h-4 w-4" />
-                                                            </button>
-                                                        </th>
-                                                        <th className="px-4 py-3">الإجراءات</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {category.orders.map((order) => (
-                                                        <tr
-                                                            key={order.id}
-                                                            className="border-b border-slate-700/50 hover:bg-slate-700/50 transition-colors"
-                                                        >
-                                                            <td className="px-4 py-3">
-                                                                {order.orderNumber
-                                                                    ? `#${order.orderNumber}`
-                                                                    : "غير متوفر"}
-                                                            </td>
-                                                            <td className="px-4 py-3">
-                                                                {order.scheduledFor
-                                                                    ? new Date(order.scheduledFor).toLocaleDateString(
-                                                                        "ar-EG"
-                                                                    )
-                                                                    : "غير محدد"}
-                                                            </td>
-                                                            <td className="px-4 py-3">
-                                                                {order.customer?.name || "غير معروف"}
-                                                            </td>
-                                                            <td className="px-4 py-3 text-primary font-semibold">
-                                                                {formatCurrency(order.totalAmount)}
-                                                            </td>
-                                                            <td className="px-4 py-3">
-                                                                <span
-                                                                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order.paidStatus
-                                                                        ? "bg-green-500/20 text-green-400"
-                                                                        : order.invoice && order.invoice.isBreak
-                                                                            ? "bg-amber-500/20 text-amber-400"
-                                                                            : "bg-red-500/20 text-red-400"
-                                                                        }`}
-                                                                >
-                                                                    {order.paidStatus
-                                                                        ? "مدفوع"
-                                                                        : order.invoice && order.invoice.isBreak
-                                                                            ? "كسر"
-                                                                            : "غير مدفوع"}
-                                                                </span>
-                                                            </td>
-                                                            <td className="px-4 py-3">
-                                                                <span
-                                                                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusClass(
-                                                                        order.status!
-                                                                    )}`}
-                                                                >
-                                                                    {getStatusText(order.status!)}
-                                                                </span>
-                                                            </td>
-                                                            <td className="px-4 py-3">
-                                                                <div className="flex items-center gap-2">
+                                            <ChevronDown 
+                                                className={`h-4 w-4 mr-auto transition-transform ${
+                                                    collapsedCategories.has(category.categoryName.charCodeAt(0) + index) 
+                                                        ? '-rotate-90' 
+                                                        : ''
+                                                }`}
+                                            />
+                                        </button>
+
+                                        {!collapsedCategories.has(category.categoryName.charCodeAt(0) + index) && (
+                                            <>
+                                                <div className="hidden md:block overflow-x-auto">
+                                                    <table className="w-full text-sm text-right text-slate-200">
+                                                        <thead>
+                                                            <tr className="border-b border-slate-700/50 bg-slate-700/30">
+                                                                <th className="px-4 py-3">
                                                                     <button
-                                                                        onClick={() => onViewOrderDetails(order)}
-                                                                        className="text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1"
+                                                                        className="flex items-center gap-1 hover:text-blue-300"
+                                                                        onClick={() => handleSort("orderNumber")}
                                                                     >
-                                                                        <Eye className="h-4 w-4" />
-                                                                        عرض
+                                                                        رقم الفاتورة
+                                                                        <ArrowUpDown className="h-4 w-4" />
                                                                     </button>
-                                                                    {order.status !== 'delivered' && order.status !== 'cancelled' && (
-                                                                        <button
-                                                                            onClick={() => handleCancelOrder(order)}
-                                                                            className="text-red-400 hover:text-red-300 transition-colors flex items-center gap-1"
-                                                                            title="إلغاء الطلب"
+                                                                </th>
+                                                                <th className="px-4 py-3">
+                                                                    <button
+                                                                        className="flex items-center gap-1 hover:text-blue-300"
+                                                                        onClick={() => handleSort("scheduledFor")}
+                                                                    >
+                                                                        التاريخ
+                                                                        <ArrowUpDown className="h-4 w-4" />
+                                                                    </button>
+                                                                </th>
+                                                                <th className="px-4 py-3">
+                                                                    <button
+                                                                        className="flex items-center gap-1 hover:text-blue-300"
+                                                                        onClick={() => handleSort("customerName")}
+                                                                    >
+                                                                        اسم العميل
+                                                                        <ArrowUpDown className="h-4 w-4" />
+                                                                    </button>
+                                                                </th>
+                                                                <th className="px-4 py-3">
+                                                                    <button
+                                                                        className="flex items-center gap-1 hover:text-blue-300"
+                                                                        onClick={() => handleSort("totalAmount")}
+                                                                    >
+                                                                        المبلغ
+                                                                        <ArrowUpDown className="h-4 w-4" />
+                                                                    </button>
+                                                                </th>
+                                                                <th className="px-4 py-3">
+                                                                    <button
+                                                                        className="flex items-center gap-1 hover:text-blue-300"
+                                                                        onClick={() => handleSort("paidStatusText")}
+                                                                    >
+                                                                        حالة الدفع
+                                                                        <ArrowUpDown className="h-4 w-4" />
+                                                                    </button>
+                                                                </th>
+                                                                <th className="px-4 py-3">
+                                                                    <button
+                                                                        className="flex items-center gap-1 hover:text-blue-300"
+                                                                        onClick={() => handleSort("statusText")}
+                                                                    >
+                                                                        حالة الطلب
+                                                                        <ArrowUpDown className="h-4 w-4" />
+                                                                    </button>
+                                                                </th>
+                                                                <th className="px-4 py-3">الإجراءات</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {category.orders.map((order) => (
+                                                                <tr
+                                                                    key={order.id}
+                                                                    className="border-b border-slate-700/50 hover:bg-slate-700/50 transition-colors"
+                                                                >
+                                                                    <td className="px-4 py-3">
+                                                                        {order.orderNumber
+                                                                            ? `#${order.orderNumber}`
+                                                                            : "غير متوفر"}
+                                                                    </td>
+                                                                    <td className="px-4 py-3">
+                                                                        {order.scheduledFor
+                                                                            ? new Date(order.scheduledFor).toLocaleDateString(
+                                                                                "ar-EG"
+                                                                            )
+                                                                            : "غير محدد"}
+                                                                    </td>
+                                                                    <td className="px-4 py-3">
+                                                                        {order.customer?.name || "غير معروف"}
+                                                                    </td>
+                                                                    <td className="px-4 py-3 text-primary font-semibold">
+                                                                        {formatCurrency(order.totalAmount)}
+                                                                    </td>
+                                                                    <td className="px-4 py-3">
+                                                                        <span
+                                                                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order.paidStatus
+                                                                                ? "bg-green-500/20 text-green-400"
+                                                                                : order.invoice && order.invoice.isBreak
+                                                                                    ? "bg-amber-500/20 text-amber-400"
+                                                                                    : "bg-red-500/20 text-red-400"
+                                                                                }`}
                                                                         >
-                                                                            <X className="h-4 w-4" />
-                                                                            إلغاء
-                                                                        </button>
-                                                                    )}
-                                                                </div>
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                        <div className="block md:hidden">
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                {category.orders.map((order) => (
-                                                    <CustomerOrderCard
-                                                        key={order.id}
-                                                        order={order}
-                                                        onViewDetails={onViewOrderDetails}
-                                                        onCancelOrder={order.status !== 'delivered' && order.status !== 'cancelled' ? handleCancelOrder : undefined}
-                                                    />
-                                                ))}
-                                            </div>
-                                        </div>
+                                                                            {order.paidStatus
+                                                                                ? "مدفوع"
+                                                                                : order.invoice && order.invoice.isBreak
+                                                                                    ? "كسر"
+                                                                                    : "غير مدفوع"}
+                                                                        </span>
+                                                                    </td>
+                                                                    <td className="px-4 py-3">
+                                                                        <span
+                                                                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusClass(
+                                                                                order.status!
+                                                                            )}`}
+                                                                        >
+                                                                            {getStatusText(order.status!)}
+                                                                        </span>
+                                                                    </td>
+                                                                    <td className="px-4 py-3">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <button
+                                                                                onClick={() => onViewOrderDetails(order)}
+                                                                                className="text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1"
+                                                                            >
+                                                                                <Eye className="h-4 w-4" />
+                                                                                عرض
+                                                                            </button>
+                                                                            {order.status !== 'delivered' && order.status !== 'cancelled' && (
+                                                                                <button
+                                                                                    onClick={() => handleCancelOrder(order)}
+                                                                                    className="text-red-400 hover:text-red-300 transition-colors flex items-center gap-1"
+                                                                                    title="إلغاء الطلب"
+                                                                                >
+                                                                                    <X className="h-4 w-4" />
+                                                                                    إلغاء
+                                                                                </button>
+                                                                            )}
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                                <div className="block md:hidden">
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                        {category.orders.map((order) => (
+                                                            <CustomerOrderCard
+                                                                key={order.id}
+                                                                order={order}
+                                                                onViewDetails={onViewOrderDetails}
+                                                                onCancelOrder={order.status !== 'delivered' && order.status !== 'cancelled' ? handleCancelOrder : undefined}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
                                 ))}
                             </div>
