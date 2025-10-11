@@ -17,6 +17,9 @@ interface WorkshopHoursModalProps {
   onSuccess: () => void;
 }
 
+const HOURLY_RATE_KEY = 'workshop_default_hourly_rate';
+const DEFAULT_RATE = '1000';
+
 const WorkshopHoursModal: React.FC<WorkshopHoursModalProps> = ({
   workshopId,
   workType,
@@ -29,10 +32,19 @@ const WorkshopHoursModal: React.FC<WorkshopHoursModalProps> = ({
   const today = new Date();
   today.setHours(8, 0, 0, 0);
 
+    // Load default hourly rate from localStorage
+  const getDefaultHourlyRate = () => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem(HOURLY_RATE_KEY) || DEFAULT_RATE;
+    }
+    return DEFAULT_RATE;
+  };
+
+
   const [formData, setFormData] = useState({
     employeeId: "",
     hours: "",
-    hourlyRate: "",
+    hourlyRate: getDefaultHourlyRate(),
     date: today.toISOString().split('T')[0], // Store only the date part for the input
     notes: ""
   });
@@ -71,6 +83,12 @@ const WorkshopHoursModal: React.FC<WorkshopHoursModalProps> = ({
     }
 
     try {
+
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(HOURLY_RATE_KEY, formData.hourlyRate);
+      }
+
+
       // Convert date to ISO string with 8:00 AM time
       const dateWithTime = new Date(formData.date);
       dateWithTime.setHours(8, 0, 0, 0);
@@ -131,7 +149,7 @@ const WorkshopHoursModal: React.FC<WorkshopHoursModalProps> = ({
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
-          className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl p-6 w-full max-w-md shadow-2xl border border-white/10"
+          className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 w-full max-w-lg shadow-2xl border border-white/10 max-h-[90vh] overflow-y-auto"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}

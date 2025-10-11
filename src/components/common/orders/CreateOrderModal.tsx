@@ -187,8 +187,8 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
   const [selectedItemUnit, setSelectedItemUnit] = useState<string>("");
   const [selectedItemFactor, setSelectedItemFactor] = useState<number>(1);
 
-  const [withPackaging, setWithPackaging] = useState<boolean>(true);
-const [withDelivery, setWithDelivery] = useState<boolean>(true);
+  const [withPackaging, setWithPackaging] = useState<boolean>(false);
+  const [withDelivery, setWithDelivery] = useState<boolean>(false);
 
 
   const [isCustomerDropdownOpen, setIsCustomerDropdownOpen] =

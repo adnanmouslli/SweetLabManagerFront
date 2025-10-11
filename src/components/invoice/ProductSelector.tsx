@@ -48,8 +48,8 @@ const ProductSelector: React.FC<ProductSelectorProps> = ({
   const [selectedItemFactor, setSelectedItemFactor] = useState<number>(1);
   const [selectedItemProductionRate, setSelectedItemProductionRate] = useState<number>(0);
   const [selectedUnitIndex, setSelectedUnitIndex] = useState<number>(-1);
-  const [withPackaging, setWithPackaging] = useState<boolean>(true);
-  const [withDelivery, setWithDelivery] = useState<boolean>(true);
+  const [withPackaging, setWithPackaging] = useState<boolean>(false);
+  const [withDelivery, setWithDelivery] = useState<boolean>(false);
 
   const isPurchaseInvoice = mode === "expense";
 

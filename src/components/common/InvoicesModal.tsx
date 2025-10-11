@@ -14,6 +14,7 @@ import {
   Package,
   Plus,
   Minus,
+  Search,
 } from "lucide-react";
 import { formatDate, getCustomerDisplayName } from "@/utils/formatters";
 import { ShiftsInvoices } from "@/types/shifts.type";
@@ -375,6 +376,7 @@ const InvoicesModal = ({ type, data, onClose }: InvoicesModalProps) => {
   >(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
+const [searchQuery, setSearchQuery] = useState("");
 
   // Check for mobile view
   useEffect(() => {
@@ -389,7 +391,7 @@ const InvoicesModal = ({ type, data, onClose }: InvoicesModalProps) => {
   // Reset page when filter changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [invoiceFilter, paymentFilter]);
+  }, [invoiceFilter, paymentFilter, searchQuery]);
 
   // Handle sorting
   const handleSort = (field: SortField) => {
@@ -503,18 +505,35 @@ const InvoicesModal = ({ type, data, onClose }: InvoicesModalProps) => {
       );
     }
 
-    // Apply payment status filter
-    if (paymentFilter === "paid") {
-      filteredInvoices = filteredInvoices.filter(
-        (invoice) => invoice.paidStatus === true
-      );
-    } else if (paymentFilter === "unpaid") {
-      filteredInvoices = filteredInvoices.filter(
-        (invoice) => invoice.paidStatus === false
-      );
-    }
+   // Apply payment status filter
+if (paymentFilter === "paid") {
+  filteredInvoices = filteredInvoices.filter(
+    (invoice) => invoice.paidStatus === true
+  );
+} else if (paymentFilter === "unpaid") {
+  filteredInvoices = filteredInvoices.filter(
+    (invoice) => invoice.paidStatus === false
+  );
+}
 
-    return filteredInvoices;
+// Apply search filter
+if (searchQuery.trim()) {
+  const query = searchQuery.toLowerCase().trim();
+  filteredInvoices = filteredInvoices.filter((invoice) => {
+    const invoiceId = invoice.id.toString();
+    const customerName = invoice.customer?.name?.toLowerCase() || "";
+    const notes = invoice.notes?.toLowerCase() || "";
+    
+    return (
+      invoiceId.includes(query) ||
+      customerName.includes(query) ||
+      notes.includes(query)
+    );
+  });
+}
+
+return filteredInvoices;
+
   };
 
   // Get and sort invoices
@@ -706,8 +725,29 @@ const InvoicesModal = ({ type, data, onClose }: InvoicesModalProps) => {
           </div>
 
           {/* Filter Toggle */}
-          <div className="px-6 pt-4">
+          <div className="px-6 pt-4 space-y-3">
+            {/* Search Bar */}
+            <div className="relative">
+              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="ابحث برقم الفاتورة، اسم العميل، أو الملاحظات..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pr-10 pl-4 py-2 bg-slate-700/50 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+
             <div className="flex flex-wrap items-center gap-3 text-sm">
+    
               {/* Invoice Type Filter */}
               <div className="bg-slate-700/50 p-1 rounded-lg flex">
                 <button

@@ -3,7 +3,7 @@ import "./globals.css";
 import LayoutProviders from "@/components/providers/LayoutProviders";
 
 export const metadata: Metadata = {
-  title: "حلويات الشام",
+  title: "مخبز الإحسان الدمشقي",
   description: "موقع حلويات الشام",
 };
 

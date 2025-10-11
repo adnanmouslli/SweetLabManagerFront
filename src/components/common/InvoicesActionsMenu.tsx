@@ -224,9 +224,9 @@ const InvoicesActionsMenu: React.FC<InvoicesActionsMenuProps> = ({
               تعديل
             </button>
             
-            {/* Show paid/breakage options only for unpaid invoices */}
-            {!invoice.paidStatus && !invoice.isBreak && (
-              <>
+
+            {!invoice.paidStatus && (
+              
                 <button
                   onClick={() => {
                     handleMarkAsPaid(invoice);
@@ -237,6 +237,13 @@ const InvoicesActionsMenu: React.FC<InvoicesActionsMenuProps> = ({
                   <DollarSign className="h-4 w-4" />
                   مدفوع
                 </button>
+                
+            )}
+
+
+            {/* Show paid/breakage options only for unpaid invoices */}
+            {!invoice.paidStatus && !invoice.isBreak && (
+              <>
                 {invoice.invoiceType === "income" && (
                   <button
                     onClick={() => {

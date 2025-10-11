@@ -41,6 +41,7 @@ import { useEffect, useState } from "react";
 
 
 
+
 // Simple date formatter function
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
@@ -235,9 +236,49 @@ const Case = () => {
     setCurrentPage(1);
   }, [searchTerm, filterType, activeTab, transferStatus]);
 
+
+  
+const [dateFilter, setDateFilter] = useState<{
+  startDate: string;
+  endDate: string;
+}>({
+  startDate: "",
+  endDate: "",
+});
+
+// 2. دالة مساعدة لفلترة التواريخ
+const isDateInRange = (dateString: string, startDate: string, endDate: string): boolean => {
+  if (!startDate && !endDate) return true;
+  
+  const date = new Date(dateString);
+  date.setHours(0, 0, 0, 0);
+  
+  if (startDate && endDate) {
+    const start = new Date(startDate);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+    return date >= start && date <= end;
+  }
+  
+  if (startDate) {
+    const start = new Date(startDate);
+    start.setHours(0, 0, 0, 0);
+    return date >= start;
+  }
+  
+  if (endDate) {
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+    return date <= end;
+  }
+  
+  return true;
+};
+
   // Filter transactions
   const filteredTransactions = transactions
-    ? transactions.filter((transaction) => {
+  ? transactions.filter((transaction) => {
       // Apply search filter
       const searchMatch =
         transaction.notes?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -250,9 +291,58 @@ const Case = () => {
       const typeMatch =
         filterType === "all" || transaction.invoiceType === filterType;
 
-      return searchMatch && typeMatch;
+      // Apply date filter
+      const dateMatch = isDateInRange(
+        transaction.createdAt,
+        dateFilter.startDate,
+        dateFilter.endDate
+      );
+
+      return searchMatch && typeMatch && dateMatch;
     })
-    : [];
+  : [];
+
+// 4. دالة لمسح الفلاتر
+const clearDateFilter = () => {
+  setDateFilter({ startDate: "", endDate: "" });
+};
+
+// دالة للحصول على أول وآخر يوم في الشهر الحالي
+const getCurrentMonthRange = () => {
+  const now = new Date();
+  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  
+  return {
+    startDate: firstDay.toISOString().split('T')[0],
+    endDate: lastDay.toISOString().split('T')[0]
+  };
+};
+
+// دالة للحصول على آخر 7 أيام
+const getLastWeekRange = () => {
+  const now = new Date();
+  const lastWeek = new Date(now);
+  lastWeek.setDate(lastWeek.getDate() - 7);
+  
+  return {
+    startDate: lastWeek.toISOString().split('T')[0],
+    endDate: now.toISOString().split('T')[0]
+  };
+};
+
+// دالة للحصول على آخر 30 يوم
+const getLastMonthRange = () => {
+  const now = new Date();
+  const lastMonth = new Date(now);
+  lastMonth.setDate(lastMonth.getDate() - 30);
+  
+  return {
+    startDate: lastMonth.toISOString().split('T')[0],
+    endDate: now.toISOString().split('T')[0]
+  };
+};
+
 
   // Pagination for invoices
   const totalInvoicePages = Math.ceil(
@@ -480,49 +570,137 @@ const Case = () => {
                   </div>
                 )}
 
+                <div className="mb-8 px-4" dir="rtl">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {/* Search */}
+                    <div className="relative lg:col-span-2">
+                      <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="بحث في السجلات..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full px-4 pr-10 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:border-blue-500/30 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                      />
+                      {searchTerm && (
+                        <button
+                          onClick={() => setSearchTerm("")}
+                          className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300"
+                        >
+                          <X className="h-5 w-5" />
+                        </button>
+                      )}
+                    </div>
 
-                {/* Search and Filters */}
-                <div
-                  className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4 px-4"
-                  dir="rtl"
-                >
-                  {/* Search */}
-                  <div className="relative md:col-span-1">
-                    <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="بحث في السجلات..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full px-4 pr-10 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:border-blue-500/30"
-                    />
-                    {searchTerm && (
-                      <button
-                        onClick={() => setSearchTerm("")}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300"
+                    {/* Type Filter */}
+                    <div>
+                      <select
+                        value={filterType}
+                        onChange={(e) =>
+                          setFilterType(e.target.value as "all" | "income" | "expense")
+                        }
+                        className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:border-blue-500/30 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                       >
-                        <X className="h-5 w-5" />
+                        <option value="all">جميع العمليات</option>
+                        <option value="income">الدخل فقط</option>
+                        <option value="expense">المصروفات فقط</option>
+                      </select>
+                    </div>
+
+                    {/* Quick Date Filters */}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setDateFilter(getLastWeekRange())}
+                        className="flex-1 px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm hover:bg-white/10 transition-colors"
+                      >
+                        آخر 7 أيام
                       </button>
+                      <button
+                        onClick={() => setDateFilter(getLastMonthRange())}
+                        className="flex-1 px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm hover:bg-white/10 transition-colors"
+                      >
+                        آخر 30 يوم
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Date Range Filter */}
+                  <div className="mt-4 bg-white/5 border border-white/10 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-5 w-5 text-blue-400" />
+                        <span className="text-white font-medium">فلتر التاريخ</span>
+                      </div>
+                      {(dateFilter.startDate || dateFilter.endDate) && (
+                        <button
+                          onClick={clearDateFilter}
+                          className="flex items-center gap-1 px-3 py-1 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors text-sm"
+                        >
+                          <X className="h-4 w-4" />
+                          مسح الفلتر
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Start Date */}
+                      <div>
+                        <label className="block text-sm text-slate-300 mb-2">من تاريخ</label>
+                        <input
+                          type="date"
+                          value={dateFilter.startDate}
+                          onChange={(e) =>
+                            setDateFilter((prev) => ({ ...prev, startDate: e.target.value }))
+                          }
+                          className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:border-blue-500/30 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                        />
+                      </div>
+
+                      {/* End Date */}
+                      <div>
+                        <label className="block text-sm text-slate-300 mb-2">إلى تاريخ</label>
+                        <input
+                          type="date"
+                          value={dateFilter.endDate}
+                          onChange={(e) =>
+                            setDateFilter((prev) => ({ ...prev, endDate: e.target.value }))
+                          }
+                          className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:border-blue-500/30 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                        />
+                      </div>
+
+                      {/* Quick Actions */}
+                      <div className="flex items-end">
+                        <button
+                          onClick={() => setDateFilter(getCurrentMonthRange())}
+                          className="w-full px-4 py-2 bg-blue-500/20 border border-blue-500/30 text-blue-400 rounded-lg hover:bg-blue-500/30 transition-colors"
+                        >
+                          الشهر الحالي
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Active Filter Display */}
+                    {(dateFilter.startDate || dateFilter.endDate) && (
+                      <div className="mt-3 pt-3 border-t border-white/10">
+                        <div className="flex items-center gap-2 text-sm text-slate-300">
+                          <span className="text-blue-400">الفلتر النشط:</span>
+                          {dateFilter.startDate && (
+                            <span className="bg-blue-500/20 px-2 py-1 rounded">
+                              من: {formatDate(dateFilter.startDate)}
+                            </span>
+                          )}
+                          {dateFilter.endDate && (
+                            <span className="bg-blue-500/20 px-2 py-1 rounded">
+                              إلى: {formatDate(dateFilter.endDate)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     )}
                   </div>
-
-                  {/* Type Filter */}
-                  <div>
-                    <select
-                      value={filterType}
-                      onChange={(e) =>
-                        setFilterType(
-                          e.target.value as "all" | "income" | "expense"
-                        )
-                      }
-                      className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white"
-                    >
-                      <option value="all">جميع العمليات</option>
-                      <option value="income">الدخل فقط</option>
-                      <option value="expense">المصروفات فقط</option>
-                    </select>
-                  </div>
                 </div>
+
 
                 {/* Transactions Table */}
                 {/* <div className="container mx-auto px-4" dir="rtl">
