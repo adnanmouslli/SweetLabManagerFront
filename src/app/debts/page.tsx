@@ -146,11 +146,11 @@ const DebtsManagementPage = () => {
   ).filter((debt) => {
     if (!searchTerm) return true;
     const searchLower = searchTerm.toLowerCase();
-    return (
-      debt.customer.name.toLowerCase().includes(searchLower) ||
-      debt.customer.phone.toLowerCase().includes(searchLower)
-    );
+    const name = debt.customer?.name?.toLowerCase() || "";
+    const phone = debt.customer?.phone?.toLowerCase() || "";
+    return name.includes(searchLower) || phone.includes(searchLower);
   });
+
 
   const handleViewDetails = (debt: Debt) => {
     setSelectedDebt(debt);

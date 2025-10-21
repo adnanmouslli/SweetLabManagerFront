@@ -335,7 +335,7 @@ const WorkshopDetailsModal: React.FC<WorkshopDetailsModalProps> = ({ workshop, p
                 {workshop.productionRecords && workshop.productionRecords.length > 0 && (
                   <div className="space-y-3">
                     <h4 className="text-sm text-slate-400 font-medium">سجلات الإنتاج</h4>
-                    {workshop.productionRecords.slice(0, 5).map((record, index) => {
+                    {workshop.productionRecords.map((record, index) => {
                       if (!record || !record.id) return null;
                       return (
                         <CollapsibleActivityRow

@@ -246,7 +246,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, isOpen, on
                         </div>
                         {/* Actions */}
                         <div className="space-y-3 pb-4">
-                            {(order.status === OrderStatus.pending || order.status === OrderStatus.processing) && (
+                            {(order.status === OrderStatus.pending && order.paidStatus != false) && (
                                 <button
                                     onClick={() => handleUpdateStatus(OrderStatus.delivered)}
                                     disabled={isUpdating}
