@@ -28,7 +28,7 @@ import { useFetchCategories } from "@/hooks/customers/useCustomersCategories";
 interface ItemUnit {
   unit: string;
   price: number;
-  conversionFactor: number;
+  factor: number;
 }
 
 interface Item {

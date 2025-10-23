@@ -304,7 +304,7 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
   if (unitInfo) {
     const calculatedPrice = unitInfo.unit === selectedProduct.defaultUnit 
       ? finalPrice 
-      : finalPrice * (unitInfo.conversionFactor || 1);
+      : finalPrice * (unitInfo.factor || 1);
       
     setSelectedItemPrice(calculatedPrice);
   }
@@ -543,10 +543,10 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
       
       const calculatedPrice = unitInfo.unit === selectedProduct.defaultUnit 
         ? finalPrice 
-        : finalPrice * (unitInfo.conversionFactor || 1);
+        : finalPrice * (unitInfo.factor || 1);
         
       setSelectedItemPrice(calculatedPrice);
-      setSelectedItemFactor(unitInfo.conversionFactor);
+      setSelectedItemFactor(unitInfo.factor);
     } else {
       setSelectedUnitIndex(-1);
       setSelectedItemUnit("");
@@ -569,7 +569,7 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
   ) {
     const unitInfo = selectedProduct.units[unitIndex];
     setSelectedItemUnit(unitInfo.unit);
-    setSelectedItemFactor(unitInfo.conversionFactor);
+    setSelectedItemFactor(unitInfo.factor);
     
     // حساب السعر مع التكييس والتوصيل
     const basePrice = selectedProduct.basePrice || 0;
@@ -579,7 +579,7 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
     
     const calculatedPrice = unitInfo.unit === selectedProduct.defaultUnit 
       ? finalPrice 
-      : finalPrice * (unitInfo.conversionFactor || 1);
+      : finalPrice * (unitInfo.factor || 1);
       
     setSelectedItemPrice(calculatedPrice);
   }
@@ -872,7 +872,7 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
           setSelectedUnitIndex(unitIndex >= 0 ? unitIndex : 0);
           setSelectedItemUnit(selectedUnit.unit || "");
           setSelectedItemPrice(selectedUnit.price || 0);
-          setSelectedItemFactor(selectedUnit.conversionFactor || 1);
+          setSelectedItemFactor(selectedUnit.factor || 1);
         }
 
         // Set quantity for the new item form
@@ -1498,7 +1498,7 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
                           const unitData = itemData?.units.find(
                             (u) => u.unit === item.unit
                           );
-                          return unitData?.conversionFactor || 1;
+                          return unitData?.factor || 1;
                         })()}
                       </td>
                       <td className="p-3 text-slate-300">

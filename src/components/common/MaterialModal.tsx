@@ -36,7 +36,7 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
     price: 0,
     cost: 0,
     productionRate: 0,
-    units: [{ unit: "", price: 0, conversionFactor: 1 }],
+    units: [{ unit: "", price: 0, factor: 1 }],
   });
 
   // Calculate final price
@@ -66,9 +66,9 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
           ? item.units.map(u => ({
               ...u,
               price: Number(u.price),
-              factor: Number(u.conversionFactor)   // هون
+              factor: Number(u.factor) // ✅ هذا هو المفتاح الصحيح
             })) 
-          : [{ unit: "", price: 0, conversionFactor: 1 }],
+          : [{ unit: "", price: 0, factor: 1 }],
 
 });
     } else if (defaultType) {
@@ -155,7 +155,7 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
   const addUnit = () => {
     setFormData((prev) => ({
       ...prev,
-      units: [...(prev.units || []), { unit: "", price: 0, conversionFactor: 1 }],
+      units: [...(prev.units || []), { unit: "", price: 0, factor: 1 }],
     }));
   };
 
@@ -592,8 +592,8 @@ const MaterialModal: React.FC<MaterialModalProps> = ({
                     <label className="block text-slate-300 text-sm">السعة*</label>
                     <input
                       type="number"
-                      value={unit.conversionFactor}
-                      onChange={(e) => handleUnitChange(index, "conversionFactor", e.target.value)}
+                      value={unit.factor}
+                      onChange={(e) => handleUnitChange(index, "factor", e.target.value)}
                       min="0.01"
                       step="0.01"
                       className="w-full px-3 py-1.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-200 focus:outline-none focus:border-emerald-500/50"

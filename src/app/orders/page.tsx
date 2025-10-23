@@ -7,6 +7,7 @@ import CategorySection from "@/components/common/orders/CategorySection";
 import CreateOrderModal from "@/components/common/orders/CreateOrderModal";
 import CustomerOrderCard from "@/components/common/orders/CustomerOrderCard";
 import InvoiceOrderConversionModal from "@/components/common/orders/InvoiceOrderConversionModal";
+import OrderByCategoryMaterialsView from "@/components/common/orders/OrderByCategoryMaterialsView";
 import OrderDetailsModal from "@/components/common/orders/OrderDetailsModal";
 import OrderListByDateView from "@/components/common/orders/OrderListByDateView";
 import OrdersSummaryComponent from "@/components/common/orders/OrdersSummary";
@@ -134,7 +135,7 @@ const OrdersPage: React.FC = () => {
     useState<boolean>(false);
   const [isInvoiceConversionModalOpen, setIsInvoiceConversionModalOpen] =
     useState<boolean>(false);
-  const [viewMode, setViewMode] = useState<"byDate" | "byCategory">("byDate");
+const [viewMode, setViewMode] = useState<"byDate" | "byCategory" | "byMaterials">("byDate");
   const [selectedDate, setSelectedDate] = useState<string>(""); // State for selected date
   const [paymentStatus, setPaymentStatus] = useState<
     "all" | "paid" | "unpaid" | "break"
@@ -441,6 +442,18 @@ const OrdersPage: React.FC = () => {
                   <Tags className="h-4 w-4" />
                   <span>عرض حسب الزبون</span>
                 </button>
+                <button
+                  onClick={() => setViewMode("byMaterials")}
+                  className={`px-4 py-1.5 rounded-md text-sm flex items-center gap-1.5 transition-colors ${
+                    viewMode === "byMaterials"
+                      ? "bg-slate-700 text-white"
+                      : "text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  <ShoppingBag className="h-4 w-4" />
+                  <span>عرض حسب المواد</span>
+                </button>
+
               </div>
               <div className="flex items-center gap-2">
                 <input
@@ -497,57 +510,72 @@ const OrdersPage: React.FC = () => {
 
             {/* Content */}
             <div dir="rtl">
-              {viewMode === "byDate" ? (
-                <OrderListByDateView
-                  todayOrders={filteredTodayOrders}
-                  tomorrowOrders={filteredTomorrowOrders}
-                  allOrders={filteredAllOrders}
-                  isLoading={isLoading}
-                  activeTab={activeTab}
-                  onViewOrderDetails={handleViewOrderDetails}
-                  onSearchChange={setSearchTerm}
-                  searchTerm={searchTerm}
-                />
-              ) : categories && categories.length > 0 ? (
-                <div>
-                  {categories.map((category) => (
-                    <CategorySection
-                      key={category.id}
-                      category={category}
-                      orders={
-                        activeTab === "forToday"
-                          ? filteredTodayOrders
-                          : activeTab === "forTomorrow"
-                          ? filteredTomorrowOrders
-                          : filteredAllOrders
-                      }
-                      onSelectCustomer={(customer) =>
-                        handleSelectCustomer(customer, category.id)
-                      }
-                      selectedCustomerId={selectedCustomerId}
-                    />
-                  ))}
-                  {!categories.some((category) =>
-                    category.customers?.some((customer) =>
-                      (activeTab === "forToday"
-                        ? filteredTodayOrders
-                        : activeTab === "forTomorrow"
-                        ? filteredTomorrowOrders
-                        : filteredAllOrders
-                      ).some((order) => order.customerId === customer.id)
-                    )
-                  ) && (
-                    <div className="bg-slate-800/30 rounded-lg border border-slate-700/50 p-6 text-center text-slate-400">
-                      لا توجد طلبات متاحة في هذا التصنيف
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="bg-slate-800/30 rounded-lg border border-slate-700/50 p-6 text-center text-slate-400">
-                  لا توجد تصنيفات متاحة حاليًا
-                </div>
-              )}
-            </div>
+  {viewMode === "byDate" ? (
+    <OrderListByDateView
+      todayOrders={filteredTodayOrders}
+      tomorrowOrders={filteredTomorrowOrders}
+      allOrders={filteredAllOrders}
+      isLoading={isLoading}
+      activeTab={activeTab}
+      onViewOrderDetails={handleViewOrderDetails}
+      onSearchChange={setSearchTerm}
+      searchTerm={searchTerm}
+    />
+  ) : viewMode === "byMaterials" ? (
+    <OrderByCategoryMaterialsView
+      orders={
+        activeTab === "forToday"
+          ? filteredTodayOrders
+          : activeTab === "forTomorrow"
+          ? filteredTomorrowOrders
+          : filteredAllOrders
+      }
+      isLoading={isLoading}
+      onViewOrderDetails={handleViewOrderDetails}
+      // onDeleteOrder={handleCancelOrder}
+      searchTerm={searchTerm}
+      onSearchChange={setSearchTerm}
+    />
+  ) : categories && categories.length > 0 ? (
+    <div>
+      {categories.map((category) => (
+        <CategorySection
+          key={category.id}
+          category={category}
+          orders={
+            activeTab === "forToday"
+              ? filteredTodayOrders
+              : activeTab === "forTomorrow"
+              ? filteredTomorrowOrders
+              : filteredAllOrders
+          }
+          onSelectCustomer={(customer) =>
+            handleSelectCustomer(customer, category.id)
+          }
+          selectedCustomerId={selectedCustomerId}
+        />
+      ))}
+      {!categories.some((category) =>
+        category.customers?.some((customer) =>
+          (activeTab === "forToday"
+            ? filteredTodayOrders
+            : activeTab === "forTomorrow"
+            ? filteredTomorrowOrders
+            : filteredAllOrders
+          ).some((order) => order.customerId === customer.id)
+        )
+      ) && (
+        <div className="bg-slate-800/30 rounded-lg border border-slate-700/50 p-6 text-center text-slate-400">
+          لا توجد طلبات متاحة في هذا التصنيف
+        </div>
+      )}
+    </div>
+  ) : (
+    <div className="bg-slate-800/30 rounded-lg border border-slate-700/50 p-6 text-center text-slate-400">
+      لا توجد تصنيفات متاحة حاليًا
+    </div>
+  )}
+</div>
           </div>
         </main>
       </div>

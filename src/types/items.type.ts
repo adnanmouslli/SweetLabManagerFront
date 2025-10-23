@@ -11,7 +11,7 @@ export interface BaseItem {
 export interface ItemUnit {
   unit: string;
   price: number;
-  conversionFactor: number;
+  factor: number;
 }
 
 export interface Item extends BaseItem {
