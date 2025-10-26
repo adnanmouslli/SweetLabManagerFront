@@ -28,6 +28,7 @@ interface OrderItemWithMaterial {
   materialId: number;
   materialName: string;
   unit?: string;
+  conversionFactor?: number; // معامل التحويل إلى قطعة
 }
 
 interface OrderWithMaterials {
@@ -41,6 +42,17 @@ interface CategoryGroup {
   orders: OrderWithMaterials[];
   allMaterials: Material[];
 }
+
+// دالة للحصول على معامل التحويل من ItemUnit
+const getConversionFactorFromItem = (item: any, currentUnit: string): number => {
+  if (!item || !item.units) {
+    return 1;
+  }
+  const unitData = item.units.find(
+    (u: any) => u.unit.toLowerCase() === (currentUnit?.toLowerCase() || item.defaultUnit?.toLowerCase())
+  );
+  return unitData?.factor || 1;
+};
 
 const OrderByCategoryMaterialsView: React.FC<OrderByCategoryMaterialsViewProps> = ({
   orders,
@@ -111,6 +123,7 @@ const OrderByCategoryMaterialsView: React.FC<OrderByCategoryMaterialsViewProps> 
               materialId: materialId,
               materialName: item.item.name,
               unit: item.unit,
+              conversionFactor: getConversionFactorFromItem(item.item, item.unit),
             });
           }
         });
@@ -153,7 +166,7 @@ const OrderByCategoryMaterialsView: React.FC<OrderByCategoryMaterialsViewProps> 
     ordersInCategory: OrderWithMaterials[],
     materialId: number
   ): { quantity: number; hasUnitPiece: boolean } => {
-    let totalQuantity = 0;
+    let totalQuantityInPieces = 0;
     let hasUnitPiece = false;
 
     ordersInCategory.forEach((orderWithMaterials) => {
@@ -161,14 +174,22 @@ const OrderByCategoryMaterialsView: React.FC<OrderByCategoryMaterialsViewProps> 
         (m) => m.materialId === materialId
       );
       if (material) {
-        totalQuantity += material.quantity;
+        // الحصول على معامل التحويل من ItemUnit
+        const conversionFactor = material.conversionFactor || 1;
+        
+        // حساب الكمية بالقطع = الكمية × معامل التحويل
+        const quantityInPieces = material.quantity * conversionFactor;
+        totalQuantityInPieces += quantityInPieces;
+
         if (material.unit?.toLowerCase() === "قطعة" || material.unit?.toLowerCase() === "piece") {
           hasUnitPiece = true;
         }
       }
     });
 
-    return { quantity: totalQuantity, hasUnitPiece };
+    // تقريب الرقم لـ 2 منازل عشرية
+    const roundedTotal = Math.round(totalQuantityInPieces * 100) / 100;
+    return { quantity: roundedTotal, hasUnitPiece };
   };
 
   if (isLoading) {

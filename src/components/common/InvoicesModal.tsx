@@ -16,7 +16,8 @@ import {
   Minus,
   Search,
 } from "lucide-react";
-import { formatDate, getCustomerDisplayName } from "@/utils/formatters";
+import { formatDate } from "@/utils/formatters";
+import { getCustomerDisplayName } from "@/utils/formatters"; // أو من الملف الجديد
 import { ShiftsInvoices } from "@/types/shifts.type";
 import { useState, useRef, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
@@ -939,10 +940,15 @@ return filteredInvoices;
                                 </div>
                               </td>
                               <td className="py-3 px-4 text-white">
-                                {getCustomerDisplayName(
-                                  invoice.customer,
-                                  invoice.notes
-                                )}
+                                <span className="truncate max-w-[200px]">
+                                  {getCustomerDisplayName(
+                                    invoice.customer,
+                                    invoice.notes,
+                                    invoice.relatedEmployee
+                                      ? `موظف: ${invoice.relatedEmployee.name}`
+                                      : "-"
+                                  )}
+                                </span>
                               </td>
                               <td className="py-3 px-4 text-white">
                                 {formatDate(invoice.createdAt)}
