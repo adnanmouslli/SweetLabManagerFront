@@ -20,7 +20,8 @@ import {
     CustomerStatementReportDTO,
     SalesReportDTO,
     EmployeeWithdrawalsReportDTO,
-    WorkshopSalariesReportDTO
+    WorkshopSalariesReportDTO,
+    ComprehensiveReportDTO
 } from '@/types/reports.type';
 
 export const useReports = () => {
@@ -70,6 +71,10 @@ export const useReports = () => {
             let result: ReportGenerationResult;
 
             switch (reportId) {
+                // ⭐ التقرير الشامل الجديد
+                case 'comprehensive-report':
+                    result = await reportsService.generateComprehensiveReport(filters as ComprehensiveReportDTO);
+                    break;
                 case 'orders-inventory':
                     result = await reportsService.generateOrdersInventoryReport(filters as OrdersInventoryReportDTO);
                     break;
@@ -212,4 +217,4 @@ export const useReports = () => {
     };
 };
 
-export default useReports
+export default useReports;

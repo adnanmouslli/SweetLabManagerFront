@@ -60,6 +60,40 @@ export const generateReportsConfig = (data: {
     workshopOptions: Array<{ value: number; label: string }>;
 
 }): ReportConfig[] => [
+        // ⭐ COMPREHENSIVE REPORT (التقرير الشامل)
+        {
+            id: 'comprehensive-report',
+            title: 'التقرير الشامل',
+            description: 'تقرير شامل يجمع بيانات الصناديق والفواتير والورشات والطلبيات مع فلترة اختيارية حسب الوارديات',
+            category: ReportCategory.FUNDS,
+            icon: '📊',
+            endpoint: '/reports/comprehensive',
+            filters: [
+                {
+                    key: 'startDate',
+                    label: 'تاريخ البداية',
+                    type: FilterType.DATE,
+                    required: true
+                },
+                {
+                    key: 'endDate',
+                    label: 'تاريخ النهاية',
+                    type: FilterType.DATE,
+                    required: true
+                },
+                {
+                    key: 'shiftIds',
+                    label: 'الوارديات (اختياري)',
+                    type: FilterType.MULTISELECT,
+                    options: data.shiftOptions,
+                    multiple: true,
+                    placeholder: 'اختر وارديات محددة - تاركها فارغة = جميع الوارديات'
+                }
+            ],
+            requiredFilters: ['startDate', 'endDate'],
+           
+        },
+
         // Orders Reports
         {
             id: 'orders-inventory',

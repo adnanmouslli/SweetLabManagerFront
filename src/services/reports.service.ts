@@ -14,11 +14,77 @@ import {
     ShiftSummaryReportDTO,
     WarehouseComparisonReportDTO,
     WarehouseInventoryReportDTO,
-    WorkshopSalariesReportDTO
+    WorkshopSalariesReportDTO,
+    ComprehensiveReportDTO
 } from '@/types/reports.type';
 import { apiClient } from '@/utils/axios';
 
 class ReportsService {
+    /**
+     * 🎯 Generate Comprehensive Report (التقرير الشامل)
+     * 
+     * يجمع بيانات الصناديق والفواتير والورشات والطلبيات
+     * مع دعم فلتر الوارديات المتعدد والاختياري
+     * 
+     * ✅ إصلاح: تحويل أرقام الوارديات إلى strings
+     */
+    async generateComprehensiveReport(filters: ComprehensiveReportDTO): Promise<ReportGenerationResult> {
+        try {
+            const params = new URLSearchParams();
+
+            // التواريخ (مطلوب)
+            if (filters.startDate) params.append('startDate', filters.startDate);
+            if (filters.endDate) params.append('endDate', filters.endDate);
+
+            // فلتر الوارديات (اختياري - متعدد)
+            // ✅ إصلاح: تحويل الأرقام إلى strings وإضافتها بشكل منفصل
+            if (filters.shiftIds && filters.shiftIds.length > 0) {
+                // تحويل جميع الأرقام إلى strings وإضافتها
+                filters.shiftIds.forEach(shiftId => {
+                    // تحويل إلى string للتأكد
+                    const shiftIdStr = String(shiftId);
+                    
+                    // تجاهل القيم الفارغة
+                    if (shiftIdStr && shiftIdStr !== 'undefined' && shiftIdStr !== 'null') {
+                        // إضافة كل شيفت ID بشكل منفصل
+                        // يجب أن ينتج عنه: ?shiftIds=6&shiftIds=5
+                        params.append('shiftIds', shiftIdStr);
+                    }
+                });
+            }
+
+            if (filters.download) params.append('download', 'true');
+
+            const response = await apiClient.get<string>(
+                `/reports/comprehensive?${params.toString()}`,
+                {
+                    headers: {
+                        'Accept': 'text/html',
+                    },
+                }
+            );
+
+            // تحديد اسم الملف
+            const shiftInfo = filters.shiftIds && filters.shiftIds.length > 0
+                ? `-shifts-${filters.shiftIds.join('-')}`
+                : '-all-shifts';
+
+            const filename = `comprehensive-report${shiftInfo}-${filters.startDate}-to-${filters.endDate}.html`;
+
+            return {
+                success: true,
+                content: response,
+                filename
+            };
+        } catch (error) {
+            console.error('Comprehensive Report Error:', error);
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error occurred'
+            };
+        }
+    }
+
     /**
      * Generate Orders Inventory Report
      */
@@ -305,41 +371,41 @@ class ReportsService {
      * Generate Funds Movement Report
      */
     async generateFundsMovementReport(filters: FundsMovementReportDTO): Promise<ReportGenerationResult> {
-    try {
-        const params = new URLSearchParams();
+        try {
+            const params = new URLSearchParams();
 
-        params.append('startDate', filters.startDate);
-        params.append('endDate', filters.endDate);
-        
-        // إضافة فلتر الصندوق إذا تم تحديده
-        if (filters.fundType) {
-            params.append('fundType', filters.fundType);
+            params.append('startDate', filters.startDate);
+            params.append('endDate', filters.endDate);
+
+            // إضافة فلتر الصندوق إذا تم تحديده
+            if (filters.fundType) {
+                params.append('fundType', filters.fundType);
+            }
+
+            if (filters.download) params.append('download', 'true');
+
+            const response = await apiClient.get<string>(`/reports/funds/movement?${params.toString()}`, {
+                headers: {
+                    'Accept': 'text/html',
+                },
+            });
+
+            // تحديث اسم الملف ليشمل نوع الصندوق
+            const fundSuffix = filters.fundType ? `-${filters.fundType}` : '-all';
+            const filename = `funds-movement${fundSuffix}-${filters.startDate}-to-${filters.endDate}.html`;
+
+            return {
+                success: true,
+                content: response,
+                filename
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error occurred'
+            };
         }
-        
-        if (filters.download) params.append('download', 'true');
-
-        const response = await apiClient.get<string>(`/reports/funds/movement?${params.toString()}`, {
-            headers: {
-                'Accept': 'text/html',
-            },
-        });
-
-        // تحديث اسم الملف ليشمل نوع الصندوق
-        const fundSuffix = filters.fundType ? `-${filters.fundType}` : '-all';
-        const filename = `funds-movement${fundSuffix}-${filters.startDate}-to-${filters.endDate}.html`;
-
-        return {
-            success: true,
-            content: response,
-            filename
-        };
-    } catch (error) {
-        return {
-            success: false,
-            error: error instanceof Error ? error.message : 'Unknown error occurred'
-        };
     }
-}
 
     /**
      * Generate Shift Summary Report
@@ -586,6 +652,8 @@ class ReportsService {
 
     /**
      * Process report parameters to handle arrays and convert to proper format
+     * 
+     * ✅ إصلاح: معالجة صحيحة للأرقام وتحويلها إلى strings
      */
     private processReportParams(params: Record<string, any>): Record<string, any> {
         const processed: Record<string, any> = {};
@@ -598,10 +666,16 @@ class ReportsService {
             if (Array.isArray(value)) {
                 // Handle arrays (for multiselect filters)
                 if (value.length > 0) {
-                    // Filter out empty values from arrays
-                    const filteredArray = value.filter(v => v !== '' && v !== null && v !== undefined);
+                    // تحويل جميع العناصر إلى strings
+                    const filteredArray = value
+                        .filter(v => v !== '' && v !== null && v !== undefined)
+                        .map(v => String(v));  // ✅ تحويل إلى string
+                    
                     if (filteredArray.length > 0) {
-                        processed[key] = filteredArray.join(',');
+                        // ✅ إضافة كل عنصر بشكل منفصل للـ params
+                        // بدلاً من: processed[key] = filteredArray.join(',');
+                        // سنعيده كـ array ليتم معالجته بشكل صحيح
+                        processed[key] = filteredArray;
                     }
                 }
             } else if (typeof value === 'object' && value !== null) {
@@ -612,7 +686,7 @@ class ReportsService {
                 if (typeof value === 'boolean') {
                     processed[key] = value.toString();
                 } else if (typeof value === 'number') {
-                    processed[key] = value.toString();
+                    processed[key] = value.toString();  // ✅ تحويل الأرقام إلى strings
                 } else {
                     processed[key] = value.toString();
                 }

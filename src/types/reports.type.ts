@@ -28,6 +28,9 @@ export interface ReportFilters {
 
     // Shift summary filters
     shiftId?: number;
+
+    // ⭐ NEW: Comprehensive Report filters
+    shiftIds?: string[];  // فلتر الوارديات المتعدد
 }
 
 // Report configuration interface
@@ -40,6 +43,11 @@ export interface ReportConfig {
     endpoint: string;
     filters: ReportFilterConfig[];
     requiredFilters?: string[];
+    // ⭐ NEW: Filter info for UI
+    filterInfo?: {
+        title: string;
+        description: string;
+    };
 }
 
 // Report categories
@@ -102,6 +110,54 @@ export interface ReportResponse {
         period1: { year: number; month: number };
         period2: { year: number; month: number };
     };
+}
+
+// ⭐ NEW: Comprehensive Report DTO
+/**
+ * التقرير الشامل - يجمع بيانات الصناديق والفواتير والورشات والطلبيات
+ * 
+ * @example
+ * ```typescript
+ * const filters: ComprehensiveReportDTO = {
+ *   startDate: '2024-01-01',
+ *   endDate: '2024-01-31',
+ *   shiftIds: ['shift-001', 'shift-002'],  // اختياري - متعدد
+ *   download: false
+ * };
+ * ```
+ * 
+ * فلتر الوارديات:
+ * - يؤثر على: الصناديق والفواتير
+ * - لا يؤثر على: الورشات والطلبيات
+ */
+export interface ComprehensiveReportDTO {
+    /**
+     * تاريخ البداية (مطلوب)
+     * @example '2024-01-01'
+     */
+    startDate: string;
+
+    /**
+     * تاريخ النهاية (مطلوب)
+     * @example '2024-01-31'
+     */
+    endDate: string;
+
+    /**
+     * معرفات الوارديات المحددة (اختياري - متعدد)
+     * 
+     * - إذا كانت فارغة: جميع الوارديات
+     * - إذا تم تحديد واحدة أو أكثر: الوارديات المحددة فقط
+     * 
+     * @example ['shift-morning-001', 'shift-evening-001']
+     */
+    shiftIds?: string[];
+
+    /**
+     * للتحميل المباشر (اختياري)
+     * @default false
+     */
+    download?: boolean;
 }
 
 // Specific report DTOs
@@ -216,26 +272,7 @@ export interface ReportModalState {
     isLoading: boolean;
 }
 
-
-
-
-// NEW 
-// NEW 
-// NEW 
-// NEW 
-// NEW 
-// NEW 
-// NEW 
-// NEW 
-// NEW 
-// NEW 
-// NEW 
-// NEW 
-// NEW 
-
-
-
-// New Employee Report DTOs
+// Employee Report DTOs
 export interface EmployeeWithdrawalsReportDTO {
     employeeId?: number;
     startDate: string;
@@ -247,5 +284,14 @@ export interface WorkshopSalariesReportDTO {
     workshopId?: number;
     startDate: string;
     endDate: string;
+    download?: boolean;
+}
+
+/**
+ * Base Report DTO - الواجهة الأساسية لجميع DTOs
+ * 
+ * تُستخدم كـ base class للتعريفات الأخرى
+ */
+export interface BaseReportDTO {
     download?: boolean;
 }
