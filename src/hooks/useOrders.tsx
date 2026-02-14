@@ -229,3 +229,12 @@ export const useCancelOrder = () => {
         },
     });
 };
+
+// Queue System Hooks
+export const useQueueStatus = () => {
+    return useQuery<{ date: string; currentNumber: number }, Error>({
+        queryKey: ["queueStatus"],
+        queryFn: OrdersService.getQueueStatus,
+        refetchInterval: 30000,
+    });
+};

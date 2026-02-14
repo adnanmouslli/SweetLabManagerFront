@@ -125,4 +125,19 @@ export class OrdersService {
             return null;
         }
     };
+
+    // Queue System
+    static getQueueStatus = async (): Promise<{ date: string; currentNumber: number }> => {
+        const response = await apiClient.get<{ date: string; currentNumber: number }>("/order-queue/status");
+        return response;
+    };
+
+    static printQueueTicket = async (orderId: number): Promise<string> => {
+        const response = await apiClient.get<string>(`/order-queue/ticket/${orderId}`, {
+            headers: {
+                'Accept': 'text/html',
+            },
+        });
+        return response;
+    };
 }

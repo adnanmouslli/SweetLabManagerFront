@@ -1,6 +1,6 @@
 // components/orders/CustomerOrderCard.tsx
 import React, { useState } from "react";
-import { ShoppingBag, Calendar, EyeIcon, Clock, CheckCircle, CheckCircle2, AlertCircle, RefreshCcw, BellDot, X } from "lucide-react";
+import { ShoppingBag, Calendar, EyeIcon, Clock, CheckCircle, CheckCircle2, AlertCircle, RefreshCcw, BellDot, X, Printer } from "lucide-react";
 import { OrderResponseDto, OrderStatus } from "@/types/orders.type";
 import { formatCurrency, getCustomerDisplayName } from "@/utils/formatters";
 import { getStatusClass, getStatusText } from "@/utils/orderHelpers";
@@ -9,6 +9,7 @@ interface CustomerOrderCardProps {
     order: OrderResponseDto;
     onViewDetails?: (order: OrderResponseDto) => void;
     onCancelOrder?: (order: OrderResponseDto) => void;
+    onPrintQueueTicket?: (orderId: number) => void;
 }
 
 // Helper function to directly get the status icon component
@@ -29,7 +30,7 @@ const getStatusIconComponent = (status: OrderStatus) => {
     }
 };
 
-const CustomerOrderCard: React.FC<CustomerOrderCardProps> = ({ order, onViewDetails, onCancelOrder }) => {
+const CustomerOrderCard: React.FC<CustomerOrderCardProps> = ({ order, onViewDetails, onCancelOrder, onPrintQueueTicket }) => {
     const [showDetails, setShowDetails] = useState(false);
 
     const handleViewClick = () => {
@@ -86,6 +87,16 @@ const CustomerOrderCard: React.FC<CustomerOrderCardProps> = ({ order, onViewDeta
                             <EyeIcon className="h-4 w-4 mx-1" />
                             {onViewDetails ? 'عرض التفاصيل' : (showDetails ? 'إخفاء التفاصيل' : 'عرض التفاصيل')}
                         </button>
+                        {onPrintQueueTicket && (
+                            <button
+                                onClick={() => onPrintQueueTicket(order.id)}
+                                className="inline-flex items-center text-amber-400 hover:text-amber-300 transition-colors text-sm"
+                                title="طباعة تذكرة الدور"
+                            >
+                                <Printer className="h-4 w-4 mx-1" />
+                                دور
+                            </button>
+                        )}
                         {onCancelOrder && order.status !== 'cancelled' && (
                             <button
                                 onClick={() => onCancelOrder(order)}

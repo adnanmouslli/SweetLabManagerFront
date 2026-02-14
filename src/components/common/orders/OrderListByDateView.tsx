@@ -2,7 +2,7 @@
 import { OrderResponseDto } from "@/types/orders.type";
 import { formatCurrency } from "@/utils/formatters";
 import { getStatusClass, getStatusText } from "@/utils/orderHelpers";
-import { ArrowUpDown, ChevronDown, Eye, ShoppingBag, X } from "lucide-react";
+import { ArrowUpDown, ChevronDown, Eye, Printer, ShoppingBag, X } from "lucide-react";
 import React, { useState } from "react";
 import CustomerOrderCard from "./CustomerOrderCard";
 import SearchBar from "./SearchBar";
@@ -19,6 +19,7 @@ interface OrderListByDateViewProps {
     onViewOrderDetails: (order: OrderResponseDto) => void;
     onSearchChange: (term: string) => void;
     searchTerm: string;
+    onPrintQueueTicket?: (orderId: number) => void;
 }
 
 const OrderListByDateView: React.FC<OrderListByDateViewProps> = ({
@@ -30,6 +31,7 @@ const OrderListByDateView: React.FC<OrderListByDateViewProps> = ({
     onViewOrderDetails,
     onSearchChange,
     searchTerm,
+    onPrintQueueTicket,
 }) => {
     const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({
         today: true,
@@ -366,6 +368,16 @@ const toggleCategory = (categoryId: number) => {
                                                                             <Eye className="h-4 w-4" />
                                                                             عرض
                                                                         </button>
+                                                                        {onPrintQueueTicket && (
+                                                                            <button
+                                                                                onClick={() => onPrintQueueTicket(order.id)}
+                                                                                className="text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1"
+                                                                                title="طباعة تذكرة الدور"
+                                                                            >
+                                                                                <Printer className="h-4 w-4" />
+                                                                                دور
+                                                                            </button>
+                                                                        )}
                                                                         {order.status !== 'delivered' && order.status !== 'cancelled' && (
                                                                             <button
                                                                                 onClick={() => handleCancelOrder(order)}
@@ -391,6 +403,7 @@ const toggleCategory = (categoryId: number) => {
                                                             order={order}
                                                             onViewDetails={onViewOrderDetails}
                                                             onCancelOrder={order.status !== 'delivered' && order.status !== 'cancelled' ? handleCancelOrder : undefined}
+                                                            onPrintQueueTicket={onPrintQueueTicket}
                                                         />
                                                     ))}
                                                 </div>
@@ -558,6 +571,16 @@ const toggleCategory = (categoryId: number) => {
                                                                                 <Eye className="h-4 w-4" />
                                                                                 عرض
                                                                             </button>
+                                                                            {onPrintQueueTicket && (
+                                                                                <button
+                                                                                    onClick={() => onPrintQueueTicket(order.id)}
+                                                                                    className="text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1"
+                                                                                    title="طباعة تذكرة الدور"
+                                                                                >
+                                                                                    <Printer className="h-4 w-4" />
+                                                                                    دور
+                                                                                </button>
+                                                                            )}
                                                                             {order.status !== 'delivered' && order.status !== 'cancelled' && (
                                                                                 <button
                                                                                     onClick={() => handleCancelOrder(order)}
@@ -583,6 +606,7 @@ const toggleCategory = (categoryId: number) => {
                                                                 order={order}
                                                                 onViewDetails={onViewOrderDetails}
                                                                 onCancelOrder={order.status !== 'delivered' && order.status !== 'cancelled' ? handleCancelOrder : undefined}
+                                                                onPrintQueueTicket={onPrintQueueTicket}
                                                             />
                                                         ))}
                                                     </div>
@@ -751,6 +775,16 @@ const toggleCategory = (categoryId: number) => {
                                                                                 <Eye className="h-4 w-4" />
                                                                                 عرض
                                                                             </button>
+                                                                            {onPrintQueueTicket && (
+                                                                                <button
+                                                                                    onClick={() => onPrintQueueTicket(order.id)}
+                                                                                    className="text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1"
+                                                                                    title="طباعة تذكرة الدور"
+                                                                                >
+                                                                                    <Printer className="h-4 w-4" />
+                                                                                    دور
+                                                                                </button>
+                                                                            )}
                                                                             {order.status !== 'delivered' && order.status !== 'cancelled' && (
                                                                                 <button
                                                                                     onClick={() => handleCancelOrder(order)}
@@ -776,6 +810,7 @@ const toggleCategory = (categoryId: number) => {
                                                                 order={order}
                                                                 onViewDetails={onViewOrderDetails}
                                                                 onCancelOrder={order.status !== 'delivered' && order.status !== 'cancelled' ? handleCancelOrder : undefined}
+                                                                onPrintQueueTicket={onPrintQueueTicket}
                                                             />
                                                         ))}
                                                     </div>

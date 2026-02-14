@@ -20,14 +20,17 @@ import {
   useOrderCategories,
   useOrders,
   useOrdersSummary,
+  useQueueStatus,
 } from "@/hooks/useOrders";
 import {
   FilterOrders,
   OrderCustomer,
   OrderResponseDto,
 } from "@/types/orders.type";
-import { CalendarDays, Plus, ShoppingBag, Tags, User, X } from "lucide-react";
+import { CalendarDays, Plus, ShoppingBag, Tags, User, X, Ticket } from "lucide-react";
 import React, { useMemo, useState } from "react";
+import { OrdersService } from "@/services/orders.service";
+import toast from "react-hot-toast";
 
 // Customer Orders Modal Component (unchanged)
 interface CustomerOrdersModalProps {
@@ -188,6 +191,24 @@ const [viewMode, setViewMode] = useState<"byDate" | "byCategory" | "byMaterials"
       return { endDate: selectedDate };
     }
     return { forTomorrow: true };
+  };
+
+  // Queue status
+  const { data: queueStatus } = useQueueStatus();
+
+  // Print queue ticket handler
+  const handlePrintQueueTicket = async (orderId: number) => {
+    try {
+      const htmlContent = await OrdersService.printQueueTicket(orderId);
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+      }
+    } catch (error) {
+      console.error("Error printing queue ticket:", error);
+      toast.error("حدث خطأ أثناء طباعة تذكرة الدور");
+    }
   };
 
   // Query hooks
@@ -392,6 +413,14 @@ const [viewMode, setViewMode] = useState<"byDate" | "byCategory" | "byMaterials"
                 <h1 className="text-2xl font-bold text-slate-200">
                   إدارة الطلبات
                 </h1>
+                {queueStatus && (
+                  <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 text-amber-400 px-3 py-1.5 rounded-lg">
+                    <Ticket className="h-5 w-5" />
+                    <span className="text-sm font-medium">
+                      الدور الحالي: <span className="text-lg font-bold text-amber-300">{queueStatus.currentNumber}</span>
+                    </span>
+                  </div>
+                )}
               </div>
               <div className="flex gap-3">
                 <button
@@ -520,6 +549,7 @@ const [viewMode, setViewMode] = useState<"byDate" | "byCategory" | "byMaterials"
       onViewOrderDetails={handleViewOrderDetails}
       onSearchChange={setSearchTerm}
       searchTerm={searchTerm}
+      onPrintQueueTicket={handlePrintQueueTicket}
     />
   ) : viewMode === "byMaterials" ? (
     <OrderByCategoryMaterialsView
