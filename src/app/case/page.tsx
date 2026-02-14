@@ -30,10 +30,14 @@ import {
   Clock,
   CreditCard,
   DollarSign,
+  Eye,
+  EyeOff,
   FileText,
   Loader2,
+  Lock,
   Plus,
   Search,
+  ShieldAlert,
   X,
   XCircle
 } from "lucide-react";
@@ -126,8 +130,142 @@ const RejectionModal = ({
   );
 };
 
+// Treasury Lock Screen Component
+const TreasuryLockScreen = ({
+  onUnlock,
+}: {
+  onUnlock: () => void;
+}) => {
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState(false);
+  const [shake, setShake] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const correctPassword = process.env.NEXT_PUBLIC_TREASURY_PASSWORD;
+    if (password === correctPassword) {
+      onUnlock();
+    } else {
+      setError(true);
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
+      setTimeout(() => setError(false), 3000);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-background relative transition-colors duration-300">
+      <SplineBackground activeTab="case" />
+      <div className="relative z-10">
+        <Navbar />
+        <main className="py-32 p-4">
+          <div className="max-w-md mx-auto">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="text-center mb-8"
+            >
+              <div className="w-20 h-20 bg-blue-500/20 border border-blue-500/30 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Lock className="w-10 h-10 text-blue-400" />
+              </div>
+              <h1 className="text-3xl font-bold text-white mb-2">الخزينة مقفلة</h1>
+              <p className="text-gray-400">أدخل كلمة المرور للوصول إلى الخزينة</p>
+            </motion.div>
+
+            <motion.form
+              onSubmit={handleSubmit}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className={`bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 ${
+                shake ? "animate-shake" : ""
+              }`}
+              dir="rtl"
+              style={
+                shake
+                  ? {
+                      animation: "shake 0.5s ease-in-out",
+                    }
+                  : undefined
+              }
+            >
+              <div className="mb-6">
+                <label className="block text-sm text-slate-300 mb-2">
+                  كلمة المرور
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      setError(false);
+                    }}
+                    placeholder="أدخل كلمة المرور..."
+                    className={`w-full px-4 pr-4 pl-12 py-3 bg-white/5 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors ${
+                      error
+                        ? "border-red-500/50 focus:border-red-500/50 focus:ring-red-500/20"
+                        : "border-white/10 focus:border-blue-500/30 focus:ring-blue-500/20"
+                    }`}
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300 transition-colors"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-4 flex items-center gap-2 text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg p-3"
+                >
+                  <ShieldAlert className="h-5 w-5 flex-shrink-0" />
+                  <span className="text-sm">كلمة المرور غير صحيحة</span>
+                </motion.div>
+              )}
+
+              <button
+                type="submit"
+                className="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+              >
+                <Lock className="h-5 w-5" />
+                فتح الخزينة
+              </button>
+            </motion.form>
+          </div>
+        </main>
+      </div>
+
+      <style jsx>{`
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+          20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        .animate-shake {
+          animation: shake 0.5s ease-in-out;
+        }
+      `}</style>
+    </div>
+  );
+};
+
 // Modified Case component with support for all invoice types
 const Case = () => {
+  // Treasury lock state
+  const [isUnlocked, setIsUnlocked] = useState(false);
+
   // State
   const [invoiceToEdit, setInvoiceToEdit] = useState<Invoice | null>(null);
   const [invoiceToDelete, setInvoiceToDelete] = useState<Invoice | null>(null);
@@ -403,6 +541,11 @@ const getLastMonthRange = () => {
 
   const isLoading =
     isInvoicesLoading || isPendingLoading || isHistoryLoading || isConfirming;
+
+  // Show lock screen if not unlocked
+  if (!isUnlocked) {
+    return <TreasuryLockScreen onUnlock={() => setIsUnlocked(true)} />;
+  }
 
   return (
     <div className="min-h-screen bg-background relative transition-colors duration-300">
