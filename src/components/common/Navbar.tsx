@@ -23,6 +23,7 @@ import {
   Warehouse,
   X,
   FileText,
+  Shield,
 } from "lucide-react";
 
 import { useEffect, useState, useRef } from "react";
@@ -215,6 +216,12 @@ const Navbar = () => {
       roles: [Role.ADMIN, Role.MANAGER, Role.TreasuryManager], // Only Admin, Manager, and TreasuryManager can access reports
     },
     {
+      name: "سجل المراقبة",
+      icon: Shield,
+      href: "/audit-logs",
+      roles: [Role.SUPER_ADMIN], // Only SUPER_ADMIN can access audit logs
+    },
+    {
       name: "إدارة",
       icon: Store,
       roles: [
@@ -268,11 +275,12 @@ const Navbar = () => {
   const { hasRole } = useRoles();
 
   useEffect(() => {
-    if (hasRole(Role.TrayManager)) {
+    // Don't redirect SUPER_ADMIN
+    if (hasRole(Role.TrayManager) && !roles.includes(Role.SUPER_ADMIN)) {
       router.replace("/trays");
       localStorage.setItem("new_page", "/trays");
     }
-  }, [hasRole, router]);
+  }, [hasRole, router, roles]);
 
   // ========== Event Handlers ==========
   // Handle logout
@@ -295,6 +303,9 @@ const Navbar = () => {
 
   // Helper function to check if an item is visible based on user roles
   const isItemVisible = (item: NavItem | SubNavItem) => {
+    // SUPER_ADMIN can see everything
+    if (roles.includes(Role.SUPER_ADMIN)) return true;
+
     // If no roles specified, item is visible to all
     if (!item.roles) return true;
 

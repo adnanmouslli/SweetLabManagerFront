@@ -6,6 +6,7 @@ import { useSelector } from "react-redux";
 export enum Role {
   MANAGER = "MANAGER",
   ADMIN = "ADMIN",
+  SUPER_ADMIN = "SUPER_ADMIN",
   ShiftManager = "ShiftManager",
   TreasuryManager = "TreasuryManager",
   TrayManager = "TrayManager",
@@ -21,6 +22,8 @@ export const useRoles = () => {
   // Check if user has a specific role
   const hasRole = useCallback(
     (role: Role) => {
+      // SUPER_ADMIN has all roles
+      if (roles.includes(Role.SUPER_ADMIN)) return true;
       return roles.includes(role);
     },
     [roles]
@@ -29,6 +32,8 @@ export const useRoles = () => {
   // Check if user has any of the specified roles
   const hasAnyRole = useCallback(
     (checkRoles: Role[]) => {
+      // SUPER_ADMIN has all roles
+      if (roles.includes(Role.SUPER_ADMIN)) return true;
       return checkRoles.some((role) => roles.includes(role));
     },
     [roles]

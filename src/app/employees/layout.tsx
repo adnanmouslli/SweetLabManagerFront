@@ -14,7 +14,8 @@ export default function EmployeesLayout({
 
   // Check if user has permission to access this page
   useEffect(() => {
-    if (!hasAnyRole([Role.ADMIN, Role.MANAGER, Role.TreasuryManager])) {
+    // SUPER_ADMIN can access everything, so we check it first
+    if (!hasAnyRole([Role.SUPER_ADMIN, Role.ADMIN, Role.MANAGER, Role.TreasuryManager])) {
       router.replace("/");
     }
   }, [hasAnyRole, router]);
