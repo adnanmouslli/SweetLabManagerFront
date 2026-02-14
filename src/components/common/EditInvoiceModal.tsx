@@ -504,8 +504,40 @@ const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({
                           <td className="p-3 text-slate-300">
                             <Controller
                               control={control}
-                              name={`items.${index}.item.name`}
-                              render={({ field }) => <span>{field.value}</span>}
+                              name={`items.${index}.itemId`}
+                              render={({ field }) => (
+                                <select
+                                  value={field.value}
+                                  onChange={(e) => {
+                                    const newItemId = Number(e.target.value);
+                                    const selectedProduct = items?.find((i) => i.id === newItemId);
+                                    if (selectedProduct) {
+                                      field.onChange(newItemId);
+                                      setValue(`items.${index}.item`, {
+                                        id: selectedProduct.id,
+                                        name: selectedProduct.name,
+                                        description: selectedProduct.description || "",
+                                        type: selectedProduct.type,
+                                        price: selectedProduct.cost || 0,
+                                        unit: selectedProduct.defaultUnit || "",
+                                        groupId: selectedProduct.groupId || 0,
+                                      });
+                                      setValue(`items.${index}.unitPrice`, selectedProduct.cost || watchedItems[index]?.unitPrice || 0);
+                                      setValue(`items.${index}.unit`, selectedProduct.defaultUnit || watchedItems[index]?.unit || "");
+                                      const qty = watchedItems[index]?.quantity || 0;
+                                      const price = selectedProduct.cost || watchedItems[index]?.unitPrice || 0;
+                                      setValue(`items.${index}.subTotal`, qty * price);
+                                    }
+                                  }}
+                                  className="w-full bg-slate-700/30 border border-slate-500/30 rounded p-1.5 text-slate-200 text-sm"
+                                >
+                                  {items?.map((i) => (
+                                    <option key={i.id} value={i.id}>
+                                      {i.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              )}
                             />
                           </td>
                           <td className="p-3 text-slate-300">
@@ -513,9 +545,19 @@ const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({
                               control={control}
                               name={`items.${index}.quantity`}
                               render={({ field }) => (
-                                <span>
-                                  {field.value} {watchedItems[index]?.unit}
-                                </span>
+                                <input
+                                  type="number"
+                                  min="0.01"
+                                  step="0.01"
+                                  value={field.value}
+                                  onChange={(e) => {
+                                    const qty = Number(e.target.value) || 0;
+                                    field.onChange(qty);
+                                    const price = watchedItems[index]?.unitPrice || 0;
+                                    setValue(`items.${index}.subTotal`, qty * price);
+                                  }}
+                                  className="w-full bg-slate-700/30 border border-slate-500/30 rounded p-1.5 text-slate-200 text-sm"
+                                />
                               )}
                             />
                           </td>
@@ -523,14 +565,30 @@ const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({
                             <Controller
                               control={control}
                               name={`items.${index}.unitPrice`}
-                              render={({ field }) => <span>{field.value}</span>}
+                              render={({ field }) => (
+                                <input
+                                  type="number"
+                                  min="0"
+                                  step="any"
+                                  value={field.value}
+                                  onChange={(e) => {
+                                    const price = Number(e.target.value) || 0;
+                                    field.onChange(price);
+                                    const qty = watchedItems[index]?.quantity || 0;
+                                    setValue(`items.${index}.subTotal`, qty * price);
+                                  }}
+                                  className="w-full bg-slate-700/30 border border-slate-500/30 rounded p-1.5 text-slate-200 text-sm"
+                                />
+                              )}
                             />
                           </td>
                           <td className="p-3 text-slate-300">
                             <Controller
                               control={control}
                               name={`items.${index}.subTotal`}
-                              render={({ field }) => <span>{field.value}</span>}
+                              render={({ field }) => (
+                                <span className="font-medium">{field.value.toLocaleString()}</span>
+                              )}
                             />
                           </td>
                           <td className="p-3">
