@@ -17,10 +17,12 @@ import {
   FileX,
   MoreHorizontal,
   Glasses,
-  GlassWater
+  GlassWater,
+  Printer
 } from "lucide-react";
 import { useMediaQuery } from "@mui/material";
 import { Role, useRoles } from "@/hooks/users/useRoles";
+import { apiClient } from "@/utils/axios";
 
 interface InvoiceTableProps {
   invoices?: Invoice[];
@@ -157,6 +159,21 @@ export const InvoiceTable = ({
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
   const { hasAnyRole } = useRoles();
+
+  const handlePrintInvoice = async (invoice: Invoice) => {
+    try {
+      const response = await apiClient.get(`/reports/invoice-receipt/${invoice.id}`, {
+        headers: { 'Accept': 'text/html' },
+      });
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(response as string);
+        printWindow.document.close();
+      }
+    } catch (error) {
+      console.error("Error printing invoice:", error);
+    }
+  };
 
   // Reset to first page when invoices change
   useEffect(() => {
@@ -319,6 +336,17 @@ export const InvoiceTable = ({
               <Eye className="h-4 w-4" />
               <span>عرض التفاصيل</span>
             </button>
+
+            <button
+              onClick={() => {
+                handlePrintInvoice(actionInvoice);
+                setActionInvoice(null);
+              }}
+              className="flex w-full items-center gap-2 p-3 rounded-lg text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 transition-colors text-sm text-right"
+            >
+              <Printer className="h-4 w-4" />
+              <span>طباعة الفاتورة</span>
+            </button>
           </div>
 
           <div className="mt-4 flex justify-center">
@@ -424,6 +452,13 @@ export const InvoiceTable = ({
                 >
                   <Eye className="h-4 w-4" />
                   <span>عرض التفاصيل</span>
+                </button>
+                <button
+                  onClick={() => handlePrintInvoice(invoice)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-colors flex-1"
+                >
+                  <Printer className="h-4 w-4" />
+                  <span>طباعة</span>
                 </button>
               </div>
             </div>
@@ -551,22 +586,31 @@ export const InvoiceTable = ({
 
 
                     <td className="p-3 text-center">
-                      {!invoice.paidStatus && hasAnyRole([Role.ADMIN]) ? (
+                      <div className="flex items-center justify-center gap-2">
+                        {!invoice.paidStatus && hasAnyRole([Role.ADMIN]) ? (
+                          <button
+                            onClick={() => setActionInvoice(invoice)}
+                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs bg-slate-700/50 text-slate-200 hover:bg-slate-700/70 transition-colors"
+                          >
+                            <span>إجراءات</span>
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => onViewDetail(invoice)}
+                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs bg-slate-700/50 text-slate-200 hover:bg-slate-700/70 transition-colors"
+                          >
+                            <Eye className="h-4 w-4" />
+                            <span>عرض التفاصيل</span>
+                          </button>
+                        )}
                         <button
-                          onClick={() => setActionInvoice(invoice)}
-                          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs bg-slate-700/50 text-slate-200 hover:bg-slate-700/70 transition-colors"
+                          onClick={() => handlePrintInvoice(invoice)}
+                          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-colors"
+                          title="طباعة الفاتورة"
                         >
-                          <span>إجراءات</span>
+                          <Printer className="h-4 w-4" />
                         </button>
-                      ) : (
-                        <button
-                          onClick={() => onViewDetail(invoice)}
-                          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs bg-slate-700/50 text-slate-200 hover:bg-slate-700/70 transition-colors"
-                        >
-                          <Eye className="h-4 w-4" />
-                          <span>عرض التفاصيل</span>
-                        </button>
-                      )}
+                      </div>
                     </td>
 
 

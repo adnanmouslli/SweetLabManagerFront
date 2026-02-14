@@ -15,6 +15,7 @@ import {
   Plus,
   Minus,
   Search,
+  Printer,
 } from "lucide-react";
 import { formatDate } from "@/utils/formatters";
 import { getCustomerDisplayName } from "@/utils/formatters"; // أو من الملف الجديد
@@ -26,6 +27,7 @@ import EditInvoiceModal from "@/components/common/EditInvoiceModal";
 import DeleteConfirmationModal from "@/components/common/invoices/DeleteConfirmationModal";
 import { useDeleteInvoice } from "@/hooks/invoices/useInvoice";
 import { useMokkBar } from "../providers/MokkBarContext";
+import { apiClient } from "@/utils/axios";
 
 interface InvoicesModalProps {
   type: "boothInvoices" | "universityInvoices" | "generalInvoices";
@@ -39,11 +41,13 @@ const ActionsMenu = ({
   onView,
   onEdit,
   onDelete,
+  onPrint,
 }: {
   invoice: any;
   onView: (invoice: any) => void;
   onEdit: (invoice: any) => void;
   onDelete: (invoice: any) => void;
+  onPrint: (invoice: any) => void;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -82,6 +86,17 @@ const ActionsMenu = ({
           >
             <Eye className="h-4 w-4" />
             <span>عرض التفاصيل</span>
+          </button>
+
+          <button
+            onClick={() => {
+              onPrint(invoice);
+              setIsOpen(false);
+            }}
+            className="flex w-full items-center gap-2 px-3 py-2 text-sm text-amber-400 hover:bg-white/10 rounded-md transition-colors text-right"
+          >
+            <Printer className="h-4 w-4" />
+            <span>طباعة</span>
           </button>
 
           <button
@@ -408,6 +423,22 @@ const [searchQuery, setSearchQuery] = useState("");
         field,
         direction: "asc",
       });
+    }
+  };
+
+  // Print invoice handler
+  const handlePrintInvoice = async (invoice: any) => {
+    try {
+      const response = await apiClient.get(`/reports/invoice-receipt/${invoice.id}`, {
+        headers: { 'Accept': 'text/html' },
+      });
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(response as string);
+        printWindow.document.close();
+      }
+    } catch (error) {
+      console.error("Error printing invoice:", error);
     }
   };
 
@@ -998,6 +1029,7 @@ return filteredInvoices;
                                   onView={handleViewInvoice}
                                   onEdit={handleEditInvoice}
                                   onDelete={handleDeleteInvoice}
+                                  onPrint={handlePrintInvoice}
                                 />
                               </td>
                             </tr>
