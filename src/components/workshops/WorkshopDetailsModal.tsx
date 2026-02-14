@@ -3,18 +3,20 @@
 import ConfirmationDialog from "@/components/common/ConfirmationDialog";
 import { useMokkBar } from "@/components/providers/MokkBarContext";
 import { Role, useRoles } from "@/hooks/users/useRoles";
-import { useRemoveEmployeeFromWorkshop, useWorkshopFinancialSummary } from "@/hooks/workshops/useWorkshops";
+import { useRemoveEmployeeFromWorkshop, useDeleteWorkshopProduction, useDeleteWorkshopHours, useWorkshopFinancialSummary } from "@/hooks/workshops/useWorkshops";
 import { WorkType } from "@/types/employees.type";
-import { Workshop } from "@/types/workshops/workshop.type";
+import { Workshop, WorkshopProduction, WorkshopHours } from "@/types/workshops/workshop.type";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { AnimatePresence, motion } from "framer-motion";
-import { Activity, Calendar, ChevronDown, ChevronRight, Clock, DollarSign, FileText, Package, PersonStanding, Plus, Trash2, User, Users, X } from "lucide-react";
+import { Activity, Calendar, ChevronDown, ChevronRight, Clock, DollarSign, Edit3, FileText, Package, PersonStanding, Plus, Trash2, User, Users, X } from "lucide-react";
 import React, { useState } from "react";
 import AddEmployeeToWorkshopModal from "./AddEmployeeToWorkshopModal";
 import WorkshopHoursModal from "./WorkshopHoursModal";
 import WorkshopProductionModal from "./WorkshopProductionModal";
 import WorkshopSettlementModal from "./WorkshopSettlementModal";
+import EditProductionModal from "./EditProductionModal";
+import EditHoursModal from "./EditHoursModal";
 import { formatDate } from "@/utils/formatters";
 
 // Enhanced employee withdrawal type that includes employee name and handles both date formats
@@ -47,9 +49,21 @@ const WorkshopDetailsModal: React.FC<WorkshopDetailsModalProps> = ({ workshop, p
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [employeeToRemove, setEmployeeToRemove] = useState<{ id: number; name: string } | null>(null);
 
+  // Edit/Delete production state
+  const [editingProduction, setEditingProduction] = useState<WorkshopProduction | null>(null);
+  const [productionToDelete, setProductionToDelete] = useState<WorkshopProduction | null>(null);
+  const [showDeleteProductionDialog, setShowDeleteProductionDialog] = useState(false);
+
+  // Edit/Delete hours state
+  const [editingHours, setEditingHours] = useState<WorkshopHours | null>(null);
+  const [hoursToDelete, setHoursToDelete] = useState<WorkshopHours | null>(null);
+  const [showDeleteHoursDialog, setShowDeleteHoursDialog] = useState(false);
+
   const { hasAnyRole } = useRoles();
   const { setSnackbarConfig } = useMokkBar();
   const removeEmployeeFromWorkshop = useRemoveEmployeeFromWorkshop();
+  const deleteProductionMutation = useDeleteWorkshopProduction();
+  const deleteHoursMutation = useDeleteWorkshopHours();
 
   const canManageWorkshops = hasAnyRole([
     Role.ADMIN,
@@ -112,6 +126,66 @@ const WorkshopDetailsModal: React.FC<WorkshopDetailsModalProps> = ({ workshop, p
     }
   };
 
+
+  // Delete production handler
+  const confirmDeleteProduction = async () => {
+    if (!productionToDelete) return;
+
+    try {
+      await deleteProductionMutation.mutateAsync({
+        workshopId: workshop.id,
+        productionRecordId: productionToDelete.id,
+      });
+
+      setSnackbarConfig({
+        open: true,
+        severity: "success",
+        message: "تم حذف سجل الإنتاج بنجاح",
+      });
+
+      if (onUpdate) onUpdate();
+    } catch (error) {
+      console.error("Error deleting production:", error);
+      setSnackbarConfig({
+        open: true,
+        severity: "error",
+        message: "حدث خطأ أثناء حذف سجل الإنتاج",
+      });
+    } finally {
+      setShowDeleteProductionDialog(false);
+      setProductionToDelete(null);
+    }
+  };
+
+  // Delete hours handler
+  const confirmDeleteHours = async () => {
+    if (!hoursToDelete) return;
+
+    try {
+      await deleteHoursMutation.mutateAsync({
+        workshopId: workshop.id,
+        hoursRecordId: hoursToDelete.id,
+      });
+
+      setSnackbarConfig({
+        open: true,
+        severity: "success",
+        message: "تم حذف سجل الساعات بنجاح",
+      });
+
+      if (onUpdate) onUpdate();
+    } catch (error) {
+      console.error("Error deleting hours:", error);
+      setSnackbarConfig({
+        open: true,
+        severity: "error",
+        message: "حدث خطأ أثناء حذف سجل الساعات",
+      });
+    } finally {
+      setShowDeleteHoursDialog(false);
+      setHoursToDelete(null);
+    }
+  };
 
   const stats = [
     {
@@ -350,6 +424,31 @@ const WorkshopDetailsModal: React.FC<WorkshopDetailsModalProps> = ({ workshop, p
                           badge={record.items.length > 3 ? "إنتاج كثيف" : "إنتاج عادي"}
                           badgeColor={record.items.length > 3 ? "bg-orange-500/10 text-orange-400" : "bg-blue-500/10 text-blue-400"}
                         >
+                          {/* Action Buttons */}
+                          {canManageWorkshops && (
+                            <div className="flex gap-2 mb-4">
+                              <button
+                                onClick={() => setEditingProduction(record)}
+                                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500/10
+                                  text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition-colors text-sm"
+                              >
+                                <Edit3 className="h-3.5 w-3.5" />
+                                تعديل
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setProductionToDelete(record);
+                                  setShowDeleteProductionDialog(true);
+                                }}
+                                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-500/10
+                                  text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-colors text-sm"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                                حذف
+                              </button>
+                            </div>
+                          )}
+
                           {/* Production Details */}
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                             <div className="p-3 bg-green-500/10 rounded-lg border border-green-500/20">
@@ -429,101 +528,100 @@ const WorkshopDetailsModal: React.FC<WorkshopDetailsModalProps> = ({ workshop, p
             {/* Enhanced Hour Records (for hourly workshops) */}
             {workshop.workType === WorkType.HOURLY && (
               <>
-                {financialSummary?.dailySummary && financialSummary.dailySummary.length > 0 && (
+                {workshop.hourRecords && workshop.hourRecords.length > 0 && (
                   <div className="space-y-3">
                     <h4 className="text-sm text-slate-400 font-medium">سجلات ساعات العمل</h4>
-                    {financialSummary.dailySummary.slice(0, 5).map((dailySummary, index) => {
-                      if (!dailySummary.employees || dailySummary.employees.length === 0) return null;
+                    {workshop.hourRecords.map((record, index) => {
+                      if (!record || !record.id) return null;
+                      const employeeName = workshop.employees?.find(e => e.id === record.employeeId)?.name || "موظف";
                       return (
                         <CollapsibleActivityRow
-                          key={`daily-${index}`}
-                          id={`daily-${index}`}
-                          title={`ساعات ${formatDate(dailySummary.date)}`}
+                          key={`hours-${record.id}-${index}`}
+                          id={`hours-${record.id}-${index}`}
+                          title={`ساعات ${employeeName} - ${formatDate(record.date)}`}
                           icon={<Clock className="h-4 w-4 text-cyan-400" />}
-                          summary={`${dailySummary.totalHours} ساعة • ${dailySummary.employees.length} موظف`}
-                          amount={dailySummary.totalAmount || 0}
+                          summary={`${record.hours} ساعة • ${formatCurrency(record.hourlyRate)} / ساعة`}
+                          amount={record.totalAmount}
                           amountColor="text-cyan-400"
-                          date={dailySummary.date}
-                          badge={dailySummary.totalHours && dailySummary.totalHours > 20 ? "يوم مكثف" : "يوم عادي"}
-                          badgeColor={dailySummary.totalHours && dailySummary.totalHours > 20 ? "bg-red-500/10 text-red-400" : "bg-green-500/10 text-green-400"}
+                          date={record.date}
+                          badge={record.hours > 8 ? "يوم مكثف" : "يوم عادي"}
+                          badgeColor={record.hours > 8 ? "bg-red-500/10 text-red-400" : "bg-green-500/10 text-green-400"}
                         >
-                          {/* Daily Summary Stats */}
+                          {/* Action Buttons */}
+                          {canManageWorkshops && (
+                            <div className="flex gap-2 mb-4">
+                              <button
+                                onClick={() => setEditingHours(record)}
+                                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500/10
+                                  text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition-colors text-sm"
+                              >
+                                <Edit3 className="h-3.5 w-3.5" />
+                                تعديل
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setHoursToDelete(record);
+                                  setShowDeleteHoursDialog(true);
+                                }}
+                                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-500/10
+                                  text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-colors text-sm"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                                حذف
+                              </button>
+                            </div>
+                          )}
+
+                          {/* Hours Details */}
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <div className="p-3 bg-cyan-500/10 rounded-lg border border-cyan-500/20">
-                              <div className="text-cyan-400 text-sm">إجمالي الساعات</div>
-                              <div className="text-white text-xl font-bold">{dailySummary.totalHours}</div>
+                              <div className="text-cyan-400 text-sm">عدد الساعات</div>
+                              <div className="text-white text-xl font-bold">{record.hours}</div>
                             </div>
                             <div className="p-3 bg-green-500/10 rounded-lg border border-green-500/20">
-                              <div className="text-green-400 text-sm">إجمالي المبلغ</div>
-                              <div className="text-white text-xl font-bold">{formatCurrency(dailySummary.totalAmount || 0)}</div>
+                              <div className="text-green-400 text-sm">سعر الساعة</div>
+                              <div className="text-white text-xl font-bold">{formatCurrency(record.hourlyRate)}</div>
                             </div>
                             <div className="p-3 bg-purple-500/10 rounded-lg border border-purple-500/20">
-                              <div className="text-purple-400 text-sm">عدد الموظفين</div>
-                              <div className="text-white text-xl font-bold">{dailySummary.employees.length}</div>
+                              <div className="text-purple-400 text-sm">المبلغ الإجمالي</div>
+                              <div className="text-white text-xl font-bold">{formatCurrency(record.totalAmount)}</div>
                             </div>
                           </div>
 
-                          {/* Employee Details */}
-                          <div className="space-y-2">
-                            <h5 className="text-sm font-medium text-white border-b border-white/10 pb-2">تفاصيل الموظفين</h5>
-                            {dailySummary.employees.map((employeeRecord, empIndex) => (
-                              <div key={`hour-${index}-${empIndex}`}
-                                className="p-3 bg-white/5 rounded-lg">
-                                <div className="flex justify-between items-start">
-                                  <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-cyan-500/20 rounded-lg flex items-center justify-center">
-                                      <User className="h-5 w-5 text-cyan-400" />
-                                    </div>
-                                    <div>
-                                      <span className="text-white font-medium">{employeeRecord.employeeName}</span>
-                                      <div className="grid grid-cols-2 gap-4 text-xs text-slate-400 mt-1">
-                                        <div>ساعات العمل: {employeeRecord.hours}h</div>
-                                        <div>معدل الساعة: {formatCurrency(employeeRecord.hourlyRate)}</div>
-                                        <div>الإجمالي: {formatCurrency(employeeRecord.amount)}</div>
-                                        <div>المعدل/ساعة: {formatCurrency(employeeRecord.amount / employeeRecord.hours)}</div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <div className="text-right">
-                                    <div className="text-cyan-400 font-medium">
-                                      {formatCurrency(employeeRecord.amount)}
-                                    </div>
-                                    <div className="text-xs text-slate-400">
-                                      {employeeRecord.hours}h × {formatCurrency(employeeRecord.hourlyRate)}
-                                    </div>
-                                  </div>
+                          {/* Additional Info */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2">
+                                <User className="h-4 w-4 text-blue-400" />
+                                <span className="text-slate-400">الموظف:</span>
+                                <span className="text-white">{employeeName}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Calendar className="h-4 w-4 text-purple-400" />
+                                <span className="text-slate-400">التاريخ:</span>
+                                <span className="text-white">{formatDate(record.date)}</span>
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2">
+                                <Clock className="h-4 w-4 text-cyan-400" />
+                                <span className="text-slate-400">المعدل:</span>
+                                <span className="text-white">{record.hours}h × {formatCurrency(record.hourlyRate)}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {record.notes && (
+                            <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                              <div className="flex items-start gap-2">
+                                <FileText className="h-4 w-4 text-blue-400 mt-0.5" />
+                                <div>
+                                  <span className="text-blue-400 text-sm font-medium">ملاحظات:</span>
+                                  <p className="text-white text-sm mt-1">{record.notes}</p>
                                 </div>
                               </div>
-                            ))}
-                          </div>
-
-                          {/* Daily Statistics */}
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                            <div className="text-center p-2 bg-white/5 rounded">
-                              <div className="text-slate-400">متوسط ساعات/موظف</div>
-                              <div className="text-white font-medium">
-                                {(dailySummary.totalHours! / dailySummary.employees.length).toFixed(1)}h
-                              </div>
                             </div>
-                            <div className="text-center p-2 bg-white/5 rounded">
-                              <div className="text-slate-400">متوسط معدل/ساعة</div>
-                              <div className="text-white font-medium">
-                                {formatCurrency(dailySummary.totalAmount! / dailySummary.totalHours!)}
-                              </div>
-                            </div>
-                            <div className="text-center p-2 bg-white/5 rounded">
-                              <div className="text-slate-400">أعلى معدل</div>
-                              <div className="text-white font-medium">
-                                {formatCurrency(Math.max(...dailySummary.employees.map(e => e.hourlyRate)))}
-                              </div>
-                            </div>
-                            <div className="text-center p-2 bg-white/5 rounded">
-                              <div className="text-slate-400">أقل معدل</div>
-                              <div className="text-white font-medium">
-                                {formatCurrency(Math.min(...dailySummary.employees.map(e => e.hourlyRate)))}
-                              </div>
-                            </div>
-                          </div>
+                          )}
                         </CollapsibleActivityRow>
                       );
                     })}
@@ -904,7 +1002,33 @@ const WorkshopDetailsModal: React.FC<WorkshopDetailsModalProps> = ({ workshop, p
         />
       )}
 
-      {/* Confirmation Dialog */}
+      {/* Edit Production Modal */}
+      {editingProduction && (
+        <EditProductionModal
+          workshopId={workshop.id}
+          production={editingProduction}
+          onClose={() => setEditingProduction(null)}
+          onSuccess={() => {
+            setEditingProduction(null);
+            if (onUpdate) onUpdate();
+          }}
+        />
+      )}
+
+      {/* Edit Hours Modal */}
+      {editingHours && (
+        <EditHoursModal
+          workshopId={workshop.id}
+          hoursRecord={editingHours}
+          onClose={() => setEditingHours(null)}
+          onSuccess={() => {
+            setEditingHours(null);
+            if (onUpdate) onUpdate();
+          }}
+        />
+      )}
+
+      {/* Confirmation Dialog - Remove Employee */}
       <ConfirmationDialog
         isOpen={showConfirmDialog}
         onClose={() => {
@@ -915,6 +1039,36 @@ const WorkshopDetailsModal: React.FC<WorkshopDetailsModalProps> = ({ workshop, p
         title="إزالة موظف"
         message={`هل أنت متأكد من إزالة ${employeeToRemove?.name} من الورشة؟`}
         confirmText="إزالة"
+        cancelText="إلغاء"
+        type="danger"
+      />
+
+      {/* Confirmation Dialog - Delete Production */}
+      <ConfirmationDialog
+        isOpen={showDeleteProductionDialog}
+        onClose={() => {
+          setShowDeleteProductionDialog(false);
+          setProductionToDelete(null);
+        }}
+        onConfirm={confirmDeleteProduction}
+        title="حذف سجل الإنتاج"
+        message="هل أنت متأكد من حذف سجل الإنتاج هذا؟ لا يمكن التراجع عن هذا الإجراء."
+        confirmText="حذف"
+        cancelText="إلغاء"
+        type="danger"
+      />
+
+      {/* Confirmation Dialog - Delete Hours */}
+      <ConfirmationDialog
+        isOpen={showDeleteHoursDialog}
+        onClose={() => {
+          setShowDeleteHoursDialog(false);
+          setHoursToDelete(null);
+        }}
+        onConfirm={confirmDeleteHours}
+        title="حذف سجل الساعات"
+        message="هل أنت متأكد من حذف سجل الساعات هذا؟ لا يمكن التراجع عن هذا الإجراء."
+        confirmText="حذف"
         cancelText="إلغاء"
         type="danger"
       />

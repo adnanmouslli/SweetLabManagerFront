@@ -144,6 +144,19 @@ export interface CreateWorkshopProductionDTO {
   notes?: string;
 }
 
+// Update Production DTO
+export interface UpdateWorkshopProductionDTO {
+  items?: ProductionItemDTO[];
+  notes?: string;
+}
+
+// Update Hours DTO
+export interface UpdateWorkshopHoursDTO {
+  hours?: number;
+  hourlyRate?: number;
+  notes?: string;
+}
+
 // Hours related DTOs
 export interface CreateWorkshopHoursDTO {
   employeeId: number;

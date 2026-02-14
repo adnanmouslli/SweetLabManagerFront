@@ -4,6 +4,8 @@ import {
   CreateWorkshopProductionDTO,
   CreateWorkshopSettlementDTO,
   UpdateWorkshopDTO,
+  UpdateWorkshopProductionDTO,
+  UpdateWorkshopHoursDTO,
   Workshop,
   WorkshopFinancialSummary,
   WorkshopFinancialSummaryParams,
@@ -47,6 +49,27 @@ export class WorkshopService {
     return response;
   }
 
+  // Update production
+  static async updateWorkshopProduction(
+    workshopId: number,
+    productionRecordId: number,
+    data: UpdateWorkshopProductionDTO,
+  ): Promise<WorkshopProduction> {
+    const response = await apiClient.patch<WorkshopProduction>(
+      `/workshops/${workshopId}/production/${productionRecordId}`,
+      data,
+    );
+    return response;
+  }
+
+  // Delete production
+  static async deleteWorkshopProduction(
+    workshopId: number,
+    productionRecordId: number,
+  ): Promise<void> {
+    await apiClient.delete(`/workshops/${workshopId}/production/${productionRecordId}`);
+  }
+
   // Hours operations
   static async addWorkshopHours(
     workshopId: number,
@@ -57,6 +80,27 @@ export class WorkshopService {
       data,
     );
     return response;
+  }
+
+  // Update hours
+  static async updateWorkshopHours(
+    workshopId: number,
+    hoursRecordId: number,
+    data: UpdateWorkshopHoursDTO,
+  ): Promise<WorkshopHours> {
+    const response = await apiClient.patch<WorkshopHours>(
+      `/workshops/${workshopId}/hours/${hoursRecordId}`,
+      data,
+    );
+    return response;
+  }
+
+  // Delete hours
+  static async deleteWorkshopHours(
+    workshopId: number,
+    hoursRecordId: number,
+  ): Promise<void> {
+    await apiClient.delete(`/workshops/${workshopId}/hours/${hoursRecordId}`);
   }
 
   // Settlement operations

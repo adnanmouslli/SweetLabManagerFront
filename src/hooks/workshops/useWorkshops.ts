@@ -11,7 +11,9 @@ import {
   CreateWorkshopDTO,
   UpdateWorkshopDTO,
   CreateWorkshopProductionDTO,
+  UpdateWorkshopProductionDTO,
   CreateWorkshopHoursDTO,
+  UpdateWorkshopHoursDTO,
   CreateWorkshopSettlementDTO,
   WorkshopFinancialSummary,
   WorkshopFinancialSummaryParams,
@@ -113,6 +115,62 @@ export const useAddWorkshopProduction = (
   });
 };
 
+// Update workshop production
+export const useUpdateWorkshopProduction = (
+  options?: UseMutationOptions<
+    WorkshopProduction,
+    Error,
+    { workshopId: number; productionRecordId: number; data: UpdateWorkshopProductionDTO; }
+  >
+) => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    WorkshopProduction,
+    Error,
+    { workshopId: number; productionRecordId: number; data: UpdateWorkshopProductionDTO; }
+  >({
+    mutationFn: ({ workshopId, productionRecordId, data }) =>
+      WorkshopService.updateWorkshopProduction(workshopId, productionRecordId, data),
+    onSuccess: (data, variables, context) => {
+      queryClient.invalidateQueries({
+        queryKey: WORKSHOP_QUERY_KEYS.byId(variables.workshopId)
+      });
+      queryClient.invalidateQueries({ queryKey: WORKSHOP_QUERY_KEYS.all });
+      options?.onSuccess?.(data, variables, context);
+    },
+    ...options
+  });
+};
+
+// Delete workshop production
+export const useDeleteWorkshopProduction = (
+  options?: UseMutationOptions<
+    void,
+    Error,
+    { workshopId: number; productionRecordId: number; }
+  >
+) => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    void,
+    Error,
+    { workshopId: number; productionRecordId: number; }
+  >({
+    mutationFn: ({ workshopId, productionRecordId }) =>
+      WorkshopService.deleteWorkshopProduction(workshopId, productionRecordId),
+    onSuccess: (data, variables, context) => {
+      queryClient.invalidateQueries({
+        queryKey: WORKSHOP_QUERY_KEYS.byId(variables.workshopId)
+      });
+      queryClient.invalidateQueries({ queryKey: WORKSHOP_QUERY_KEYS.all });
+      options?.onSuccess?.(data, variables, context);
+    },
+    ...options
+  });
+};
+
 // Add workshop hours with password
 export const useAddWorkshopHours = (
   options?: UseMutationOptions<
@@ -134,6 +192,62 @@ export const useAddWorkshopHours = (
       queryClient.invalidateQueries({
         queryKey: WORKSHOP_QUERY_KEYS.byId(variables.workshopId)
       });
+      options?.onSuccess?.(data, variables, context);
+    },
+    ...options
+  });
+};
+
+// Update workshop hours
+export const useUpdateWorkshopHours = (
+  options?: UseMutationOptions<
+    WorkshopHours,
+    Error,
+    { workshopId: number; hoursRecordId: number; data: UpdateWorkshopHoursDTO; }
+  >
+) => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    WorkshopHours,
+    Error,
+    { workshopId: number; hoursRecordId: number; data: UpdateWorkshopHoursDTO; }
+  >({
+    mutationFn: ({ workshopId, hoursRecordId, data }) =>
+      WorkshopService.updateWorkshopHours(workshopId, hoursRecordId, data),
+    onSuccess: (data, variables, context) => {
+      queryClient.invalidateQueries({
+        queryKey: WORKSHOP_QUERY_KEYS.byId(variables.workshopId)
+      });
+      queryClient.invalidateQueries({ queryKey: WORKSHOP_QUERY_KEYS.all });
+      options?.onSuccess?.(data, variables, context);
+    },
+    ...options
+  });
+};
+
+// Delete workshop hours
+export const useDeleteWorkshopHours = (
+  options?: UseMutationOptions<
+    void,
+    Error,
+    { workshopId: number; hoursRecordId: number; }
+  >
+) => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    void,
+    Error,
+    { workshopId: number; hoursRecordId: number; }
+  >({
+    mutationFn: ({ workshopId, hoursRecordId }) =>
+      WorkshopService.deleteWorkshopHours(workshopId, hoursRecordId),
+    onSuccess: (data, variables, context) => {
+      queryClient.invalidateQueries({
+        queryKey: WORKSHOP_QUERY_KEYS.byId(variables.workshopId)
+      });
+      queryClient.invalidateQueries({ queryKey: WORKSHOP_QUERY_KEYS.all });
       options?.onSuccess?.(data, variables, context);
     },
     ...options
