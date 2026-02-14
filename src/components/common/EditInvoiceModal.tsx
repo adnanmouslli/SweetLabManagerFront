@@ -9,7 +9,8 @@ import { Invoice, Item, SingleFetchedInvoice } from "@/types/invoice.type";
 import { sweetShopUnits } from "@/utils/constants";
 import { AxiosError } from "axios";
 import { motion } from "framer-motion";
-import { Calculator, DollarSign, Loader2, Plus, Trash2, X } from "lucide-react";
+import { useCustomersList } from "@/hooks/customers/useCustomers";
+import { Calculator, DollarSign, Loader2, Plus, Trash2, User, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 
@@ -41,6 +42,7 @@ const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({
 }) => {
   const { setSnackbarConfig } = useMokkBar();
   const { data: items } = useItems();
+  const { data: customers } = useCustomersList();
   const [invoiceType, setInvoiceType] = useState<"income" | "expense">(
     "income"
   );
@@ -368,6 +370,29 @@ const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" dir="rtl">
+          {/* Customer Selection */}
+          <div className="space-y-2">
+            <label className="block text-slate-200">العميل</label>
+            <div className="relative">
+              <User className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+              <select
+                value={customerId || ""}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setCustomerId(value ? Number(value) : undefined);
+                }}
+                className="w-full pl-4 pr-12 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-200"
+              >
+                <option value="">بدون عميل</option>
+                {customers?.map((customer) => (
+                  <option key={customer.id} value={customer.id}>
+                    {customer.name} {customer.phone ? `- ${customer.phone}` : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           {/* Products Section - Only show if invoice category is products */}
           {showProductsSection && (
             <>
