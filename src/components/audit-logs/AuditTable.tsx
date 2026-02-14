@@ -24,7 +24,7 @@ import {
   DollarSign,
   UserCircle,
   Building,
-  Sitemap,
+  Network,
   Truck,
   Server,
 } from "lucide-react";
@@ -145,7 +145,7 @@ const AuditTable: React.FC<AuditTableProps> = ({
       Advance: DollarSign,
       Employee: UserCircle,
       Workshop: Building,
-      CustomerCategory: Sitemap,
+      CustomerCategory: Network,
       TrayTracking: Truck,
       System: Server,
     };
