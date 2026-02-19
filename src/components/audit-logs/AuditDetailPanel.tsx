@@ -14,6 +14,47 @@ interface AuditDetailPanelProps {
   onViewEntityHistory: (entity: string, entityId: number) => void;
 }
 
+// Render items array as a sub-table
+const renderItemsTable = (items: any[]): React.ReactNode => {
+  if (!items || items.length === 0) {
+    return <span className="text-slate-400 italic">لا توجد عناصر</span>;
+  }
+
+  // Get all unique keys from items (excluding the numbered key like #1, #2)
+  const allKeys = Array.from(new Set(items.flatMap((item) => Object.keys(item))));
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm border border-slate-600/50 rounded">
+        <thead className="bg-slate-700/40">
+          <tr>
+            {allKeys.map((key) => (
+              <th key={key} className="p-2 text-slate-300 text-right font-medium border-b border-slate-600/50">
+                {key}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((item, index) => (
+            <tr key={index} className="border-b border-slate-700/30 hover:bg-slate-700/20">
+              {allKeys.map((key) => (
+                <td key={key} className="p-2 text-slate-200 text-right">
+                  {item[key] !== undefined && item[key] !== null
+                    ? typeof item[key] === "number"
+                      ? item[key].toLocaleString("ar-SA")
+                      : String(item[key])
+                    : "—"}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
 // Helper function to render data in a readable table format
 const renderDataAsTable = (data: any, depth: number = 0): React.ReactNode => {
   if (data === null || data === undefined) {
@@ -50,22 +91,40 @@ const renderDataAsTable = (data: any, depth: number = 0): React.ReactNode => {
       <div className="space-y-2">
         <table className="w-full text-sm">
           <tbody>
-            {entries.map(([key, value]) => (
-              <tr key={key} className="border-b border-slate-700/30">
-                <td className="p-2 text-slate-400 font-medium w-1/3 align-top">
-                  {formatFieldName(key)}
-                </td>
-                <td className="p-2 text-slate-200 align-top">
-                  {typeof value === "object" && value !== null ? (
-                    <div className="pl-2 border-r-2 border-slate-600">
-                      {renderDataAsTable(value, depth + 1)}
-                    </div>
-                  ) : (
-                    <span>{String(value)}</span>
-                  )}
-                </td>
-              </tr>
-            ))}
+            {entries.map(([key, value]) => {
+              // Render "العناصر" as a special items sub-table
+              if (key === "العناصر" && Array.isArray(value)) {
+                return (
+                  <tr key={key} className="border-b border-slate-700/30">
+                    <td colSpan={2} className="p-2">
+                      <div className="text-slate-400 font-medium mb-2">{key}</div>
+                      {renderItemsTable(value)}
+                    </td>
+                  </tr>
+                );
+              }
+
+              return (
+                <tr key={key} className="border-b border-slate-700/30">
+                  <td className="p-2 text-slate-400 font-medium w-1/3 align-top">
+                    {key}
+                  </td>
+                  <td className="p-2 text-slate-200 align-top">
+                    {typeof value === "object" && value !== null ? (
+                      <div className="pl-2 border-r-2 border-slate-600">
+                        {renderDataAsTable(value, depth + 1)}
+                      </div>
+                    ) : (
+                      <span>
+                        {typeof value === "number"
+                          ? value.toLocaleString("ar-SA")
+                          : String(value)}
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -73,40 +132,6 @@ const renderDataAsTable = (data: any, depth: number = 0): React.ReactNode => {
   }
 
   return <span className="text-slate-400">{String(data)}</span>;
-};
-
-// Format field names to Arabic when possible
-const formatFieldName = (key: string): string => {
-  const fieldMap: Record<string, string> = {
-    id: "المعرف",
-    name: "الاسم",
-    username: "اسم المستخدم",
-    email: "البريد الإلكتروني",
-    phone: "الهاتف",
-    total: "الإجمالي",
-    amount: "المبلغ",
-    price: "السعر",
-    quantity: "الكمية",
-    date: "التاريخ",
-    createdAt: "تاريخ الإنشاء",
-    updatedAt: "تاريخ التحديث",
-    status: "الحالة",
-    type: "النوع",
-    description: "الوصف",
-    notes: "الملاحظات",
-    customerName: "اسم العميل",
-    customerPhone: "هاتف العميل",
-    employeeName: "اسم الموظف",
-    invoiceNumber: "رقم الفاتورة",
-    orderNumber: "رقم الطلب",
-    shiftId: "معرف الوردية",
-    fundId: "معرف الصندوق",
-    debtAmount: "مبلغ الدين",
-    paidAmount: "المبلغ المدفوع",
-    remainingAmount: "المبلغ المتبقي",
-  };
-
-  return fieldMap[key] || key;
 };
 
 const AuditDetailPanel: React.FC<AuditDetailPanelProps> = ({
@@ -242,63 +267,88 @@ const AuditDetailPanel: React.FC<AuditDetailPanelProps> = ({
                   </div>
                 )}
 
-                {/* Old Data */}
-                <div className="bg-slate-700/30 rounded-lg overflow-hidden">
-                  <button
-                    onClick={() => toggleSection("oldData")}
-                    className="w-full flex items-center justify-between p-4 hover:bg-slate-700/50 transition-colors"
-                  >
-                    <div>
-                      <span className="text-slate-200 font-medium block">البيانات قبل العملية</span>
-                      <span className="text-xs text-slate-400 mt-1">
-                        {log.oldData ? "انقر لعرض التفاصيل" : "لا توجد بيانات قديمة"}
-                      </span>
-                    </div>
-                    {log.oldData && (
-                      expandedSections.has("oldData") ? (
-                        <ChevronDown className="h-5 w-5 text-slate-400" />
+                {/* DELETE: Show deleted data prominently */}
+                {log.action === "DELETE" && log.oldData && (
+                  <div className="bg-red-500/10 border border-red-500/30 rounded-lg overflow-hidden">
+                    <button
+                      onClick={() => toggleSection("oldData")}
+                      className="w-full flex items-center justify-between p-4 hover:bg-red-500/15 transition-colors"
+                    >
+                      <div>
+                        <span className="text-red-400 font-medium block">بيانات العنصر المحذوف</span>
+                        <span className="text-xs text-slate-400 mt-1">انقر لعرض كامل بيانات العنصر قبل الحذف</span>
+                      </div>
+                      {expandedSections.has("oldData") ? (
+                        <ChevronDown className="h-5 w-5 text-red-400" />
                       ) : (
-                        <ChevronRight className="h-5 w-5 text-slate-400" />
-                      )
+                        <ChevronRight className="h-5 w-5 text-red-400" />
+                      )}
+                    </button>
+                    {expandedSections.has("oldData") && (
+                      <div className="p-4 bg-slate-800/50 border-t border-red-500/20">
+                        {renderDataAsTable(log.oldData)}
+                      </div>
                     )}
-                  </button>
-                  {log.oldData && expandedSections.has("oldData") && (
-                    <div className="p-4 bg-slate-800/50 border-t border-slate-700/50">
-                      {renderDataAsTable(log.oldData)}
-                    </div>
-                  )}
-                </div>
+                  </div>
+                )}
+
+                {/* Non-DELETE: Old Data */}
+                {log.action !== "DELETE" && (
+                  <div className="bg-slate-700/30 rounded-lg overflow-hidden">
+                    <button
+                      onClick={() => toggleSection("oldData")}
+                      className="w-full flex items-center justify-between p-4 hover:bg-slate-700/50 transition-colors"
+                    >
+                      <div>
+                        <span className="text-slate-200 font-medium block">البيانات قبل العملية</span>
+                        <span className="text-xs text-slate-400 mt-1">
+                          {log.oldData ? "انقر لعرض التفاصيل" : "لا توجد بيانات قديمة (عملية إنشاء)"}
+                        </span>
+                      </div>
+                      {log.oldData && (
+                        expandedSections.has("oldData") ? (
+                          <ChevronDown className="h-5 w-5 text-slate-400" />
+                        ) : (
+                          <ChevronRight className="h-5 w-5 text-slate-400" />
+                        )
+                      )}
+                    </button>
+                    {log.oldData && expandedSections.has("oldData") && (
+                      <div className="p-4 bg-slate-800/50 border-t border-slate-700/50">
+                        {renderDataAsTable(log.oldData)}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* New Data */}
-                <div className="bg-slate-700/30 rounded-lg overflow-hidden">
-                  <button
-                    onClick={() => toggleSection("newData")}
-                    className="w-full flex items-center justify-between p-4 hover:bg-slate-700/50 transition-colors"
-                  >
-                    <div>
-                      <span className="text-slate-200 font-medium block">البيانات بعد العملية</span>
-                      <span className="text-xs text-slate-400 mt-1">
-                        {log.newData
-                          ? "انقر لعرض التفاصيل"
-                          : log.action.startsWith("DELETE")
-                          ? "تم الحذف - لا توجد بيانات جديدة"
-                          : "لا توجد بيانات جديدة"}
-                      </span>
-                    </div>
-                    {log.newData && (
-                      expandedSections.has("newData") ? (
-                        <ChevronDown className="h-5 w-5 text-slate-400" />
-                      ) : (
-                        <ChevronRight className="h-5 w-5 text-slate-400" />
-                      )
+                {log.action !== "DELETE" && (
+                  <div className="bg-slate-700/30 rounded-lg overflow-hidden">
+                    <button
+                      onClick={() => toggleSection("newData")}
+                      className="w-full flex items-center justify-between p-4 hover:bg-slate-700/50 transition-colors"
+                    >
+                      <div>
+                        <span className="text-slate-200 font-medium block">البيانات بعد العملية</span>
+                        <span className="text-xs text-slate-400 mt-1">
+                          {log.newData ? "انقر لعرض التفاصيل" : "لا توجد بيانات جديدة"}
+                        </span>
+                      </div>
+                      {log.newData && (
+                        expandedSections.has("newData") ? (
+                          <ChevronDown className="h-5 w-5 text-slate-400" />
+                        ) : (
+                          <ChevronRight className="h-5 w-5 text-slate-400" />
+                        )
+                      )}
+                    </button>
+                    {log.newData && expandedSections.has("newData") && (
+                      <div className="p-4 bg-slate-800/50 border-t border-slate-700/50">
+                        {renderDataAsTable(log.newData)}
+                      </div>
                     )}
-                  </button>
-                  {log.newData && expandedSections.has("newData") && (
-                    <div className="p-4 bg-slate-800/50 border-t border-slate-700/50">
-                      {renderDataAsTable(log.newData)}
-                    </div>
-                  )}
-                </div>
+                  </div>
+                )}
 
                 {/* Technical Info (Collapsible) */}
                 <div className="bg-slate-700/30 rounded-lg overflow-hidden">

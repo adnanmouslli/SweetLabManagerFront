@@ -15,6 +15,9 @@ export interface AuditLog {
     routeParams?: Record<string, string>;
     queryParams?: Record<string, string>;
     error?: string;
+    customerName?: string;
+    invoiceType?: string;
+    invoiceCategory?: string;
   } | null;
   ipAddress: string | null;
   userAgent: string | null;
@@ -52,6 +55,7 @@ export interface AuditLogQuery {
   startDate?: string; // YYYY-MM-DD
   endDate?: string; // YYYY-MM-DD
   search?: string;
+  customerName?: string;
   sortBy?: 'createdAt' | 'action' | 'entity' | 'userId';
   sortOrder?: 'asc' | 'desc';
 }

@@ -9,6 +9,7 @@ import {
   ChevronDown,
   ChevronUp,
   XCircle,
+  Users,
 } from "lucide-react";
 import { AuditLogQuery, ENTITIES, ACTIONS, HTTP_METHODS, getActionLabel, getEntityLabel } from "@/types/audit-logs.type";
 import { useUsers } from "@/hooks/users/useUsers";
@@ -35,6 +36,7 @@ const AuditFilters: React.FC<AuditFiltersProps> = ({
     if (filters.method) count++;
     if (filters.startDate) count++;
     if (filters.endDate) count++;
+    if (filters.customerName) count++;
     return count;
   }, [filters]);
 
@@ -76,6 +78,17 @@ const AuditFilters: React.FC<AuditFiltersProps> = ({
     }, 500);
     return () => clearTimeout(timer);
   }, [searchValue]);
+
+  // Debounced customer name search
+  const [customerNameValue, setCustomerNameValue] = useState(filters.customerName || "");
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (customerNameValue !== filters.customerName) {
+        handleFilterChange("customerName", customerNameValue);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [customerNameValue]);
 
   return (
     <div className="bg-slate-800/50 rounded-lg border border-slate-700/50 mb-6" dir="rtl">
@@ -185,6 +198,21 @@ const AuditFilters: React.FC<AuditFiltersProps> = ({
                       </button>
                     </span>
                   )}
+                  {filters.customerName && (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded-full">
+                      عميل: {filters.customerName}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeFilter("customerName");
+                          setCustomerNameValue("");
+                        }}
+                        className="hover:text-blue-300"
+                      >
+                        <XCircle className="h-3 w-3" />
+                      </button>
+                    </span>
+                  )}
                   {(filters.startDate || filters.endDate) && (
                     <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded-full">
                       تاريخ: {filters.startDate || "..."} - {filters.endDate || "..."}
@@ -213,6 +241,18 @@ const AuditFilters: React.FC<AuditFiltersProps> = ({
                     placeholder="بحث (الوصف، المسار، اسم المستخدم)"
                     value={searchValue}
                     onChange={(e) => setSearchValue(e.target.value)}
+                    className="w-full pl-4 pr-12 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-200 placeholder:text-slate-400 focus:outline-none focus:border-blue-500/50"
+                  />
+                </div>
+
+                {/* Customer Name */}
+                <div className="relative">
+                  <Users className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="بحث باسم العميل"
+                    value={customerNameValue}
+                    onChange={(e) => setCustomerNameValue(e.target.value)}
                     className="w-full pl-4 pr-12 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-200 placeholder:text-slate-400 focus:outline-none focus:border-blue-500/50"
                   />
                 </div>

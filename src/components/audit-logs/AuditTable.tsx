@@ -214,6 +214,9 @@ const AuditTable: React.FC<AuditTableProps> = ({
               </th>
               <th className="text-right p-3 text-slate-300 text-sm font-medium">الكيان</th>
               <th className="text-right p-3 text-slate-300 text-sm font-medium">معرّف الكيان</th>
+              <th className="text-right p-3 text-slate-300 text-sm font-medium">العميل</th>
+              <th className="text-right p-3 text-slate-300 text-sm font-medium">نوع الفاتورة</th>
+              <th className="text-right p-3 text-slate-300 text-sm font-medium">تصنيف الفاتورة</th>
               <th className="text-right p-3 text-slate-300 text-sm font-medium">الوصف</th>
               <th className="text-right p-3 text-slate-300 text-sm font-medium">الحالة</th>
               <th className="text-right p-3 text-slate-300 text-sm font-medium">تفاصيل</th>
@@ -290,6 +293,21 @@ const AuditTable: React.FC<AuditTableProps> = ({
                     ) : (
                       <span className="text-slate-500 text-sm">—</span>
                     )}
+                  </td>
+                  <td className="p-3">
+                    <span className="text-slate-300 text-sm">
+                      {log.metadata?.customerName || "—"}
+                    </span>
+                  </td>
+                  <td className="p-3">
+                    <span className="text-slate-300 text-sm">
+                      {log.metadata?.invoiceType || "—"}
+                    </span>
+                  </td>
+                  <td className="p-3">
+                    <span className="text-slate-300 text-sm">
+                      {log.metadata?.invoiceCategory || "—"}
+                    </span>
                   </td>
                   <td className="p-3">
                     <div

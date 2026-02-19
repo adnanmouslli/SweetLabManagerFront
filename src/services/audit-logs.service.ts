@@ -24,6 +24,7 @@ export class AuditLogsService {
     if (query?.startDate) params.append("startDate", query.startDate);
     if (query?.endDate) params.append("endDate", query.endDate);
     if (query?.search) params.append("search", query.search);
+    if (query?.customerName) params.append("customerName", query.customerName);
     if (query?.sortBy) params.append("sortBy", query.sortBy);
     if (query?.sortOrder) params.append("sortOrder", query.sortOrder);
 

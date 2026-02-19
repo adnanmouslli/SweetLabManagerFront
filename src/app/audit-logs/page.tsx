@@ -71,6 +71,7 @@ const AuditLogsPage = () => {
     if (searchParams.get("method")) params.method = searchParams.get("method")!;
     if (searchParams.get("startDate")) params.startDate = searchParams.get("startDate")!;
     if (searchParams.get("endDate")) params.endDate = searchParams.get("endDate")!;
+    if (searchParams.get("customerName")) params.customerName = searchParams.get("customerName")!;
 
     return params;
   });
