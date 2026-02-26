@@ -79,6 +79,8 @@ interface OrderFormData {
   notes: string;
   paidStatus: boolean;
   isForToday: boolean;
+  /** تاريخ تسليم معين (اختياري) - ISO YYYY-MM-DD */
+  scheduledFor: string | null;
   items: OrderItem[];
   discount: number;
   additionalAmount: number;
@@ -109,6 +111,7 @@ const INITIAL_FORM_DATA: OrderFormData = {
   notes: "",
   paidStatus: false,
   isForToday: false,
+  scheduledFor: null,
   paymentType: "paid",
   items: [],
   discount: 0,
@@ -213,6 +216,9 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
           ? new Date(order.scheduledFor).toDateString() ===
             new Date().toDateString()
           : false,
+        scheduledFor: order.scheduledFor
+          ? order.scheduledFor.split("T")[0]
+          : null,
         paymentType: order.paidStatus
           ? "paid"
           : order.invoice?.isBreak
@@ -350,6 +356,8 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
           [name]:
             type === "checkbox"
               ? checked
+              : name === "scheduledFor"
+              ? (value || null) as string | null
               : name === "discount" ||
                 name === "additionalAmount" ||
                 name === "initialPayment"
@@ -672,6 +680,7 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
           })),
           notes: formData.notes || "",
           isForToday: formData.isForToday,
+          ...(formData.scheduledFor && { scheduledFor: formData.scheduledFor }),
           invoiceData: {
             discount: formData.discount,
             additionalAmount: formData.additionalAmount,
@@ -840,6 +849,7 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
       notes: lastOrder.notes || "",
       paidStatus: lastOrder.paidStatus,
       isForToday: false, // Default to today for a new order
+      scheduledFor: null,
       items: orderItems,
       discount: lastOrder.invoice?.discount || 0,
       additionalAmount: lastOrder.invoice?.additionalAmount || 0,
@@ -1133,6 +1143,24 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
             </div>
             <p className="text-xs text-slate-400">
               إذا لم يتم التحديد، سيتم جدولة التسليم للغد
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-slate-200 flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-slate-400" />
+              تاريخ تسليم معين (اختياري)
+            </label>
+            <input
+              type="date"
+              name="scheduledFor"
+              value={formData.scheduledFor ?? ""}
+              onChange={handleInputChange}
+              min={new Date().toISOString().split("T")[0]}
+              className="w-full bg-slate-700/50 border border-slate-600/50 rounded-lg px-4 py-2.5 text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+            />
+            <p className="text-xs text-slate-400">
+              اختر تاريخاً محدداً للتسليم؛ إن لم تختر، يُستخدم اليوم أو الغد حسب الخيار أعلاه
             </p>
           </div>
 

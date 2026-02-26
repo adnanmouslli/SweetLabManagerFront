@@ -35,7 +35,9 @@ export interface OrdersCreateDto {
         unit: string,
         notes: string,
     }[],
-    isForToday: boolean
+    isForToday: boolean,
+    /** اختياري: تاريخ تسليم معين (ISO YYYY-MM-DD). إن وُجد يُستخدم بدلاً من اليوم/غداً */
+    scheduledFor?: string
 }
 
 
