@@ -2,7 +2,7 @@
 // src/hooks/invoices/useInvoice.ts
 import { InvoiceStatus } from "@/components/common/InvoiceTabs";
 import { InvoiceService } from "@/services/invoice.service";
-import { Invoice, SingleFetchedInvoice } from "@/types/invoice.type";
+import { Invoice, InvoiceQueryParams, PaginatedInvoicesResponse, SingleFetchedInvoice } from "@/types/invoice.type";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface InvoiceTotals {
@@ -37,6 +37,14 @@ export const useFundInvoices = (fundId: string) => {
   return useQuery<Invoice[], Error>({
     queryKey: ["invoices", fundId],
     queryFn: () => InvoiceService.fetchFundInvoices(fundId),
+  });
+};
+
+export const usePaginatedInvoices = (params: InvoiceQueryParams) => {
+  return useQuery<PaginatedInvoicesResponse, Error>({
+    queryKey: ["invoices", "paginated", params],
+    queryFn: () => InvoiceService.fetchPaginatedInvoices(params),
+    placeholderData: (previousData) => previousData,
   });
 };
 

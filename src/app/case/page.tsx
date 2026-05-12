@@ -10,13 +10,13 @@ import PageSpinner from "@/components/common/PageSpinner";
 import SplineBackground from "@/components/common/SplineBackground";
 import TransactionTypeModal from "@/components/common/TransactionTypeModal";
 import { useMokkBar } from "@/components/providers/MokkBarContext";
-import { useDeleteInvoice, useFundInvoices } from "@/hooks/invoices/useInvoice";
+import { useDeleteInvoice, usePaginatedInvoices } from "@/hooks/invoices/useInvoice";
 import {
   useMainTransferHistory,
   useTransferConfirmation,
 } from "@/hooks/invoices/useTransfers";
 import { Role, useRoles } from "@/hooks/users/useRoles";
-import { Invoice, InvoiceCategory, ProductInvoice } from "@/types/invoice.type";
+import { Invoice, InvoiceCategory, InvoiceQueryParams, ProductInvoice } from "@/types/invoice.type";
 import { InvoiceType } from "@/types/types";
 import { getFundId } from "@/utils/fund_id";
 import { AnimatePresence, motion } from "framer-motion";
@@ -311,14 +311,32 @@ const Case = () => {
 
       const [selectedSubType, setSelectedSubType] = useState<string | undefined>(undefined);
 
-      
-  const itemsPerPage = 10;
+  const [dateFilter, setDateFilter] = useState<{
+    startDate: string;
+    endDate: string;
+  }>({
+    startDate: "",
+    endDate: "",
+  });
+
+  const itemsPerPage = 20;
 
   const { hasAnyRole } = useRoles();
 
+  // Build query params for paginated API
+  const queryParams: InvoiceQueryParams = {
+    fundId: 1,
+    page: currentPage,
+    limit: itemsPerPage,
+    ...(filterType !== "all" && { type: filterType }),
+    ...(dateFilter.startDate && { startDate: dateFilter.startDate }),
+    ...(dateFilter.endDate && { endDate: dateFilter.endDate }),
+    ...(searchTerm.trim() && { search: searchTerm.trim() }),
+  };
+
   // Queries
-  const { data: transactions, isLoading: isInvoicesLoading } =
-    useFundInvoices("1");
+  const { data: paginatedData, isLoading: isInvoicesLoading } =
+    usePaginatedInvoices(queryParams);
   const { data: pendingTransfers, isLoading: isPendingLoading } =
     useMainTransferHistory("pending");
 
@@ -369,78 +387,18 @@ const Case = () => {
     }
   };
 
-  // Reset to first page when search or filter changes
+  // Reset to first page when filter changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, filterType, activeTab, transferStatus]);
+  }, [filterType, activeTab, transferStatus, dateFilter, searchTerm]);
 
+  // Data from paginated API
+  const filteredTransactions = paginatedData?.data || [];
+  const totalInvoicePages = paginatedData?.pagination?.totalPages || 0;
+  const totalCount = paginatedData?.pagination?.totalCount || 0;
+  const statistics = paginatedData?.statistics;
 
-  
-const [dateFilter, setDateFilter] = useState<{
-  startDate: string;
-  endDate: string;
-}>({
-  startDate: "",
-  endDate: "",
-});
-
-// 2. دالة مساعدة لفلترة التواريخ
-const isDateInRange = (dateString: string, startDate: string, endDate: string): boolean => {
-  if (!startDate && !endDate) return true;
-  
-  const date = new Date(dateString);
-  date.setHours(0, 0, 0, 0);
-  
-  if (startDate && endDate) {
-    const start = new Date(startDate);
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(endDate);
-    end.setHours(23, 59, 59, 999);
-    return date >= start && date <= end;
-  }
-  
-  if (startDate) {
-    const start = new Date(startDate);
-    start.setHours(0, 0, 0, 0);
-    return date >= start;
-  }
-  
-  if (endDate) {
-    const end = new Date(endDate);
-    end.setHours(23, 59, 59, 999);
-    return date <= end;
-  }
-  
-  return true;
-};
-
-  // Filter transactions
-  const filteredTransactions = transactions
-  ? transactions.filter((transaction) => {
-      // Apply search filter
-      const searchMatch =
-        transaction.notes?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        transaction.employee.username
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        transaction.totalAmount.toString().includes(searchTerm);
-
-      // Apply type filter
-      const typeMatch =
-        filterType === "all" || transaction.invoiceType === filterType;
-
-      // Apply date filter
-      const dateMatch = isDateInRange(
-        transaction.createdAt,
-        dateFilter.startDate,
-        dateFilter.endDate
-      );
-
-      return searchMatch && typeMatch && dateMatch;
-    })
-  : [];
-
-// 4. دالة لمسح الفلاتر
+// دالة لمسح الفلاتر
 const clearDateFilter = () => {
   setDateFilter({ startDate: "", endDate: "" });
 };
@@ -482,26 +440,10 @@ const getLastMonthRange = () => {
 };
 
 
-  // Pagination for invoices
-  const totalInvoicePages = Math.ceil(
-    (filteredTransactions?.length || 0) / itemsPerPage
-  );
-  const paginatedTransactions =
-    filteredTransactions?.slice(
-      (currentPage - 1) * itemsPerPage,
-      currentPage * itemsPerPage
-    ) || [];
-
-  // Calculate totals
-  const totalIncome = filteredTransactions
-    .filter((t) => t.invoiceType === "income")
-    .reduce((sum, t) => sum + t.totalAmount, 0);
-
-  const totalExpense = filteredTransactions
-    .filter((t) => t.invoiceType === "expense")
-    .reduce((sum, t) => sum + t.totalAmount, 0);
-
-  const balance = totalIncome - totalExpense;
+  // Statistics from API (calculated across all matching invoices, not just current page)
+  const totalIncome = statistics?.totalIncome || 0;
+  const totalExpense = statistics?.totalExpenses || 0;
+  const balance = statistics?.balance || 0;
 
   // Handle invoice form modal opener
   const openInvoiceForm = (
@@ -944,7 +886,7 @@ const getLastMonthRange = () => {
                   )}
                 </div> */}
                 <HomeInvoiceTable
-                  data={paginatedTransactions}
+                  data={filteredTransactions}
                   // @ts-ignore
                   onViewDetails={(invoice) => setSelectedInvoice(invoice)}
                   onEditInvoice={(invoice) => setInvoiceToEdit(invoice)}
@@ -1001,7 +943,7 @@ const getLastMonthRange = () => {
 
                 {/* Results count */}
                 <div className="mt-4 text-center text-gray-400">
-                  إجمالي النتائج: {filteredTransactions.length}
+                  إجمالي النتائج: {totalCount}
                 </div>
               </>
             )}

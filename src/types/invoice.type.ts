@@ -266,6 +266,36 @@ export interface ProductInvoice {
   supplierPaymentAmount?: number; // المبلغ المدفوع للمورد
 }
 
+// Paginated invoices API response
+export interface PaginatedInvoicesResponse {
+  data: Invoice[];
+  pagination: {
+    page: number;
+    limit: number;
+    totalCount: number;
+    totalPages: number;
+  };
+  statistics: {
+    totalIncome: number;
+    totalExpenses: number;
+    balance: number;
+  };
+}
+
+// Query params for fetching invoices
+export interface InvoiceQueryParams {
+  page?: number;
+  limit?: number;
+  fundId?: number;
+  type?: 'income' | 'expense';
+  category?: InvoiceCategory;
+  status?: 'paid' | 'unpaid' | 'debt' | 'breakage';
+  startDate?: string;
+  endDate?: string;
+  paidStatus?: string;
+  search?: string;
+}
+
 export interface RelatedEmployee {
   id: number;
   name: string;

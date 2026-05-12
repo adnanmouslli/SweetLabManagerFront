@@ -6,6 +6,8 @@ import {
   ExpenseProductsDTO,
   IncomeProductsDTO,
   Invoice,
+  InvoiceQueryParams,
+  PaginatedInvoicesResponse,
   SingleFetchedInvoice,
 } from "@/types/invoice.type";
 import { apiClient } from "@/utils/axios";
@@ -41,6 +43,25 @@ export class InvoiceService {
   static async fetchFundInvoices(fundId: string): Promise<Invoice[]> {
     const response = await apiClient.get<Invoice[]>(
       "/invoices?fundId=" + fundId
+    );
+    return response;
+  }
+
+  static async fetchPaginatedInvoices(params: InvoiceQueryParams): Promise<PaginatedInvoicesResponse> {
+    const searchParams = new URLSearchParams();
+    if (params.page) searchParams.set("page", params.page.toString());
+    if (params.limit) searchParams.set("limit", params.limit.toString());
+    if (params.fundId) searchParams.set("fundId", params.fundId.toString());
+    if (params.type) searchParams.set("type", params.type);
+    if (params.category) searchParams.set("category", params.category);
+    if (params.status) searchParams.set("status", params.status);
+    if (params.startDate) searchParams.set("startDate", params.startDate);
+    if (params.endDate) searchParams.set("endDate", params.endDate);
+    if (params.paidStatus) searchParams.set("paidStatus", params.paidStatus);
+    if (params.search) searchParams.set("search", params.search);
+
+    const response = await apiClient.get<PaginatedInvoicesResponse>(
+      `/invoices?${searchParams.toString()}`
     );
     return response;
   }

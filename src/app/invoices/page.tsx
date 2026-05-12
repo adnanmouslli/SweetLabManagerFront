@@ -6,13 +6,11 @@ import { InvoiceStatus, InvoiceTabs } from "@/components/common/InvoiceTabs";
 import Navbar from "@/components/common/Navbar";
 import PageSpinner from "@/components/common/PageSpinner";
 import SplineBackground from "@/components/common/SplineBackground";
-import { StatusSummary } from "@/components/common/StatusSummary";
 import StatusTransitionModal from "@/components/common/StatusTransitionModal";
-import { useInvoices, useMarkInvoiceAsBreak } from "@/hooks/invoices/useInvoice";
-import { useInvoiceFilters } from "@/hooks/invoices/useInvoiceFilter";
-import { Invoice } from "@/types/invoice.type";
+import { usePaginatedInvoices, useMarkInvoiceAsBreak } from "@/hooks/invoices/useInvoice";
+import { Invoice, InvoiceQueryParams } from "@/types/invoice.type";
 import { AnimatePresence, motion } from "framer-motion";
-import { useState, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeftRight } from "lucide-react";
 import BreakageConversionModal from "@/components/common/invoices/BreakageConversionModal";
 import { useMokkBar } from "@/components/providers/MokkBarContext";
@@ -20,22 +18,41 @@ import { useMokkBar } from "@/components/providers/MokkBarContext";
 const InvoiceManagementPage = () => {
   const [invoiceType, setInvoiceType] = useState<"income" | "expense">("income");
   const { setSnackbarConfig } = useMokkBar();
-  
+
   const [activeStatus, setActiveStatus] = useState<InvoiceStatus | "all">("paid");
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [dateFilter, setDateFilter] = useState<{
     startDate: Date | null;
     endDate: Date | null;
   }>({ startDate: null, endDate: null });
 
-  // Fetch invoices based on active status
+  const itemsPerPage = 20;
+
+  // Build query params for paginated API
+  const queryParams: InvoiceQueryParams = {
+    page: currentPage,
+    limit: itemsPerPage,
+    type: invoiceType,
+    ...(activeStatus !== "all" && { status: activeStatus }),
+    ...(dateFilter.startDate && { startDate: dateFilter.startDate.toISOString().split('T')[0] }),
+    ...(dateFilter.endDate && { endDate: dateFilter.endDate.toISOString().split('T')[0] }),
+    ...(searchTerm.trim() && { search: searchTerm.trim() }),
+  };
+
+  // Fetch invoices with paginated API
   const {
-    data: invoices,
+    data: paginatedData,
     isLoading,
     isError,
     error,
-  } = useInvoices(activeStatus);
-  
+  } = usePaginatedInvoices(queryParams);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [invoiceType, activeStatus, dateFilter, searchTerm]);
+
   const [invoiceForBreak, setInvoiceForBreak] = useState<Invoice | null>(null);
   const markAsBreak = useMarkInvoiceAsBreak();
 
@@ -48,68 +65,10 @@ const InvoiceManagementPage = () => {
     "paid" | "unpaid" | "debt" | "breakage" | null
   >(null);
 
-  // البحث والفلترة الذكية
-  const filteredInvoices = useMemo(() => {
-    if (!invoices) return [];
-
-    let filtered = invoices;
-
-    // 1. تطبيق فلتر نوع الفاتورة (دخل/صرف)
-    filtered = filtered.filter(invoice => invoice.invoiceType === invoiceType);
-
-    // 2. تطبيق البحث الذكي على جميع الحقول
-    if (searchTerm.trim()) {
-      const searchLower = searchTerm.toLowerCase().trim();
-      
-      filtered = filtered.filter(invoice => {
-        // البحث في رقم الفاتورة
-        const invoiceNumber = invoice.invoiceNumber?.toString().toLowerCase() || "";
-        
-        // البحث في اسم العميل/المورد
-        const clientName = invoice.customer?.name?.toLowerCase() || "";
-        
-        // البحث في المبلغ
-        const amount = invoice.totalAmount?.toString() || "";
-                
-        // البحث في تفاصيل العناصر
-        const itemsText = invoice.items?.map(item => 
-          `${item.item.name} || ""}`.toLowerCase()
-        ).join(" ") || "";
-
-        // البحث في رقم الهاتف
-        const phone = invoice.customer?.phone?.toLowerCase() || "";
-
-  
-        return (
-          invoiceNumber.includes(searchLower) ||
-          clientName.includes(searchLower) ||
-          amount.includes(searchLower) ||
-          itemsText.includes(searchLower) ||
-          phone.includes(searchLower)
-        );
-      });
-    }
-
-    // 3. تطبيق فلتر التاريخ
-    if (dateFilter.startDate || dateFilter.endDate) {
-      filtered = filtered.filter(invoice => {
-        const invoiceDate = new Date(invoice.createdAt);
-        
-        if (dateFilter.startDate && dateFilter.endDate) {
-          return invoiceDate >= dateFilter.startDate && 
-                 invoiceDate <= dateFilter.endDate;
-        } else if (dateFilter.startDate) {
-          return invoiceDate >= dateFilter.startDate;
-        } else if (dateFilter.endDate) {
-          return invoiceDate <= dateFilter.endDate;
-        }
-        
-        return true;
-      });
-    }
-
-    return filtered;
-  }, [invoices, invoiceType, searchTerm, dateFilter]);
+  // Data from paginated API
+  const filteredInvoices = paginatedData?.data || [];
+  const totalCount = paginatedData?.pagination?.totalCount || 0;
+  const totalPages = paginatedData?.pagination?.totalPages || 0;
 
   // Type toggle handler
   const handleTypeToggle = () => {
@@ -182,7 +141,7 @@ const InvoiceManagementPage = () => {
               <div className="text-xl font-bold text-slate-100">
                 {invoiceType === "income" ? "فواتير الدخل" : "فواتير الصرف"}
                 <span className="text-sm font-normal text-slate-400 mr-2">
-                  ({filteredInvoices.length} فاتورة)
+                  ({totalCount} فاتورة)
                 </span>
               </div>
 
@@ -234,6 +193,50 @@ const InvoiceManagementPage = () => {
                 onConvertToBreak={handleConvertToBreak}
               />
             </motion.div>
+
+            {/* Server-side Pagination */}
+            {totalPages > 1 && (
+              <div className="mt-6 flex justify-center items-center gap-4" dir="rtl">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 rounded-lg bg-slate-800/50 text-white disabled:opacity-50 hover:bg-slate-700/50 transition-colors border border-slate-700/50"
+                >
+                  السابق
+                </button>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-300">الصفحة</span>
+                  <select
+                    value={currentPage}
+                    onChange={(e) => setCurrentPage(Number(e.target.value))}
+                    className="bg-slate-800/50 border border-slate-700/50 rounded-lg text-white px-2 py-1"
+                  >
+                    {[...Array(totalPages)].map((_, i) => (
+                      <option key={i + 1} value={i + 1}>
+                        {i + 1}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="text-slate-300">من {totalPages}</span>
+                </div>
+
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages || totalPages === 0}
+                  className="px-4 py-2 rounded-lg bg-slate-800/50 text-white disabled:opacity-50 hover:bg-slate-700/50 transition-colors border border-slate-700/50"
+                >
+                  التالي
+                </button>
+              </div>
+            )}
+
+            {/* Results count */}
+            {totalCount > 0 && (
+              <div className="mt-3 text-center text-slate-400 text-sm">
+                إجمالي النتائج: {totalCount}
+              </div>
+            )}
 
             {/* عرض رسالة عند عدم وجود نتائج */}
             {filteredInvoices.length === 0 && !isLoading && (
