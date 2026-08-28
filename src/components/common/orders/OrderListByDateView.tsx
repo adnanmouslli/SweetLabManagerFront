@@ -20,6 +20,9 @@ interface OrderListByDateViewProps {
     onSearchChange: (term: string) => void;
     searchTerm: string;
     onPrintQueueTicket?: (orderId: number) => void;
+    allOrdersPage?: number;
+    allOrdersTotalPages?: number;
+    onAllOrdersPageChange?: (page: number) => void;
 }
 
 const OrderListByDateView: React.FC<OrderListByDateViewProps> = ({
@@ -32,6 +35,9 @@ const OrderListByDateView: React.FC<OrderListByDateViewProps> = ({
     onSearchChange,
     searchTerm,
     onPrintQueueTicket,
+    allOrdersPage,
+    allOrdersTotalPages,
+    onAllOrdersPageChange,
 }) => {
     const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({
         today: true,
@@ -819,6 +825,28 @@ const toggleCategory = (categoryId: number) => {
                                         )}
                                     </div>
                                 ))}
+                            </div>
+                        )}
+
+                        {onAllOrdersPageChange && allOrdersTotalPages && allOrdersTotalPages > 1 && (
+                            <div className="flex items-center justify-center gap-3 mt-6">
+                                <button
+                                    onClick={() => onAllOrdersPageChange(Math.max(1, (allOrdersPage || 1) - 1))}
+                                    disabled={(allOrdersPage || 1) <= 1}
+                                    className="px-3 py-1.5 rounded-md bg-slate-700 text-slate-200 text-sm disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-600 transition-colors"
+                                >
+                                    السابق
+                                </button>
+                                <span className="text-slate-400 text-sm">
+                                    صفحة {allOrdersPage || 1} من {allOrdersTotalPages}
+                                </span>
+                                <button
+                                    onClick={() => onAllOrdersPageChange(Math.min(allOrdersTotalPages, (allOrdersPage || 1) + 1))}
+                                    disabled={(allOrdersPage || 1) >= allOrdersTotalPages}
+                                    className="px-3 py-1.5 rounded-md bg-slate-700 text-slate-200 text-sm disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-600 transition-colors"
+                                >
+                                    التالي
+                                </button>
                             </div>
                         )}
                     </div>

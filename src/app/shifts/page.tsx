@@ -11,7 +11,7 @@ import {
   useCompleteClosure,
   useFetchShiftSummary,
   useShiftInvoices,
-  useShifts,
+  useShiftsPaginated,
 } from "@/hooks/shifts/useShifts";
 import { formatDate } from "@/utils/formatters";
 import { AnimatePresence, motion } from "framer-motion";
@@ -25,7 +25,7 @@ import {
   User2,
   CheckCircle,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const Shifts = () => {
   // Pagination and filtering state
@@ -56,7 +56,30 @@ const Shifts = () => {
   const { setSnackbarConfig } = useMokkBar();
 
   const itemsPerPage = 10;
-  const { data: shifts, isLoading } = useShifts();
+
+  // تأخير بسيط قبل إرسال البحث للباك، لتفادي إرسال طلب مع كل ضغطة زر
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  useEffect(() => {
+    const timeout = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(timeout);
+  }, [search]);
+
+  // إعادة الصفحة إلى 1 كلما تغيرت الفلترة أو البحث حتى لا نطلب صفحة غير موجودة من الباك
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch, filterType, filterStatus]);
+
+  const { data: shiftsResult, isLoading } = useShiftsPaginated({
+    page: currentPage,
+    limit: itemsPerPage,
+    search: debouncedSearch || undefined,
+    shiftType: filterType !== "all" ? filterType : undefined,
+    status: filterStatus !== "all" ? filterStatus : undefined,
+  });
+  const paginatedShifts = shiftsResult?.data ?? [];
+  const totalResults = shiftsResult?.total ?? 0;
+  const totalPages = shiftsResult?.totalPages ?? 1;
+
   const { mutate: fetchSummary, isPending: isSummaryLoading } =
     useFetchShiftSummary({
       onSuccess: (data) => setShiftSummary(data),
@@ -184,31 +207,6 @@ const Shifts = () => {
       console.log("Delete invoice:", invoice);
     }
   };
-
-  // Filter and search logic
-  const filteredShifts =
-    shifts
-      ?.filter((shift) => {
-        const matchesSearch =
-          shift.employee.username
-            .toLowerCase()
-            .includes(search.toLowerCase()) ||
-          shift.id.toString().includes(search);
-        const matchesType =
-          filterType === "all" || shift.shiftType === filterType;
-        const matchesStatus =
-          filterStatus === "all" || shift.status === filterStatus;
-
-        return matchesSearch && matchesType && matchesStatus;
-      })
-      .sort((a, b) => b.id - a.id) || [];
-
-  // Pagination logic
-  const totalPages = Math.ceil(filteredShifts.length / itemsPerPage);
-  const paginatedShifts = filteredShifts.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
 
   return (
     <div className="min-h-screen bg-background relative transition-colors duration-300">

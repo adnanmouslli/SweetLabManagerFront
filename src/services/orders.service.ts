@@ -11,7 +11,8 @@ import {
     OrdersSummary,
     UpdateOrder,
     FilterOrders,
-    OrderCategoryUpdateDto
+    OrderCategoryUpdateDto,
+    PaginatedOrdersResponse
 } from "@/types/orders.type";
 
 export interface UpdateOrderStatusRequest {
@@ -102,11 +103,11 @@ export class OrdersService {
 
 
     // Additional helper methods for filtering orders
-    static getOrders = async (params?: FilterOrders): Promise<OrderResponseDto[]> => {
+    static getOrders = async (params?: FilterOrders): Promise<PaginatedOrdersResponse> => {
         const url = params
             ? `/orders?${new URLSearchParams(params as Record<string, string>).toString()}`
             : "/orders";
-        const response = await apiClient.get<OrderResponseDto[]>(url);
+        const response = await apiClient.get<PaginatedOrdersResponse>(url);
         return response;
     };
 

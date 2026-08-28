@@ -18,7 +18,7 @@ import {
   Truck,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { useFetchCustomers } from "@/hooks/customers/useCustomers";
+import { useCustomersList } from "@/hooks/customers/useCustomers";
 import { useItems } from "@/hooks/items/useItems";
 import { useItemGroups } from "@/hooks/items/useItemGroups";
 import {
@@ -130,12 +130,14 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
   mode = "create",
 }) => {
   // Hooks for fetching data
+  // ملاحظة: نستخدم القائمة الخفيفة (بدون فواتير/عناصر متداخلة) لتفادي تعليق الفورم
+  // كلما كبرت بيانات العميل التاريخية - هذا هو نفس المصدر المستخدم في فورم الفاتورة.
   const {
     data: customers = [],
     isLoading: isLoadingCustomers,
     error: customersError,
     refetch: refetchCustomers,
-  } = useFetchCustomers();
+  } = useCustomersList();
 
   const {
     data: categories = [],
@@ -793,10 +795,10 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
   let filtered = customers.filter(
     (c) => c.customerType === CustomerTypeEnum.CUSTOMER
   );
-  
+
   // ثم تطبيق البحث
   if (!customerMenuSearch.trim()) return filtered;
-  
+
   const term = customerMenuSearch.toLowerCase();
   return filtered.filter(
     (c) =>
@@ -804,6 +806,16 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
       (c.phone && c.phone.includes(customerMenuSearch))
   );
 }, [customers, customerMenuSearch]);
+
+  // لتفادي رسم آلاف العناصر دفعة واحدة عند فتح القائمة (تعليق الواجهة)،
+  // نعرض عدداً محدوداً افتراضياً ونطلب من المستخدم البحث للوصول لباقي النتائج.
+  const CUSTOMER_DROPDOWN_VISIBLE_LIMIT = 50;
+  const visibleDropdownCustomers = useMemo(
+    () => dropdownCustomers.slice(0, CUSTOMER_DROPDOWN_VISIBLE_LIMIT),
+    [dropdownCustomers]
+  );
+  const hiddenDropdownCustomersCount =
+    dropdownCustomers.length - visibleDropdownCustomers.length;
 
 
   const hasDataLoadingErrors = Boolean(
@@ -976,7 +988,7 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
                       >
                         اختر العميل
                       </button>
-                      {dropdownCustomers.map((customer) => (
+                      {visibleDropdownCustomers.map((customer) => (
                         <button
                           key={customer.id}
                           type="button"
@@ -1001,6 +1013,12 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
                       {dropdownCustomers.length === 0 && (
                         <div className="px-4 py-3 text-slate-400 text-right">
                           لا توجد نتائج
+                        </div>
+                      )}
+                      {hiddenDropdownCustomersCount > 0 && (
+                        <div className="px-4 py-2 text-xs text-slate-500 text-right border-t border-slate-700">
+                          يوجد {hiddenDropdownCustomersCount} نتيجة إضافية، اكتب
+                          للبحث للوصول إليها
                         </div>
                       )}
                     </div>

@@ -196,6 +196,38 @@ export const useShifts = () => {
   });
 };
 
+export interface PaginatedShiftsResponse {
+  data: QueryShiftType[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface ShiftsQueryParams {
+  page: number;
+  limit: number;
+  search?: string;
+  shiftType?: "morning" | "evening";
+  status?: "open" | "closed" | "partially_closed";
+}
+
+/**
+ * نسخة مقسّمة على صفحات من قائمة الورديات (بحث/فلترة تتم في الباك)،
+ * تُستخدم في شاشة "سجل الورديات" لتفادي تحميل كامل السجل التاريخي دفعة واحدة.
+ */
+export const useShiftsPaginated = (params: ShiftsQueryParams) => {
+  return useQuery<PaginatedShiftsResponse>({
+    queryKey: ["shifts", "paginated", params],
+    queryFn: async () => {
+      const response = await apiClient.get<PaginatedShiftsResponse>("shifts", {
+        params,
+      });
+      return response;
+    },
+  });
+};
+
 
 export const useCloseShiftPartially = (options?: {
   onSuccess?: (data: CloseShiftResponse) => void;

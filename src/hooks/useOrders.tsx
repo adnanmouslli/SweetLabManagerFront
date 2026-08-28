@@ -11,7 +11,8 @@ import {
     OrdersSummary,
     UpdateOrder,
     OrderCategoryUpdateDto,
-    OrdersCreateDto
+    OrdersCreateDto,
+    PaginatedOrdersResponse
 } from "@/types/orders.type";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -64,7 +65,7 @@ export const useDeleteOrderCategory = () => {
 
 // Orders Hooks
 export const useOrders = (params?: FilterOrders) => {
-    return useQuery<OrderResponseDto[], Error>({
+    return useQuery<PaginatedOrdersResponse, Error>({
         queryKey: ["orders", params],
         queryFn: () => OrdersService.getOrders(params),
     });

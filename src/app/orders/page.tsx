@@ -143,20 +143,24 @@ const [viewMode, setViewMode] = useState<"byDate" | "byCategory" | "byMaterials"
   const [paymentStatus, setPaymentStatus] = useState<
     "all" | "paid" | "unpaid" | "break"
   >("all"); // State for payment status
+  const [allOrdersPage, setAllOrdersPage] = useState<number>(1); // Pagination page for "all orders"
 
   // Function to clear date filter
   const handleClearDate = () => {
     setSelectedDate("");
+    setAllOrdersPage(1);
   };
 
   // Function to handle date change
   const handleDateChange = (date: string) => {
     setSelectedDate(date);
+    setAllOrdersPage(1);
   };
 
   // Function to clear date filter (alias)
   const clearDateFilter = () => {
     setSelectedDate("");
+    setAllOrdersPage(1);
   };
 
   // Function to handle payment status change
@@ -174,9 +178,9 @@ const [viewMode, setViewMode] = useState<"byDate" | "byCategory" | "byMaterials"
   // Filter parameters (unchanged, as filtering is done client-side)
   const getAllFilters = (): FilterOrders | undefined => {
     if (selectedDate) {
-      return { endDate: selectedDate };
+      return { endDate: selectedDate, page: allOrdersPage };
     }
-    return undefined; // Get all orders without filtering
+    return { page: allOrdersPage };
   };
 
   const getTodayFilters = (): FilterOrders | undefined => {
@@ -213,14 +217,18 @@ const [viewMode, setViewMode] = useState<"byDate" | "byCategory" | "byMaterials"
 
   // Query hooks
   const { data: summary, isLoading: isSummaryLoading } = useOrdersSummary();
-  const { data: allOrders = [], isLoading: isAllOrdersLoading } = useOrders(
+  const { data: allOrdersResult, isLoading: isAllOrdersLoading } = useOrders(
     getAllFilters()
   );
-  const { data: todayOrders = [], isLoading: isTodayOrdersLoading } = useOrders(
+  const allOrders = allOrdersResult?.data ?? [];
+  const allOrdersTotalPages = allOrdersResult?.totalPages ?? 1;
+  const { data: todayOrdersResult, isLoading: isTodayOrdersLoading } = useOrders(
     getTodayFilters()
   );
-  const { data: tomorrowOrders = [], isLoading: isTomorrowOrdersLoading } =
+  const todayOrders = todayOrdersResult?.data ?? [];
+  const { data: tomorrowOrdersResult, isLoading: isTomorrowOrdersLoading } =
     useOrders(getTomorrowFilters());
+  const tomorrowOrders = tomorrowOrdersResult?.data ?? [];
   const { data: categories = [], isLoading: isCategoriesLoading } =
     useOrderCategories();
 
@@ -550,6 +558,9 @@ const [viewMode, setViewMode] = useState<"byDate" | "byCategory" | "byMaterials"
       onSearchChange={setSearchTerm}
       searchTerm={searchTerm}
       onPrintQueueTicket={handlePrintQueueTicket}
+      allOrdersPage={allOrdersPage}
+      allOrdersTotalPages={allOrdersTotalPages}
+      onAllOrdersPageChange={setAllOrdersPage}
     />
   ) : viewMode === "byMaterials" ? (
     <OrderByCategoryMaterialsView

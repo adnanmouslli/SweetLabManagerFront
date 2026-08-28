@@ -187,6 +187,16 @@ export interface FilterOrders {
     categoryId?: number;
     forToday?: boolean;
     forTomorrow?: boolean;
+    page?: number;
+    limit?: number;
+}
+
+export interface PaginatedOrdersResponse {
+    data: OrderResponseDto[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
 }
 
 export interface UpdateOrderCategory {
