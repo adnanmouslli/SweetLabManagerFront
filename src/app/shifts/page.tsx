@@ -453,7 +453,7 @@ const Shifts = () => {
                 ))}
 
                 {/* Empty State */}
-                {!isLoading && filteredShifts.length === 0 && (
+                {!isLoading && paginatedShifts.length === 0 && (
                   <div className="text-center py-12 text-gray-400">
                     لا يوجد ورديات لعرضها
                   </div>
@@ -502,7 +502,7 @@ const Shifts = () => {
 
             {/* Results count */}
             <div className="mt-4 text-center text-gray-400">
-              إجمالي النتائج: {filteredShifts.length}
+              إجمالي النتائج: {totalResults}
             </div>
           </div>
         </main>
